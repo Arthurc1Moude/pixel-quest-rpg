@@ -1,0 +1,3973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIXEL QUEST RPG</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  :root {
+    --bg-deep: #0f0d1d;
+    --bg-panel: #1a1c2c;
+    --bg-panel-2: #29366f;
+    --border-dark: #333c57;
+    --border-light: #566c86;
+    --border-bright: #94b0c2;
+    --text-primary: #f4f4f4;
+    --text-secondary: #94b0c2;
+    --text-gold: #f4b41b;
+    --text-gold-light: #ffcd75;
+    --hp-red: #ef4155;
+    --hp-dark: #b13e53;
+    --mp-blue: #29adff;
+    --mp-dark: #1d6fa5;
+    --xp-green: #38b764;
+    --xp-dark: #257179;
+    --purple: #5d275d;
+    --cyan: #73eff7;
+    --crimson: #b13e53;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+
+  body {
+    background: var(--bg-deep);
+    font-family: 'Press Start 2P', monospace;
+    color: var(--text-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  #game-container {
+    position: relative;
+    width: 960px;
+    height: 720px;
+    background: var(--bg-panel);
+    border: 4px solid var(--border-light);
+    box-shadow:
+      0 0 0 4px var(--border-dark),
+      0 0 40px rgba(115, 239, 247, 0.2),
+      inset 0 0 100px rgba(0,0,0,0.5);
+  }
+
+  #game-container::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.15),
+      rgba(0, 0, 0, 0.15) 2px,
+      transparent 2px,
+      transparent 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  #game-container::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at center,
+      transparent 40%,
+      rgba(0, 0, 0, 0.4) 100%
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  .screen {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: none;
+    flex-direction: column;
+  }
+
+  .screen.active { display: flex; }
+
+  /* TITLE SCREEN */
+  #title-screen {
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(180deg, #1a1c2c 0%, #5d275d 50%, #b13e53 100%);
+  }
+
+  .title-logo {
+    font-size: 36px;
+    color: var(--text-gold);
+    text-shadow:
+      4px 4px 0 var(--crimson),
+      8px 8px 0 rgba(0,0,0,0.5);
+    margin-bottom: 8px;
+    animation: titleFloat 2s ease-in-out infinite;
+    letter-spacing: 2px;
+  }
+
+  .title-sub {
+    font-size: 12px;
+    color: var(--cyan);
+    margin-bottom: 60px;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+  }
+
+  @keyframes titleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .title-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .pixel-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    padding: 14px 32px;
+    background: var(--bg-panel-2);
+    color: var(--text-primary);
+    border: none;
+    cursor: pointer;
+    position: relative;
+    box-shadow:
+      inset -4px -4px 0 var(--border-dark),
+      inset 4px 4px 0 var(--border-bright),
+      0 0 0 2px var(--border-dark);
+    transition: transform 0.05s, box-shadow 0.05s;
+  }
+
+  .pixel-btn:hover {
+    background: #3a4a8a;
+    color: var(--text-gold-light);
+  }
+
+  .pixel-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow:
+      inset 4px 4px 0 var(--border-dark),
+      inset -4px -4px 0 var(--border-bright),
+      0 0 0 2px var(--border-dark);
+  }
+
+  .pixel-btn.gold {
+    background: var(--text-gold);
+    color: var(--bg-deep);
+    box-shadow:
+      inset -4px -4px 0 #a07000,
+      inset 4px 4px 0 var(--text-gold-light),
+      0 0 0 2px #a07000;
+  }
+
+  .pixel-btn.gold:hover {
+    background: #ffd54f;
+  }
+
+  /* CHARACTER SELECT */
+  #char-screen {
+    padding: 40px;
+    gap: 20px;
+  }
+
+  .screen-header {
+    font-size: 18px;
+    color: var(--text-gold);
+    text-align: center;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 0 var(--border-dark);
+  }
+
+  .class-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    flex: 1;
+  }
+
+  .class-card {
+    background: var(--bg-panel-2);
+    border: 3px solid var(--border-dark);
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.1s;
+  }
+
+  .class-card:hover {
+    border-color: var(--text-gold);
+    transform: translateY(-2px);
+  }
+
+  .class-card.selected {
+    border-color: var(--text-gold);
+    background: #3a4a8a;
+    box-shadow: 0 0 12px rgba(244, 180, 27, 0.4);
+  }
+
+  .class-sprite {
+    width: 64px;
+    height: 64px;
+    background: var(--bg-deep);
+    border: 2px solid var(--border-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+  }
+
+  .class-name {
+    font-size: 11px;
+    color: var(--text-gold-light);
+  }
+
+  .class-desc {
+    font-size: 8px;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .class-stats {
+    font-size: 8px;
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 100%;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .name-input {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .name-input input {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    padding: 10px 14px;
+    background: var(--bg-deep);
+    color: var(--text-gold-light);
+    border: 3px solid var(--border-dark);
+    width: 200px;
+    outline: none;
+  }
+
+  .name-input input:focus {
+    border-color: var(--text-gold);
+  }
+
+  /* EXPLORE / MAIN GAME */
+  #explore-screen {
+    display: none;
+  }
+
+  #explore-screen.active {
+    display: grid;
+    grid-template-rows: 1fr 120px;
+    grid-template-columns: 180px 1fr 180px;
+    grid-template-areas:
+      "stats canvas action"
+      "log log log";
+  }
+
+  .stats-panel {
+    grid-area: stats;
+    background: var(--bg-panel-2);
+    border-right: 3px solid var(--border-dark);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+  }
+
+  .panel-title {
+    font-size: 10px;
+    color: var(--text-gold);
+    border-bottom: 2px solid var(--border-dark);
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+  }
+
+  .char-name-display {
+    font-size: 11px;
+    color: var(--text-gold-light);
+  }
+
+  .char-level {
+    font-size: 9px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .bar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 6px;
+  }
+
+  .bar-label {
+    font-size: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .bar {
+    height: 12px;
+    background: var(--bg-deep);
+    border: 2px solid var(--border-dark);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    transition: width 0.3s;
+  }
+
+  .bar-fill.hp {
+    background: linear-gradient(180deg, #ff6b7a 0%, var(--hp-red) 50%, var(--hp-dark) 100%);
+  }
+
+  .bar-fill.mp {
+    background: linear-gradient(180deg, #5cc9ff 0%, var(--mp-blue) 50%, var(--mp-dark) 100%);
+  }
+
+  .bar-fill.xp {
+    background: linear-gradient(180deg, #5eff8e 0%, var(--xp-green) 50%, var(--xp-dark) 100%);
+  }
+
+  .mini-stats {
+    font-size: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+
+  .mini-stat {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-secondary);
+  }
+
+  .mini-stat span:last-child {
+    color: var(--text-primary);
+  }
+
+  .equipped-panel {
+    margin-top: 4px;
+  }
+
+  .equip-slot {
+    font-size: 8px;
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-secondary);
+    padding: 2px 0;
+  }
+
+  .equip-slot .item-name {
+    color: var(--cyan);
+  }
+
+  .canvas-area {
+    grid-area: canvas;
+    position: relative;
+    background: #0d0c18;
+    overflow: hidden;
+  }
+
+  #game-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .location-name {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--text-gold);
+    background: rgba(0,0,0,0.7);
+    padding: 6px 16px;
+    border: 2px solid var(--border-dark);
+    z-index: 10;
+  }
+
+  .action-panel {
+    grid-area: action;
+    background: var(--bg-panel-2);
+    border-left: 3px solid var(--border-dark);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .action-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 10px 8px;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    border: 2px solid var(--border-dark);
+    cursor: pointer;
+    text-align: left;
+    position: relative;
+    box-shadow: inset -2px -2px 0 rgba(0,0,0,0.5), inset 2px 2px 0 var(--border-light);
+  }
+
+  .action-btn:hover {
+    background: var(--bg-panel-2);
+    color: var(--text-gold-light);
+    border-color: var(--text-gold);
+  }
+
+  .action-btn:active {
+    box-shadow: inset 2px 2px 0 rgba(0,0,0,0.5), inset -2px -2px 0 var(--border-light);
+    transform: translate(1px, 1px);
+  }
+
+  .log-panel {
+    grid-area: log;
+    background: var(--bg-deep);
+    border-top: 3px solid var(--border-dark);
+    padding: 8px 12px;
+    overflow-y: auto;
+    font-size: 10px;
+    line-height: 1.8;
+  }
+
+  .log-line {
+    color: var(--text-secondary);
+  }
+
+  .log-line.gold { color: var(--text-gold-light); }
+  .log-line.red { color: var(--hp-red); }
+  .log-line.green { color: var(--xp-green); }
+  .log-line.cyan { color: var(--cyan); }
+
+  /* BATTLE SCREEN */
+  #battle-screen {
+    display: none;
+  }
+
+  #battle-screen.active {
+    display: grid;
+    grid-template-rows: 1fr auto 140px;
+  }
+
+  .battle-arena {
+    position: relative;
+    background: linear-gradient(180deg, #257179 0%, #1a1c2c 60%, #3a2a1a 100%);
+    overflow: hidden;
+  }
+
+  .battle-enemy-area {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+  }
+
+  .enemy-sprite {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  .enemy-sprite:hover { transform: scale(1.05); }
+  .enemy-sprite.selected .enemy-body { border-color: var(--text-gold); }
+  .enemy-sprite.dead { opacity: 0.3; filter: grayscale(1); }
+
+  .enemy-body {
+    width: 80px;
+    height: 80px;
+    background: var(--bg-deep);
+    border: 3px solid var(--border-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+  }
+
+  .enemy-name { font-size: 9px; color: var(--text-gold-light); }
+  .enemy-hp-bar {
+    width: 70px;
+    height: 8px;
+    background: var(--bg-deep);
+    border: 2px solid var(--border-dark);
+  }
+  .enemy-hp-fill {
+    height: 100%;
+    background: var(--hp-red);
+    transition: width 0.3s;
+  }
+
+  .battle-player-area {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 30px;
+  }
+
+  .player-battle-sprite {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .player-body {
+    width: 64px;
+    height: 64px;
+    background: var(--bg-deep);
+    border: 3px solid var(--border-bright);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+  }
+
+  .player-body.active {
+    border-color: var(--text-gold);
+    box-shadow: 0 0 12px rgba(244, 180, 27, 0.6);
+  }
+
+  .battle-player-info {
+    background: rgba(0,0,0,0.8);
+    border: 2px solid var(--border-dark);
+    padding: 6px 10px;
+    font-size: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .battle-player-name { color: var(--text-gold-light); }
+
+  .battle-hp-row, .battle-mp-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .battle-bar {
+    width: 60px;
+    height: 6px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border-dark);
+  }
+  .battle-bar-fill.hp { height: 100%; background: var(--hp-red); }
+  .battle-bar-fill.mp { height: 100%; background: var(--mp-blue); }
+
+  .battle-log {
+    background: var(--bg-deep);
+    border-top: 3px solid var(--border-dark);
+    border-bottom: 3px solid var(--border-dark);
+    padding: 8px 16px;
+    height: 60px;
+    overflow-y: auto;
+    font-size: 10px;
+    line-height: 1.8;
+  }
+
+  .battle-actions {
+    background: var(--bg-panel-2);
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    align-content: start;
+  }
+
+  .battle-actions .sub-menu {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .battle-action-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    padding: 12px 8px;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    border: 2px solid var(--border-dark);
+    cursor: pointer;
+    box-shadow: inset -2px -2px 0 rgba(0,0,0,0.5), inset 2px 2px 0 var(--border-light);
+  }
+
+  .battle-action-btn:hover:not(:disabled) {
+    background: var(--bg-panel);
+    color: var(--text-gold-light);
+    border-color: var(--text-gold);
+  }
+
+  .battle-action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .damage-pop {
+    position: absolute;
+    font-size: 18px;
+    font-weight: bold;
+    pointer-events: none;
+    animation: damagePop 1s ease-out forwards;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.8);
+    z-index: 100;
+  }
+
+  @keyframes damagePop {
+    0% { transform: translateY(0) scale(0.5); opacity: 1; }
+    50% { transform: translateY(-30px) scale(1.2); }
+    100% { transform: translateY(-50px) scale(1); opacity: 0; }
+  }
+
+  .damage-pop.heal { color: var(--xp-green); }
+  .damage-pop.damage { color: var(--hp-red); }
+  .damage-pop.mp { color: var(--mp-blue); }
+  .damage-pop.crit { color: var(--text-gold); font-size: 24px; }
+
+  .shake { animation: shake 0.3s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  /* INVENTORY & MENU MODALS */
+  .modal-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 500;
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--bg-panel-2);
+    border: 4px solid var(--border-light);
+    box-shadow: 0 0 0 4px var(--border-dark), 0 0 40px rgba(0,0,0,0.8);
+    padding: 16px;
+    min-width: 500px;
+    max-width: 800px;
+    max-height: 600px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid var(--border-dark);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+
+  .modal-title {
+    font-size: 14px;
+    color: var(--text-gold);
+  }
+
+  .modal-close {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    padding: 6px 10px;
+    background: var(--crimson);
+    color: white;
+    border: 2px solid var(--border-dark);
+    cursor: pointer;
+  }
+
+  .modal-body {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .modal-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .modal-tab {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 8px 14px;
+    background: var(--bg-deep);
+    color: var(--text-secondary);
+    border: 2px solid var(--border-dark);
+    cursor: pointer;
+  }
+
+  .modal-tab.active {
+    background: var(--bg-panel);
+    color: var(--text-gold-light);
+    border-color: var(--text-gold);
+  }
+
+  .item-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+
+  .item-slot {
+    aspect-ratio: 1;
+    background: var(--bg-deep);
+    border: 2px solid var(--border-dark);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 4px;
+    position: relative;
+  }
+
+  .item-slot:hover {
+    border-color: var(--text-gold);
+    background: var(--bg-panel);
+  }
+
+  .item-slot.equipped {
+    border-color: var(--text-gold);
+    background: rgba(244, 180, 27, 0.1);
+  }
+
+  .item-icon { font-size: 24px; }
+  .item-count {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 8px;
+    color: var(--text-gold-light);
+  }
+  .item-name-small {
+    font-size: 7px;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .item-detail {
+    margin-top: 12px;
+    padding: 10px;
+    background: var(--bg-deep);
+    border: 2px solid var(--border-dark);
+    font-size: 9px;
+    line-height: 1.8;
+  }
+
+  .item-detail .item-title {
+    color: var(--text-gold-light);
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+
+  .item-detail .item-desc {
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .item-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .item-action-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 8px 14px;
+    background: var(--bg-panel-2);
+    color: var(--text-primary);
+    border: 2px solid var(--border-dark);
+    cursor: pointer;
+  }
+
+  .item-action-btn:hover {
+    background: var(--bg-panel);
+    color: var(--text-gold-light);
+    border-color: var(--text-gold);
+  }
+
+  /* QUEST MODAL */
+  .quest-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .quest-item {
+    padding: 10px;
+    background: var(--bg-deep);
+    border: 2px solid var(--border-dark);
+    cursor: pointer;
+  }
+
+  .quest-item:hover {
+    border-color: var(--text-gold);
+  }
+
+  .quest-item.completed {
+    opacity: 0.6;
+  }
+
+  .quest-item.active-quest {
+    border-color: var(--xp-green);
+  }
+
+  .quest-name {
+    font-size: 10px;
+    color: var(--text-gold-light);
+    margin-bottom: 4px;
+  }
+
+  .quest-item.completed .quest-name {
+    text-decoration: line-through;
+  }
+
+  .quest-desc {
+    font-size: 8px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .quest-objectives {
+    margin-top: 6px;
+    font-size: 8px;
+    color: var(--text-primary);
+  }
+
+  .quest-objective {
+    padding-left: 12px;
+    color: var(--text-secondary);
+    position: relative;
+  }
+
+  .quest-objective.done { color: var(--xp-green); }
+  .quest-objective::before {
+    content: '▫';
+    position: absolute;
+    left: 0;
+  }
+  .quest-objective.done::before { content: '▪'; color: var(--xp-green); }
+
+  .quest-rewards {
+    margin-top: 6px;
+    font-size: 8px;
+    color: var(--text-gold);
+  }
+
+  /* SHOP */
+  .shop-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .shop-section h3 {
+    font-size: 11px;
+    color: var(--text-gold);
+    margin-bottom: 8px;
+    border-bottom: 2px solid var(--border-dark);
+    padding-bottom: 4px;
+  }
+
+  .shop-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .shop-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    background: var(--bg-deep);
+    border: 2px solid var(--border-dark);
+    cursor: pointer;
+    font-size: 9px;
+  }
+
+  .shop-item:hover {
+    border-color: var(--text-gold);
+  }
+
+  .shop-item-price {
+    color: var(--text-gold-light);
+  }
+
+  .gold-display {
+    font-size: 11px;
+    color: var(--text-gold);
+    padding: 6px 10px;
+    background: var(--bg-deep);
+    border: 2px solid var(--border-dark);
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  /* DIALOG */
+  #dialog-box {
+    position: absolute;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    background: var(--bg-panel-2);
+    border: 4px solid var(--border-light);
+    box-shadow: 0 0 0 4px var(--border-dark);
+    padding: 16px 20px;
+    z-index: 200;
+    display: none;
+  }
+
+  #dialog-box.active { display: block; }
+
+  .dialog-speaker {
+    font-size: 11px;
+    color: var(--text-gold-light);
+    margin-bottom: 8px;
+  }
+
+  .dialog-text {
+    font-size: 10px;
+    line-height: 1.8;
+    color: var(--text-primary);
+    min-height: 48px;
+  }
+
+  .dialog-continue {
+    font-size: 8px;
+    color: var(--text-secondary);
+    text-align: right;
+    margin-top: 8px;
+    animation: blink 1s infinite;
+  }
+
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+  }
+
+  .dialog-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .dialog-choice {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 8px 12px;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    border: 2px solid var(--border-dark);
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .dialog-choice:hover {
+    border-color: var(--text-gold);
+    color: var(--text-gold-light);
+  }
+
+  /* SAVE SLOTS */
+  .save-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .save-slot {
+    padding: 12px 16px;
+    background: var(--bg-deep);
+    border: 3px solid var(--border-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .save-slot:hover {
+    border-color: var(--text-gold);
+  }
+
+  .save-slot-info {
+    font-size: 9px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+  }
+
+  .save-slot-info .slot-name {
+    color: var(--text-gold-light);
+    font-size: 11px;
+  }
+
+  .save-slot-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .empty-slot {
+    color: var(--border-light);
+    font-style: italic;
+  }
+
+  /* GAME OVER */
+  #gameover-screen {
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,0.9);
+  }
+
+  .gameover-title {
+    font-size: 48px;
+    color: var(--hp-red);
+    text-shadow: 4px 4px 0 var(--crimson), 8px 8px 0 rgba(0,0,0,0.8);
+    margin-bottom: 30px;
+    animation: gameoverShake 0.5s;
+  }
+
+  @keyframes gameoverShake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+  }
+
+  /* VICTORY */
+  #victory-screen {
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(180deg, #29366f 0%, #5d275d 50%, #f4b41b 100%);
+  }
+
+  .victory-title {
+    font-size: 36px;
+    color: var(--text-gold);
+    text-shadow: 4px 4px 0 var(--crimson), 8px 8px 0 rgba(0,0,0,0.5);
+    margin-bottom: 20px;
+  }
+
+  .victory-text {
+    font-size: 12px;
+    color: var(--text-primary);
+    margin-bottom: 40px;
+    text-align: center;
+    line-height: 2;
+  }
+
+  /* MAP OVERLAY */
+  #map-overlay {
+    position: absolute;
+    top: 40px;
+    right: 10px;
+    width: 150px;
+    height: 150px;
+    background: rgba(0,0,0,0.8);
+    border: 2px solid var(--border-dark);
+    z-index: 20;
+    display: none;
+    padding: 4px;
+  }
+
+  #map-overlay.active { display: block; }
+
+  #map-canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-deep); }
+  ::-webkit-scrollbar-thumb { background: var(--border-dark); border: 1px solid var(--border-light); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+  /* Controls hint */
+  .controls-hint {
+    position: absolute;
+    bottom: 4px;
+    right: 8px;
+    font-size: 7px;
+    color: var(--border-light);
+    z-index: 10;
+  }
+
+  /* Level up effect */
+  .levelup-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle, rgba(244,180,27,0.3) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 300;
+    animation: levelupFlash 2s ease-out forwards;
+  }
+
+  @keyframes levelupFlash {
+    0% { opacity: 0; }
+    20% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .levelup-text {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 32px;
+    color: var(--text-gold);
+    text-shadow: 4px 4px 0 var(--crimson);
+    pointer-events: none;
+    z-index: 301;
+    animation: levelupText 2s ease-out forwards;
+  }
+
+  @keyframes levelupText {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    30% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+    70% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<div id="game-container">
+
+  <!-- TITLE SCREEN -->
+  <div id="title-screen" class="screen active">
+    <div class="title-logo">PIXEL QUEST</div>
+    <div class="title-sub">— DRAGON'S AWAKENING —</div>
+    <div class="title-menu">
+      <button class="pixel-btn gold" onclick="showScreen('char-screen')">⚔ NEW GAME</button>
+      <button class="pixel-btn" onclick="showLoadScreen()">📂 CONTINUE</button>
+      <button class="pixel-btn" onclick="showCredits()">❓ HELP</button>
+    </div>
+    <div style="margin-top:60px;font-size:8px;color:#566c86;">
+      WASD / ARROWS: Move | SPACE/ENTER: Confirm | ESC: Menu
+    </div>
+  </div>
+
+  <!-- CHARACTER SELECT -->
+  <div id="char-screen" class="screen">
+    <div class="screen-header">CHOOSE YOUR CLASS</div>
+    <div class="class-grid" id="class-grid"></div>
+    <div class="name-input">
+      <span style="font-size:10px;color:#94b0c2;">NAME:</span>
+      <input type="text" id="char-name" maxlength="10" value="HERO">
+      <button class="pixel-btn gold" onclick="startGame()">▶ BEGIN ADVENTURE</button>
+    </div>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="pixel-btn" onclick="showScreen('title-screen')">← BACK</button>
+    </div>
+  </div>
+
+  <!-- EXPLORE SCREEN (Main Game) -->
+  <div id="explore-screen" class="screen">
+    <div class="stats-panel">
+      <div class="panel-title">⚔ CHARACTER</div>
+      <div class="char-name-display" id="stat-name">HERO</div>
+      <div class="char-level" id="stat-class-level">Lv.1 Warrior</div>
+
+      <div class="bar-container">
+        <div class="bar-label"><span>HP</span><span id="stat-hp-text">150/150</span></div>
+        <div class="bar"><div class="bar-fill hp" id="stat-hp-bar" style="width:100%"></div></div>
+      </div>
+
+      <div class="bar-container">
+        <div class="bar-label"><span>MP</span><span id="stat-mp-text">20/20</span></div>
+        <div class="bar"><div class="bar-fill mp" id="stat-mp-bar" style="width:100%"></div></div>
+      </div>
+
+      <div class="bar-container">
+        <div class="bar-label"><span>EXP</span><span id="stat-xp-text">0/150</span></div>
+        <div class="bar"><div class="bar-fill xp" id="stat-xp-bar" style="width:0%"></div></div>
+      </div>
+
+      <div class="panel-title">📊 STATS</div>
+      <div class="mini-stats">
+        <div class="mini-stat"><span>STR</span><span id="stat-str">15</span></div>
+        <div class="mini-stat"><span>DEF</span><span id="stat-def">12</span></div>
+        <div class="mini-stat"><span>INT</span><span id="stat-int">5</span></div>
+        <div class="mini-stat"><span>AGI</span><span id="stat-agi">10</span></div>
+        <div class="mini-stat"><span>LUK</span><span id="stat-luk">5</span></div>
+        <div class="mini-stat"><span>💰</span><span id="stat-gold">0</span></div>
+      </div>
+
+      <div class="panel-title equipped-panel">🛡 EQUIPPED</div>
+      <div class="equip-slot"><span>Weapon</span><span class="item-name" id="equip-weapon">None</span></div>
+      <div class="equip-slot"><span>Armor</span><span class="item-name" id="equip-armor">None</span></div>
+      <div class="equip-slot"><span>Acc.</span><span class="item-name" id="equip-accessory">None</span></div>
+    </div>
+
+    <div class="canvas-area">
+      <div class="location-name" id="location-name">🌳 Greenleaf Village</div>
+      <canvas id="game-canvas" width="600" height="480"></canvas>
+      <div id="map-overlay">
+        <canvas id="map-canvas" width="142" height="142"></canvas>
+      </div>
+      <div class="controls-hint" id="controls-hint">WASD: Move | E: Interact</div>
+    </div>
+
+    <div class="action-panel">
+      <div class="panel-title">📋 ACTIONS</div>
+      <button class="action-btn" onclick="openInventory()">🎒 INVENTORY</button>
+      <button class="action-btn" onclick="openQuests()">📜 QUESTS</button>
+      <button class="action-btn" onclick="openStatus()">📊 STATUS</button>
+      <button class="action-btn" onclick="toggleMap()">🗺 MAP</button>
+      <button class="action-btn" onclick="openSaveMenu()">💾 SAVE</button>
+      <div style="flex:1"></div>
+      <button class="action-btn" onclick="restAtInn()" id="inn-btn">🏨 REST (20G)</button>
+      <button class="action-btn" onclick="returnToTitle()">🚪 QUIT</button>
+    </div>
+
+    <div class="log-panel" id="game-log"></div>
+  </div>
+
+  <!-- BATTLE SCREEN -->
+  <div id="battle-screen" class="screen">
+    <div class="battle-arena" id="battle-arena">
+      <div class="battle-enemy-area" id="enemy-area"></div>
+      <div class="battle-player-area" id="player-battle-area"></div>
+    </div>
+    <div class="battle-log" id="battle-log"></div>
+    <div class="battle-actions" id="battle-actions">
+      <button class="battle-action-btn" onclick="battleAttack()">⚔ ATTACK</button>
+      <button class="battle-action-btn" onclick="showSkills()">✨ SKILLS</button>
+      <button class="battle-action-btn" onclick="showBattleItems()">🧪 ITEMS</button>
+      <button class="battle-action-btn" onclick="battleDefend()">🛡 DEFEND</button>
+      <div class="sub-menu" id="battle-submenu" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- DIALOG BOX -->
+  <div id="dialog-box">
+    <div class="dialog-speaker" id="dialog-speaker">NPC</div>
+    <div class="dialog-text" id="dialog-text"></div>
+    <div class="dialog-continue" id="dialog-continue">▼ SPACE to continue</div>
+    <div class="dialog-choices" id="dialog-choices"></div>
+  </div>
+
+  <!-- INVENTORY MODAL -->
+  <div class="modal-overlay" id="inventory-modal">
+    <div class="modal" style="width:600px;">
+      <div class="modal-header">
+        <div class="modal-title">🎒 INVENTORY</div>
+        <button class="modal-close" onclick="closeInventory()">✕</button>
+      </div>
+      <div class="modal-tabs">
+        <div class="modal-tab active" onclick="switchInvTab('all')">ALL</div>
+        <div class="modal-tab" onclick="switchInvTab('weapon')">WEAPONS</div>
+        <div class="modal-tab" onclick="switchInvTab('armor')">ARMOR</div>
+        <div class="modal-tab" onclick="switchInvTab('consumable')">ITEMS</div>
+        <div class="modal-tab" onclick="switchInvTab('key')">KEY</div>
+      </div>
+      <div class="modal-body">
+        <div class="item-grid" id="inventory-grid"></div>
+        <div class="item-detail" id="item-detail" style="display:none;">
+          <div class="item-title" id="detail-name"></div>
+          <div class="item-desc" id="detail-desc"></div>
+          <div id="detail-stats"></div>
+          <div class="item-actions" id="detail-actions"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUEST MODAL -->
+  <div class="modal-overlay" id="quest-modal">
+    <div class="modal" style="width:500px;">
+      <div class="modal-header">
+        <div class="modal-title">📜 QUESTS</div>
+        <button class="modal-close" onclick="closeQuests()">✕</button>
+      </div>
+      <div class="modal-tabs">
+        <div class="modal-tab active" onclick="switchQuestTab('active')">ACTIVE</div>
+        <div class="modal-tab" onclick="switchQuestTab('completed')">COMPLETED</div>
+        <div class="modal-tab" onclick="switchQuestTab('available')">AVAILABLE</div>
+      </div>
+      <div class="modal-body">
+        <div class="quest-list" id="quest-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS MODAL -->
+  <div class="modal-overlay" id="status-modal">
+    <div class="modal" style="width:450px;">
+      <div class="modal-header">
+        <div class="modal-title">📊 STATUS</div>
+        <button class="modal-close" onclick="closeStatus()">✕</button>
+      </div>
+      <div class="modal-body" id="status-body"></div>
+    </div>
+  </div>
+
+  <!-- SHOP MODAL -->
+  <div class="modal-overlay" id="shop-modal">
+    <div class="modal" style="width:650px;">
+      <div class="modal-header">
+        <div class="modal-title">🏪 SHOP</div>
+        <button class="modal-close" onclick="closeShop()">✕</button>
+      </div>
+      <div class="gold-display" id="shop-gold">💰 GOLD: 0</div>
+      <div class="modal-body">
+        <div class="shop-layout">
+          <div class="shop-section">
+            <h3>🛒 BUY</h3>
+            <div class="shop-items" id="shop-buy"></div>
+          </div>
+          <div class="shop-section">
+            <h3>💰 SELL</h3>
+            <div class="shop-items" id="shop-sell"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVE MODAL -->
+  <div class="modal-overlay" id="save-modal">
+    <div class="modal" style="width:500px;">
+      <div class="modal-header">
+        <div class="modal-title">💾 SAVE / LOAD</div>
+        <button class="modal-close" onclick="closeSaveMenu()">✕</button>
+      </div>
+      <div class="modal-tabs">
+        <div class="modal-tab active" onclick="switchSaveTab('save')">SAVE</div>
+        <div class="modal-tab" onclick="switchSaveTab('load')">LOAD</div>
+      </div>
+      <div class="modal-body">
+        <div class="save-slots" id="save-slots"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div id="gameover-screen" class="screen">
+    <div class="gameover-title">GAME OVER</div>
+    <div style="margin-bottom:30px;font-size:12px;color:#94b0c2;">You have fallen in battle...</div>
+    <div class="title-menu">
+      <button class="pixel-btn gold" onclick="loadLastSave()">📂 CONTINUE</button>
+      <button class="pixel-btn" onclick="showScreen('title-screen');closeAllModals()">🏠 TITLE</button>
+    </div>
+  </div>
+
+  <!-- VICTORY -->
+  <div id="victory-screen" class="screen">
+    <div class="victory-title">✨ VICTORY! ✨</div>
+    <div class="victory-text">
+      You have defeated the ancient dragon!<br>
+      Peace returns to the kingdom.<br>
+      <span style="color:#f4b41b;">You are a true hero!</span>
+    </div>
+    <div class="title-menu">
+      <button class="pixel-btn gold" onclick="showScreen('title-screen');closeAllModals()">🏠 TITLE SCREEN</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// PIXEL QUEST RPG - Game Engine
+// ============================================================
+
+// --- GAME STATE ---
+const GameState = {
+  TITLE: 'title',
+  CHAR_SELECT: 'char_select',
+  EXPLORE: 'explore',
+  BATTLE: 'battle',
+  DIALOG: 'dialog',
+  GAME_OVER: 'game_over',
+  VICTORY: 'victory'
+};
+
+let currentState = GameState.TITLE;
+let selectedClass = 'warrior';
+
+// --- PLAYER DATA ---
+let player = null;
+
+const CLASS_DATA = {
+  warrior: {
+    name: 'Warrior',
+    sprite: '⚔️',
+    desc: 'Master of melee combat. High HP and defense.',
+    hp: 150, mp: 20,
+    str: 15, def: 12, int: 5, agi: 8, luk: 5,
+    skills: ['power_strike', 'shield_bash', 'war_cry'],
+    growth: { hp: 18, mp: 3, str: 3, def: 3, int: 1, agi: 1, luk: 1 }
+  },
+  mage: {
+    name: 'Mage',
+    sprite: '🧙',
+    desc: 'Wielder of arcane magic. Powerful spells.',
+    hp: 80, mp: 120,
+    str: 5, def: 5, int: 18, agi: 8, luk: 7,
+    skills: ['fireball', 'ice_lance', 'heal'],
+    growth: { hp: 8, mp: 15, str: 1, def: 1, int: 4, agi: 1, luk: 2 }
+  },
+  ranger: {
+    name: 'Ranger',
+    sprite: '🏹',
+    desc: 'Swift archer of the woods. Balanced stats.',
+    hp: 100, mp: 60,
+    str: 10, def: 8, int: 10, agi: 14, luk: 10,
+    skills: ['arrow_storm', 'poison_shot', 'focus'],
+    growth: { hp: 12, mp: 8, str: 2, def: 2, int: 2, agi: 3, luk: 2 }
+  },
+  rogue: {
+    name: 'Rogue',
+    sprite: '🗡️',
+    desc: 'Shadow warrior. High crit and agility.',
+    hp: 90, mp: 50,
+    str: 12, def: 7, int: 12, agi: 15, luk: 12,
+    skills: ['backstab', 'poison_blade', 'steal'],
+    growth: { hp: 10, mp: 6, str: 3, def: 2, int: 2, agi: 3, luk: 3 }
+  }
+};
+
+// --- ITEM DATABASE ---
+const ITEMS = {
+  // Weapons
+  iron_sword:    { id:'iron_sword', name:'Iron Sword', type:'weapon', slot:'weapon', atk:5, value:50, desc:'A basic iron sword.', icon:'🗡️', stackable:false },
+  steel_blade:   { id:'steel_blade', name:'Steel Blade', type:'weapon', slot:'weapon', atk:12, value:180, desc:'A finely crafted steel sword.', icon:'⚔️', stackable:false },
+  fire_sword:    { id:'fire_sword', name:'Flame Sword', type:'weapon', slot:'weapon', atk:20, int:5, value:500, desc:'Sword wreathed in flames.', icon:'🔥', stackable:false },
+  crystal_staff: { id:'crystal_staff', name:'Crystal Staff', type:'weapon', slot:'weapon', int:18, atk:3, value:400, desc:'Boosts magical power.', icon:'🔮', stackable:false },
+  longbow:       { id:'longbow', name:'Longbow', type:'weapon', slot:'weapon', atk:14, agi:5, value:200, desc:'A sturdy wooden bow.', icon:'🏹', stackable:false },
+  shadow_dagger: { id:'shadow_dagger', name:'Shadow Dagger', type:'weapon', slot:'weapon', atk:10, agi:8, luk:5, value:350, desc:'A dagger from the shadow realm.', icon:'🔪', stackable:false },
+  hero_sword:    { id:'hero_sword', name:'Hero\'s Sword', type:'weapon', slot:'weapon', atk:30, def:5, luk:10, value:9999, desc:'The legendary hero\'s blade.', icon:'✨', stackable:false },
+
+  // Armor
+  leather_armor:  { id:'leather_armor', name:'Leather Armor', type:'armor', slot:'armor', def:5, value:40, desc:'Basic leather protection.', icon:'🥋', stackable:false },
+  chain_mail:     { id:'chain_mail', name:'Chain Mail', type:'armor', slot:'armor', def:12, value:150, desc:'Interlocking metal rings.', icon:'⛓️', stackable:false },
+  plate_armor:    { id:'plate_armor', name:'Plate Armor', type:'armor', slot:'armor', def:25, hpMax:30, value:450, desc:'Heavy protective plating.', icon:'🛡️', stackable:false },
+  mage_robes:     { id:'mage_robes', name:'Mage Robes', type:'armor', slot:'armor', int:10, mpMax:30, def:3, value:300, desc:'Flowing arcane robes.', icon:'👘', stackable:false },
+  ranger_cloak:   { id:'ranger_cloak', name:'Ranger Cloak', type:'armor', slot:'armor', def:7, agi:8, value:180, desc:'A camouflaged forest cloak.', icon:'🧥', stackable:false },
+  dragon_armor:   { id:'dragon_armor', name:'Dragon Scale', type:'armor', slot:'armor', def:35, hpMax:50, value:9999, desc:'Armor forged from dragon scales.', icon:'🐉', stackable:false },
+
+  // Accessories
+  power_ring:     { id:'power_ring', name:'Power Ring', type:'armor', slot:'accessory', str:5, value:200, desc:'Boosts strength.', icon:'💍', stackable:false },
+  wise_amulet:    { id:'wise_amulet', name:'Wise Amulet', type:'armor', slot:'accessory', int:8, mpMax:20, value:250, desc:'Boosts intelligence.', icon:'📿', stackable:false },
+  lucky_charm:    { id:'lucky_charm', name:'Lucky Charm', type:'armor', slot:'accessory', luk:15, value:180, desc:'Brings good fortune.', icon:'🍀', stackable:false },
+
+  // Consumables
+  hp_potion:     { id:'hp_potion', name:'Health Potion', type:'consumable', hp:50, value:20, desc:'Restores 50 HP.', icon:'🧪', stackable:true },
+  hp_potion_big: { id:'hp_potion_big', name:'Hi-Potion', type:'consumable', hp:150, value:80, desc:'Restores 150 HP.', icon:'🍷', stackable:true },
+  mp_potion:     { id:'mp_potion', name:'Mana Potion', type:'consumable', mp:30, value:25, desc:'Restores 30 MP.', icon:'💧', stackable:true },
+  mp_potion_big: { id:'mp_potion_big', name:'Ether', type:'consumable', mp:100, value:100, desc:'Restores 100 MP.', icon:'💎', stackable:true },
+  elixir:        { id:'elixir', name:'Elixir', type:'consumable', hp:999, mp:999, value:500, desc:'Fully restores HP & MP.', icon:'✨', stackable:true },
+  antidote:      { id:'antidote', name:'Antidote', type:'consumable', cure:['poison','burn'], value:15, desc:'Cures poison and burn.', icon:'🌿', stackable:true },
+  bomb:          { id:'bomb', name:'Bomb', type:'consumable', damage:60, value:40, desc:'Deals 60 damage to all enemies.', icon:'💣', stackable:true },
+
+  // Key Items
+  ancient_key:   { id:'ancient_key', name:'Ancient Key', type:'key', value:0, desc:'A mysterious ancient key.', icon:'🗝️', stackable:false },
+  dragon_scale:  { id:'dragon_scale', name:'Dragon Scale', type:'key', value:0, desc:'A scale from the great dragon.', icon:'🐲', stackable:false },
+  magic_crystal: { id:'magic_crystal', name:'Magic Crystal', type:'key', value:0, desc:'A crystal pulsing with magic.', icon:'💠', stackable:false },
+  hero_medal:    { id:'hero_medal', name:'Hero\'s Medal', type:'key', value:0, desc:'Proof of your heroism.', icon:'🏅', stackable:false }
+};
+
+// --- SKILL DATABASE ---
+const SKILLS = {
+  // Warrior
+  power_strike: { name:'Power Strike', mpCost:8, damage:1.8, type:'physical', desc:'A powerful strike dealing 1.8x damage.' },
+  shield_bash:   { name:'Shield Bash', mpCost:10, damage:1.2, type:'physical', status:'stun', desc:'Stuns the enemy for 1 turn.' },
+  war_cry:       { name:'War Cry', mpCost:15, buff:'atk', amount:5, turns:3, type:'buff', desc:'Boosts attack for 3 turns.' },
+  // Mage
+  fireball:      { name:'Fireball', mpCost:12, damage:2.0, type:'magic', status:'burn', desc:'Hurls a fireball. May burn.' },
+  ice_lance:     { name:'Ice Lance', mpCost:15, damage:2.5, type:'magic', desc:'A piercing lance of ice.' },
+  heal:          { name:'Heal', mpCost:20, heal:80, type:'heal', desc:'Restores 80 HP.' },
+  // Ranger
+  arrow_storm:   { name:'Arrow Storm', mpCost:15, damage:1.0, type:'physical', aoe:true, desc:'Fires arrows at all enemies.' },
+  poison_shot:   { name:'Poison Shot', mpCost:10, damage:1.0, type:'physical', status:'poison', desc:'Poisons the target.' },
+  focus:         { name:'Focus', mpCost:12, buff:'agi', amount:8, turns:3, type:'buff', desc:'Boosts agility/crit chance.' },
+  // Rogue
+  backstab:      { name:'Backstab', mpCost:10, damage:1.5, type:'physical', critBonus:50, desc:'High critical hit chance.' },
+  poison_blade:  { name:'Poison Blade', mpCost:12, damage:1.3, type:'physical', status:'poison', desc:'A poisoned strike.' },
+  steal:         { name:'Steal', mpCost:5, type:'steal', desc:'Attempt to steal gold from the enemy.' }
+};
+
+// --- ENEMY DATABASE ---
+const ENEMIES = {
+  slime: {
+    id:'slime', name:'Green Slime', sprite:'🟢',
+    hp:30, atk:8, def:2, int:2, agi:5,
+    expReward:15, goldReward:[3, 8],
+    loot:[{item:'hp_potion', rate:0.3}],
+    ai:'balanced', statuses:[]
+  },
+  goblin: {
+    id:'goblin', name:'Goblin', sprite:'👺',
+    hp:55, atk:14, def:5, int:3, agi:10,
+    expReward:30, goldReward:[10, 25],
+    loot:[{item:'hp_potion', rate:0.4},{item:'iron_sword', rate:0.05}],
+    ai:'aggressive', statuses:[]
+  },
+  wolf: {
+    id:'wolf', name:'Wild Wolf', sprite:'🐺',
+    hp:45, atk:16, def:3, int:2, agi:14,
+    expReward:25, goldReward:[5, 15],
+    loot:[{item:'hp_potion', rate:0.2}],
+    ai:'aggressive', statuses:[]
+  },
+  skeleton: {
+    id:'skeleton', name:'Skeleton', sprite:'💀',
+    hp:75, atk:20, def:8, int:5, agi:8,
+    expReward:55, goldReward:[20, 40],
+    loot:[{item:'mp_potion', rate:0.3},{item:'chain_mail', rate:0.05}],
+    ai:'balanced', statuses:[]
+  },
+  orc: {
+    id:'orc', name:'Orc Warrior', sprite:'👹',
+    hp:130, atk:28, def:15, int:5, agi:7,
+    expReward:90, goldReward:[40, 70],
+    loot:[{item:'hp_potion_big', rate:0.4},{item:'steel_blade', rate:0.1}],
+    ai:'aggressive', statuses:[]
+  },
+  dark_mage: {
+    id:'dark_mage', name:'Dark Mage', sprite:'🧛',
+    hp:90, atk:10, def:6, int:30, agi:12,
+    expReward:100, goldReward:[50, 80],
+    loot:[{item:'mp_potion_big', rate:0.5},{item:'crystal_staff', rate:0.08}],
+    ai:'defensive', statuses:[],
+    skills:['fireball','ice_lance']
+  },
+  gargoyle: {
+    id:'gargoyle', name:'Gargoyle', sprite:'🗿',
+    hp:180, atk:25, def:25, int:10, agi:5,
+    expReward:120, goldReward:[60, 100],
+    loot:[{item:'plate_armor', rate:0.1}],
+    ai:'defensive', statuses:[]
+  },
+  dragon: {
+    id:'dragon', name:'Ancient Dragon', sprite:'🐉',
+    hp:400, atk:45, def:28, int:35, agi:12,
+    expReward:500, goldReward:[300, 500],
+    loot:[{item:'dragon_scale', rate:1.0},{item:'hero_sword', rate:0.5}],
+    ai:'balanced', statuses:[],
+    skills:['fireball'],
+    isBoss:true
+  }
+};
+
+// --- WORLD / LOCATIONS ---
+const LOCATIONS = {
+  village: {
+    id:'village', name:'🌳 Greenleaf Village', bgColor:'#257179', groundColor:'#38b764',
+    type:'town', safe:true,
+    npcs: [
+      {id:'elder', name:'Village Elder', sprite:'👴', x:300, y:200, dialog:'elder_greeting'},
+      {id:'merchant', name:'Merchant', sprite:'🧔', x:450, y:250, dialog:'merchant_greeting', shop:true},
+      {id:'innkeeper', name:'Innkeeper', sprite:'👩‍🍳', x:150, y:280, dialog:'innkeeper_greeting', inn:true},
+      {id:'quest_giver', name:'Townsman', sprite:'🧑', x:350, y:350, dialog:'quest_goblin'}
+    ],
+    connections: { north: 'forest_path' },
+    encounterRate: 0
+  },
+  forest_path: {
+    id:'forest_path', name:'🌲 Whispering Forest', bgColor:'#1a3d1a', groundColor:'#2d5a2d',
+    type:'dungeon', safe:false,
+    enemies: ['slime', 'goblin', 'wolf'],
+    encounterRate: 0.15,
+    connections: { south: 'village', north: 'forest_deep', east: 'mountain_foot' },
+    npcs: []
+  },
+  forest_deep: {
+    id:'forest_deep', name:'🌑 Deep Forest', bgColor:'#0d2010', groundColor:'#1a3a1a',
+    type:'dungeon', safe:false,
+    enemies: ['goblin', 'wolf', 'skeleton'],
+    encounterRate: 0.2,
+    connections: { south: 'forest_path', north: 'cave_entrance' },
+    npcs: []
+  },
+  mountain_foot: {
+    id:'mountain_foot', name:'⛰️ Mountain Foothills', bgColor:'#4a3a2a', groundColor:'#7a6a5a',
+    type:'dungeon', safe:false,
+    enemies: ['orc', 'skeleton'],
+    encounterRate: 0.18,
+    connections: { west: 'forest_path', north: 'mountain_pass' },
+    npcs: []
+  },
+  mountain_pass: {
+    id:'mountain_pass', name:'🏔️ Mountain Pass', bgColor:'#3a4a5a', groundColor:'#6a7a8a',
+    type:'dungeon', safe:false,
+    enemies: ['orc', 'gargoyle', 'dark_mage'],
+    encounterRate: 0.22,
+    connections: { south: 'mountain_foot', north: 'dragon_lair' },
+    npcs: []
+  },
+  cave_entrance: {
+    id:'cave_entrance', name:'🕳️ Ancient Cave', bgColor:'#1a1a2e', groundColor:'#2a2a4e',
+    type:'dungeon', safe:false,
+    enemies: ['skeleton', 'dark_mage'],
+    encounterRate: 0.2,
+    connections: { south: 'forest_deep' },
+    npcs: [{id:'sage', name:'Old Sage', sprite:'🧙‍♂️', x:300, y:200, dialog:'sage_greeting'}]
+  },
+  dragon_lair: {
+    id:'dragon_lair', name:'🔥 Dragon\'s Lair', bgColor:'#3a1a1a', groundColor:'#5a2a2a',
+    type:'boss', safe:false,
+    enemies: ['dragon'],
+    encounterRate: 0,
+    boss: 'dragon',
+    connections: { south: 'mountain_pass' },
+    npcs: []
+  }
+};
+
+// --- DIALOGUE DATA ---
+const DIALOGUES = {
+  elder_greeting: [
+    { speaker:'Village Elder', text:'Welcome, brave adventurer, to Greenleaf Village.' },
+    { speaker:'Village Elder', text:'Our peaceful village is threatened by the ancient dragon in the mountains.' },
+    { speaker:'Village Elder', text:'Will you help us defeat the dragon and bring peace back to the land?' },
+    { choices: [
+        { text:'I will help you! (Accept Main Quest)', action:'accept_main_quest' },
+        { text:'I need more information.', action:'elder_more' },
+        { text:'Maybe later...', action:'close' }
+      ]}
+  ],
+  elder_more: [
+    { speaker:'Village Elder', text:'The dragon resides at the peak of the northern mountains.' },
+    { speaker:'Village Elder', text:'The path is dangerous, filled with goblins, orcs, and worse.' },
+    { speaker:'Village Elder', text:'But I believe you have what it takes to become a true hero!' },
+    { speaker:'Village Elder', text:'Speak to the merchant for supplies, and rest at the inn if you need.' },
+    { choices: [
+        { text:'I accept the quest!', action:'accept_main_quest' },
+        { text:'Goodbye.', action:'close' }
+      ]}
+  ],
+  merchant_greeting: [
+    { speaker:'Merchant', text:'Welcome to my shop! Looking for something special?' },
+    { choices: [
+        { text:'Show me your wares.', action:'open_shop' },
+        { text:'Goodbye.', action:'close' }
+      ]}
+  ],
+  innkeeper_greeting: [
+    { speaker:'Innkeeper', text:'Stay at our inn! Rest fully for only 20 gold!' },
+    { choices: [
+        { text:'Rest (20 Gold)', action:'rest_inn' },
+        { text:'Maybe later.', action:'close' }
+      ]}
+  ],
+  quest_goblin: [
+    { speaker:'Townsman', text:'Oh no! Goblins have been raiding our supplies from the forest!' },
+    { speaker:'Townsman', text:'If someone could clear out a few goblins, I\'d reward them handsomely.' },
+    { choices: [
+        { text:'I\'ll handle it! (Kill 5 Goblins)', action:'accept_goblin_quest' },
+        { text:'Not now.', action:'close' }
+      ]}
+  ],
+  quest_goblin_done: [
+    { speaker:'Townsman', text:'You did it! The goblins are dealt with!' },
+    { speaker:'Townsman', text:'Here is your reward, brave warrior!' },
+    { action:'reward_goblin_quest' }
+  ],
+  sage_greeting: [
+    { speaker:'Old Sage', text:'So... you have come to seek my wisdom?' },
+    { speaker:'Old Sage', text:'The dragon you seek is ancient and powerful.' },
+    { speaker:'Old Sage', text:'Only the legendary Hero\'s Sword can truly harm it.' },
+    { speaker:'Old Sage', text:'But obtaining it is not easy...' },
+    { choices: [
+        { text:'Tell me more.', action:'sage_more' },
+        { text:'Goodbye.', action:'close' }
+      ]}
+  ],
+  sage_more: [
+    { speaker:'Old Sage', text:'Travel north through the mountains to the dragon\'s lair.' },
+    { speaker:'Old Sage', text:'Defeat the dragon, and you shall find glory beyond measure.' },
+    { speaker:'Old Sage', text:'Take this Magic Crystal. It may aid you on your journey.' },
+    { action:'give_crystal' }
+  ],
+  main_quest_complete: [
+    { speaker:'Village Elder', text:'The dragon is defeated! You are a true hero!' },
+    { speaker:'Village Elder', text:'The kingdom will remember your name for all time!' },
+    { action:'game_victory' }
+  ]
+};
+
+// --- QUEST DATABASE ---
+const QUESTS = {
+  main_dragon: {
+    id:'main_dragon', name:'The Dragon\'s Awakening', description:'Defeat the ancient dragon terrorizing the kingdom.',
+    type:'main',
+    objectives: [
+      { type:'kill', target:'dragon', count:1, current:0, desc:'Defeat the Ancient Dragon' }
+    ],
+    rewards: { exp:1000, gold:1000, items:['hero_medal'] },
+    status:'available'
+  },
+  goblin_problem: {
+    id:'goblin_problem', name:'Goblin Problem', description:'Clear out goblins from the Whispering Forest.',
+    type:'side',
+    objectives: [
+      { type:'kill', target:'goblin', count:5, current:0, desc:'Defeat 5 Goblins' }
+    ],
+    rewards: { exp:100, gold:100, items:['hp_potion_big'] },
+    status:'available',
+    questGiver:'quest_giver',
+    turnInDialog:'quest_goblin_done'
+  },
+  lost_heirloom: {
+    id:'lost_heirloom', name:'Lost Heirloom', description:'Find the Ancient Key in the Deep Forest.',
+    type:'side',
+    objectives: [
+      { type:'collect', target:'ancient_key', count:1, current:0, desc:'Find the Ancient Key' }
+    ],
+    rewards: { exp:80, gold:150 },
+    status:'available'
+  }
+};
+
+// --- SHOP INVENTORIES ---
+const SHOPS = {
+  village: {
+    name:'Village Shop',
+    buy: ['hp_potion', 'mp_potion', 'antidote', 'iron_sword', 'leather_armor', 'power_ring'],
+    prices: {}
+  }
+};
+
+// --- WORLD STATE ---
+let currentLocation = 'village';
+let playerX = 300;
+let playerY = 300;
+let playerDir = 'down';
+let gameFlags = {};
+let encounteredBoss = false;
+let lastSaveSlot = null;
+
+// --- BATTLE STATE ---
+let battleState = {
+  active: false,
+  enemies: [],
+  turn: 'player',
+  selectedEnemy: 0,
+  defending: false,
+  turnCount: 0,
+  buffs: [],
+  fleeing: false
+};
+
+// --- INPUT ---
+const keys = {};
+let moveCooldown = 0;
+
+// --- CANVAS ---
+let canvas, ctx, mapCanvas, mapCtx;
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+
+function init() {
+  canvas = document.getElementById('game-canvas');
+  ctx = canvas.getContext('2d');
+  mapCanvas = document.getElementById('map-canvas');
+  mapCtx = mapCanvas.getContext('2d');
+
+  setupInput();
+  setupClassSelect();
+  gameLoop();
+  logMessage('Welcome to Pixel Quest RPG!', 'gold');
+}
+
+function setupInput() {
+  document.addEventListener('keydown', (e) => {
+    keys[e.key.toLowerCase()] = true;
+    keys[e.code] = true;
+
+    if (e.key === 'Enter' || e.key === ' ') {
+      handleConfirm();
+      e.preventDefault();
+    }
+    if (e.key === 'Escape') {
+      handleEscape();
+    }
+    if (e.key.toLowerCase() === 'e') {
+      handleInteract();
+    }
+    if (e.key.toLowerCase() === 'm') {
+      toggleMap();
+    }
+    if (e.key.toLowerCase() === 'i') {
+      openInventory();
+    }
+    if (e.key.toLowerCase() === 'q') {
+      openQuests();
+    }
+  });
+
+  document.addEventListener('keyup', (e) => {
+    keys[e.key.toLowerCase()] = false;
+    keys[e.code] = false;
+  });
+}
+
+function setupClassSelect() {
+  const grid = document.getElementById('class-grid');
+  grid.innerHTML = '';
+  for (const [key, cls] of Object.entries(CLASS_DATA)) {
+    const card = document.createElement('div');
+    card.className = `class-card ${key === selectedClass ? 'selected' : ''}`;
+    card.onclick = () => selectClass(key);
+    card.innerHTML = `
+      <div class="class-sprite">${cls.sprite}</div>
+      <div class="class-name">${cls.name.toUpperCase()}</div>
+      <div class="class-desc">${cls.desc}</div>
+      <div class="class-stats">
+        <div class="stat-row"><span>HP</span><span>${cls.hp}</span></div>
+        <div class="stat-row"><span>MP</span><span>${cls.mp}</span></div>
+        <div class="stat-row"><span>STR</span><span>${cls.str}</span></div>
+        <div class="stat-row"><span>DEF</span><span>${cls.def}</span></div>
+        <div class="stat-row"><span>INT</span><span>${cls.int}</span></div>
+        <div class="stat-row"><span>AGI</span><span>${cls.agi}</span></div>
+      </div>
+    `;
+    grid.appendChild(card);
+  }
+}
+
+function selectClass(cls) {
+  selectedClass = cls;
+  setupClassSelect();
+}
+
+// ============================================================
+// SCREEN MANAGEMENT
+// ============================================================
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+
+  if (id === 'explore-screen') {
+    currentState = GameState.EXPLORE;
+    updateUI();
+    drawMap();
+  } else if (id === 'battle-screen') {
+    currentState = GameState.BATTLE;
+  } else if (id === 'title-screen') {
+    currentState = GameState.TITLE;
+  }
+}
+
+function closeAllModals() {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+  document.getElementById('dialog-box').classList.remove('active');
+  document.getElementById('map-overlay').classList.remove('active');
+}
+
+// ============================================================
+// GAME START
+// ============================================================
+
+function startGame() {
+  const name = document.getElementById('char-name').value.trim() || 'HERO';
+  const cls = CLASS_DATA[selectedClass];
+
+  player = {
+    name: name.toUpperCase(),
+    class: selectedClass,
+    className: cls.name,
+    level: 1,
+    exp: 0,
+    expNext: 150,
+    hp: cls.hp, hpMax: cls.hp,
+    mp: cls.mp, mpMax: cls.mp,
+    baseStats: {
+      str: cls.str, def: cls.def, int: cls.int, agi: cls.agi, luk: cls.luk
+    },
+    equipment: { weapon: null, armor: null, accessory: null },
+    inventory: [
+      { id: 'hp_potion', count: 3 },
+      { id: 'mp_potion', count: 2 }
+    ],
+    gold: 50,
+    skills: [...cls.skills],
+    statuses: [],
+    buffs: []
+  };
+
+  currentLocation = 'village';
+  playerX = 300;
+  playerY = 350;
+  gameFlags = {};
+  encounteredBoss = false;
+
+  for (const qid of Object.keys(QUESTS)) {
+    QUESTS[qid].status = qid === 'main_dragon' ? 'available' : 'available';
+    QUESTS[qid].objectives.forEach(o => o.current = 0);
+  }
+
+  logMessage(`${player.name} the ${player.className} begins their adventure!`, 'gold');
+  logMessage('Use WASD or Arrow Keys to move. Press E to interact.', 'cyan');
+
+  showScreen('explore-screen');
+}
+
+// ============================================================
+// GAME LOOP
+// ============================================================
+
+function gameLoop() {
+  update();
+  render();
+  requestAnimationFrame(gameLoop);
+}
+
+function update() {
+  if (currentState === GameState.EXPLORE) {
+    if (moveCooldown > 0) moveCooldown--;
+    handleMovement();
+  }
+}
+
+function handleMovement() {
+  if (moveCooldown > 0) return;
+  if (document.querySelector('.modal-overlay.active')) return;
+  if (document.getElementById('dialog-box').classList.contains('active')) return;
+
+  const speed = 4;
+  let moved = false;
+  let newX = playerX;
+  let newY = playerY;
+
+  if (keys['arrowup'] || keys['w']) { newY -= speed; playerDir = 'up'; moved = true; }
+  else if (keys['arrowdown'] || keys['s']) { newY += speed; playerDir = 'down'; moved = true; }
+  else if (keys['arrowleft'] || keys['a']) { newX -= speed; playerDir = 'left'; moved = true; }
+  else if (keys['arrowright'] || keys['d']) { newX += speed; playerDir = 'right'; moved = true; }
+
+  if (moved) {
+    const loc = LOCATIONS[currentLocation];
+    newX = Math.max(20, Math.min(580, newX));
+    newY = Math.max(40, Math.min(440, newY));
+
+    playerX = newX;
+    playerY = newY;
+    moveCooldown = 3;
+
+    // Check area transitions
+    checkAreaTransitions();
+
+    // Random encounters
+    if (!loc.safe && loc.enemies && loc.encounterRate > 0) {
+      if (Math.random() < loc.encounterRate * 0.05) {
+        triggerRandomEncounter();
+      }
+    }
+
+    // Boss encounter
+    if (loc.boss && !encounteredBoss) {
+      const bossX = 300, bossY = 150;
+      if (Math.abs(playerX - bossX) < 50 && Math.abs(playerY - bossY) < 50) {
+        encounteredBoss = true;
+        startBossBattle(loc.boss);
+      }
+    }
+  }
+}
+
+function checkAreaTransitions() {
+  const loc = LOCATIONS[currentLocation];
+  if (!loc.connections) return;
+
+  if (playerY < 45 && loc.connections.north) {
+    changeLocation(loc.connections.north, 'south');
+  } else if (playerY > 435 && loc.connections.south) {
+    changeLocation(loc.connections.south, 'north');
+  } else if (playerX < 30 && loc.connections.west) {
+    changeLocation(loc.connections.west, 'east');
+  } else if (playerX > 570 && loc.connections.east) {
+    changeLocation(loc.connections.east, 'west');
+  }
+}
+
+function changeLocation(newLoc, fromDir) {
+  currentLocation = newLoc;
+  const loc = LOCATIONS[newLoc];
+
+  if (fromDir === 'south') playerY = 420;
+  else if (fromDir === 'north') playerY = 60;
+  else if (fromDir === 'east') playerX = 50;
+  else if (fromDir === 'west') playerX = 550;
+
+  document.getElementById('location-name').textContent = loc.name;
+  logMessage(`You arrived at ${loc.name}.`, 'cyan');
+
+  if (loc.safe) {
+    logMessage('This is a safe area.', 'green');
+  }
+  drawMap();
+}
+
+function handleInteract() {
+  if (currentState !== GameState.EXPLORE) return;
+  const loc = LOCATIONS[currentLocation];
+  if (!loc.npcs) return;
+
+  for (const npc of loc.npcs) {
+    const dist = Math.abs(playerX - npc.x) + Math.abs(playerY - npc.y);
+    if (dist < 50) {
+      startDialog(npc.dialog, npc);
+      return;
+    }
+  }
+}
+
+function handleConfirm() {
+  const dialogBox = document.getElementById('dialog-box');
+  if (dialogBox.classList.contains('active')) {
+    advanceDialog();
+    return;
+  }
+}
+
+function handleEscape() {
+  const modals = document.querySelectorAll('.modal-overlay.active');
+  if (modals.length > 0) {
+    closeAllModals();
+    return;
+  }
+  if (document.getElementById('dialog-box').classList.contains('active')) {
+    closeDialog();
+    return;
+  }
+  if (currentState === GameState.EXPLORE) {
+    openInventory();
+  }
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+
+function render() {
+  if (currentState === GameState.EXPLORE) {
+    renderExplore();
+  }
+}
+
+function renderExplore() {
+  const loc = LOCATIONS[currentLocation];
+
+  ctx.fillStyle = loc.bgColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = loc.groundColor;
+  ctx.fillRect(0, 320, canvas.width, canvas.height - 320);
+
+  // Decorative elements (pseudo-pixel art)
+  drawDecorations(loc);
+
+  // NPCs
+  if (loc.npcs) {
+    for (const npc of loc.npcs) {
+      drawNPC(npc);
+    }
+  }
+
+  // Boss sprite
+  if (loc.boss && !encounteredBoss) {
+    ctx.font = '48px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(ENEMIES[loc.boss].sprite, 300, 160);
+    ctx.font = '10px "Press Start 2P"';
+    ctx.fillStyle = '#f4b41b';
+    ctx.fillText('???', 300, 200);
+  }
+
+  // Direction arrows for exits
+  drawExitMarkers(loc);
+
+  // Player
+  drawPlayer();
+}
+
+function drawDecorations(loc) {
+  ctx.save();
+
+  if (loc.id === 'village') {
+    // Houses
+    ctx.fillStyle = '#8b4513';
+    ctx.fillRect(80, 180, 80, 60);
+    ctx.fillStyle = '#654321';
+    ctx.beginPath();
+    ctx.moveTo(70, 180);
+    ctx.lineTo(120, 140);
+    ctx.lineTo(170, 180);
+    ctx.fill();
+    ctx.fillStyle = '#2d5a2d';
+    ctx.fillRect(105, 210, 20, 30);
+
+    ctx.fillStyle = '#8b4513';
+    ctx.fillRect(450, 170, 90, 70);
+    ctx.fillStyle = '#654321';
+    ctx.beginPath();
+    ctx.moveTo(440, 170);
+    ctx.lineTo(495, 125);
+    ctx.lineTo(550, 170);
+    ctx.fill();
+    ctx.fillStyle = '#2d5a2d';
+    ctx.fillRect(480, 200, 25, 40);
+
+    // Trees
+    for (let i = 0; i < 6; i++) {
+      const tx = 30 + i * 95;
+      drawPixelTree(tx, 50);
+    }
+  } else if (loc.id.includes('forest')) {
+    // Trees everywhere
+    for (let i = 0; i < 12; i++) {
+      const tx = (i * 67 + 20) % 560;
+      const ty = 60 + (i * 37) % 200;
+      drawPixelTree(tx, ty);
+    }
+    // Bushes
+    ctx.fillStyle = '#1a4a1a';
+    for (let i = 0; i < 15; i++) {
+      const bx = (i * 47 + 10) % 580;
+      const by = 350 + (i * 23) % 80;
+      ctx.fillRect(bx, by, 16, 12);
+    }
+  } else if (loc.id.includes('mountain') || loc.id === 'mountain_foot') {
+    // Mountains
+    ctx.fillStyle = '#5a4a3a';
+    for (let i = 0; i < 5; i++) {
+      const mx = i * 140 - 20;
+      ctx.beginPath();
+      ctx.moveTo(mx, 280);
+      ctx.lineTo(mx + 70, 100 + (i % 2) * 40);
+      ctx.lineTo(mx + 140, 280);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#f0f0f0';
+    for (let i = 0; i < 5; i++) {
+      const mx = i * 140 - 20;
+      const peakY = 100 + (i % 2) * 40;
+      ctx.beginPath();
+      ctx.moveTo(mx + 50, peakY + 30);
+      ctx.lineTo(mx + 70, peakY);
+      ctx.lineTo(mx + 90, peakY + 30);
+      ctx.fill();
+    }
+  } else if (loc.id.includes('cave')) {
+    // Cave walls
+    ctx.fillStyle = '#0a0a15';
+    ctx.fillRect(0, 0, canvas.width, 80);
+    // Stalactites
+    for (let i = 0; i < 10; i++) {
+      const sx = i * 65 + 10;
+      ctx.beginPath();
+      ctx.moveTo(sx, 80);
+      ctx.lineTo(sx + 15, 120 + (i % 3) * 15);
+      ctx.lineTo(sx + 30, 80);
+      ctx.fill();
+    }
+  } else if (loc.id.includes('dragon')) {
+    // Lava pools
+    ctx.fillStyle = '#ff4500';
+    ctx.beginPath();
+    ctx.ellipse(100, 400, 60, 20, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffd700';
+    ctx.beginPath();
+    ctx.ellipse(100, 400, 30, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ff4500';
+    ctx.beginPath();
+    ctx.ellipse(500, 420, 70, 25, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Skull piles
+    ctx.font = '20px serif';
+    ctx.fillText('💀💀💀', 180, 430);
+  }
+
+  // Paths
+  if (loc.connections) {
+    ctx.fillStyle = 'rgba(200,180,140,0.3)';
+    if (loc.connections.north) ctx.fillRect(290, 0, 20, 60);
+    if (loc.connections.south) ctx.fillRect(290, 420, 20, 60);
+    if (loc.connections.east) ctx.fillRect(560, 220, 40, 20);
+    if (loc.connections.west) ctx.fillRect(0, 220, 40, 20);
+  }
+
+  ctx.restore();
+}
+
+function drawPixelTree(x, y) {
+  ctx.fillStyle = '#2d5a2d';
+  ctx.beginPath();
+  ctx.moveTo(x, y + 40);
+  ctx.lineTo(x + 20, y);
+  ctx.lineTo(x + 40, y + 40);
+  ctx.fill();
+  ctx.fillStyle = '#1a3a1a';
+  ctx.beginPath();
+  ctx.moveTo(x + 5, y + 40);
+  ctx.lineTo(x + 20, y + 10);
+  ctx.lineTo(x + 35, y + 40);
+  ctx.fill();
+  ctx.fillStyle = '#654321';
+  ctx.fillRect(x + 16, y + 40, 8, 15);
+}
+
+function drawNPC(npc) {
+  ctx.font = '32px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(npc.sprite, npc.x, npc.y);
+
+  // Interaction indicator
+  const dist = Math.abs(playerX - npc.x) + Math.abs(playerY - npc.y);
+  if (dist < 50) {
+    ctx.font = '12px "Press Start 2P"';
+    ctx.fillStyle = '#f4b41b';
+    ctx.fillText('E', npc.x, npc.y - 35);
+  }
+
+  // Name
+  ctx.font = '8px "Press Start 2P"';
+  ctx.fillStyle = '#f4f4f4';
+  ctx.fillText(npc.name, npc.x, npc.y + 20);
+}
+
+function drawPlayer() {
+  const cls = CLASS_DATA[player.class];
+  ctx.font = '32px serif';
+  ctx.textAlign = 'center';
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(playerX, playerY + 18, 16, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillText(cls.sprite, playerX, playerY + 8);
+
+  // Name
+  ctx.font = '8px "Press Start 2P"';
+  ctx.fillStyle = '#f4b41b';
+  ctx.fillText(player.name, playerX, playerY - 16);
+}
+
+function drawExitMarkers(loc) {
+  ctx.font = '10px "Press Start 2P"';
+  ctx.fillStyle = '#f4b41b';
+  ctx.textAlign = 'center';
+
+  if (loc.connections && loc.connections.north) {
+    ctx.fillText('▲ N', 300, 25);
+  }
+  if (loc.connections && loc.connections.south) {
+    ctx.fillText('▼ S', 300, 470);
+  }
+  if (loc.connections && loc.connections.east) {
+    ctx.fillText('E ▶', 560, 240);
+  }
+  if (loc.connections && loc.connections.west) {
+    ctx.fillText('◀ W', 40, 240);
+  }
+}
+
+function drawMap() {
+  if (!mapCtx) return;
+  const w = mapCanvas.width;
+  const h = mapCanvas.height;
+
+  mapCtx.fillStyle = '#0a0a15';
+  mapCtx.fillRect(0, 0, w, h);
+
+  // Simple world map
+  const mapLocations = {
+    village: { x: 71, y: 120, color: '#38b764', size: 8 },
+    forest_path: { x: 71, y: 95, color: '#2d5a2d', size: 6 },
+    forest_deep: { x: 71, y: 70, color: '#1a3a1a', size: 6 },
+    cave_entrance: { x: 71, y: 45, color: '#3a3a5a', size: 6 },
+    mountain_foot: { x: 100, y: 75, color: '#7a6a5a', size: 6 },
+    mountain_pass: { x: 100, y: 40, color: '#5a6a7a', size: 6 },
+    dragon_lair: { x: 100, y: 15, color: '#b13e53', size: 8 }
+  };
+
+  // Connections
+  mapCtx.strokeStyle = '#566c86';
+  mapCtx.lineWidth = 2;
+  const connections = [
+    ['village','forest_path'],
+    ['forest_path','forest_deep'],
+    ['forest_deep','cave_entrance'],
+    ['forest_path','mountain_foot'],
+    ['mountain_foot','mountain_pass'],
+    ['mountain_pass','dragon_lair']
+  ];
+
+  for (const [a, b] of connections) {
+    const la = mapLocations[a];
+    const lb = mapLocations[b];
+    if (la && lb) {
+      mapCtx.beginPath();
+      mapCtx.moveTo(la.x, la.y);
+      mapCtx.lineTo(lb.x, lb.y);
+      mapCtx.stroke();
+    }
+  }
+
+  // Locations
+  for (const [id, loc] of Object.entries(mapLocations)) {
+    mapCtx.fillStyle = loc.color;
+    mapCtx.fillRect(loc.x - loc.size/2, loc.y - loc.size/2, loc.size, loc.size);
+
+    if (id === currentLocation) {
+      mapCtx.strokeStyle = '#f4b41b';
+      mapCtx.lineWidth = 2;
+      mapCtx.strokeRect(loc.x - loc.size/2 - 3, loc.y - loc.size/2 - 3, loc.size + 6, loc.size + 6);
+    }
+  }
+}
+
+// ============================================================
+// COMBAT SYSTEM
+// ============================================================
+
+function triggerRandomEncounter() {
+  const loc = LOCATIONS[currentLocation];
+  if (!loc.enemies || loc.enemies.length === 0) return;
+
+  const numEnemies = Math.random() < 0.3 ? 2 : 1;
+  const enemies = [];
+
+  for (let i = 0; i < numEnemies; i++) {
+    const enemyId = loc.enemies[Math.floor(Math.random() * loc.enemies.length)];
+    enemies.push(createEnemy(enemyId));
+  }
+
+  startBattle(enemies);
+}
+
+function startBossBattle(bossId) {
+  logMessage('The great dragon appears!', 'red');
+  const boss = createEnemy(bossId);
+  boss.hp = boss.hpMax = Math.floor(boss.hp * 1.2);
+  startBattle([boss]);
+}
+
+function createEnemy(id) {
+  const template = ENEMIES[id];
+  return {
+    ...template,
+    hp: template.hp,
+    hpMax: template.hp,
+    statuses: [],
+    buffs: []
+  };
+}
+
+function startBattle(enemies) {
+  battleState = {
+    active: true,
+    enemies: enemies,
+    turn: 'player',
+    selectedEnemy: 0,
+    defending: false,
+    turnCount: 0,
+    playerBuffs: [],
+    fleeing: false
+  };
+
+  document.getElementById('battle-submenu').style.display = 'none';
+  showScreen('battle-screen');
+
+  renderBattleEnemies();
+  renderBattlePlayers();
+  clearBattleLog();
+
+  const enemyNames = enemies.map(e => e.name).join(' and ');
+  battleLog(`A wild ${enemyNames} appeared!`, 'red');
+
+  updateBattleButtons(true);
+}
+
+function renderBattleEnemies() {
+  const area = document.getElementById('enemy-area');
+  area.innerHTML = '';
+
+  battleState.enemies.forEach((enemy, idx) => {
+    const hpPct = (enemy.hp / enemy.hpMax) * 100;
+    const div = document.createElement('div');
+    div.className = `enemy-sprite ${idx === battleState.selectedEnemy ? 'selected' : ''} ${enemy.hp <= 0 ? 'dead' : ''}`;
+    div.id = `enemy-${idx}`;
+    div.onclick = () => selectEnemy(idx);
+    div.innerHTML = `
+      <div class="enemy-body" id="enemy-body-${idx}">${enemy.sprite}</div>
+      <div class="enemy-name">${enemy.name}</div>
+      <div class="enemy-hp-bar"><div class="enemy-hp-fill" style="width:${hpPct}%"></div></div>
+    `;
+    area.appendChild(div);
+  });
+}
+
+function renderBattlePlayers() {
+  const area = document.getElementById('player-battle-area');
+  const cls = CLASS_DATA[player.class];
+  const hpPct = (player.hp / player.hpMax) * 100;
+  const mpPct = (player.mp / player.mpMax) * 100;
+
+  area.innerHTML = `
+    <div class="player-battle-sprite">
+      <div class="player-body active" id="player-body">${cls.sprite}</div>
+      <div class="battle-player-info">
+        <div class="battle-player-name">${player.name}</div>
+        <div class="battle-hp-row">
+          <span style="color:#ef4155;">HP</span>
+          <div class="battle-bar"><div class="battle-bar-fill hp" style="width:${hpPct}%"></div></div>
+          <span style="color:#f4f4f4;">${player.hp}/${player.hpMax}</span>
+        </div>
+        <div class="battle-mp-row">
+          <span style="color:#29adff;">MP</span>
+          <div class="battle-bar"><div class="battle-bar-fill mp" style="width:${mpPct}%"></div></div>
+          <span style="color:#f4f4f4;">${player.mp}/${player.mpMax}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function selectEnemy(idx) {
+  if (battleState.enemies[idx].hp <= 0) return;
+  battleState.selectedEnemy = idx;
+  renderBattleEnemies();
+}
+
+function updateBattleButtons(enabled) {
+  document.querySelectorAll('.battle-action-btn').forEach(btn => {
+    btn.disabled = !enabled && !btn.classList.contains('back-btn');
+  });
+}
+
+function clearBattleLog() {
+  document.getElementById('battle-log').innerHTML = '';
+}
+
+function battleLog(text, type = '') {
+  const log = document.getElementById('battle-log');
+  const line = document.createElement('div');
+  line.className = `log-line ${type}`;
+  line.textContent = text;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+// --- Battle Actions ---
+
+function battleAttack() {
+  if (battleState.turn !== 'player') return;
+  const enemy = battleState.enemies[battleState.selectedEnemy];
+  if (!enemy || enemy.hp <= 0) {
+    battleState.selectedEnemy = findNextAliveEnemy();
+    if (battleState.selectedEnemy === -1) return;
+    enemy = battleState.enemies[battleState.selectedEnemy];
+  }
+
+  const totalAtk = getPlayerAtk();
+  const damage = calcPhysicalDamage(totalAtk, enemy.def);
+  const isCrit = Math.random() * 100 < (5 + getPlayerStat('luk') / 2);
+  const finalDmg = isCrit ? Math.floor(damage * 2) : damage;
+
+  enemy.hp = Math.max(0, enemy.hp - finalDmg);
+
+  const enemyEl = document.getElementById(`enemy-body-${battleState.selectedEnemy}`);
+  if (enemyEl) {
+    enemyEl.parentElement.classList.add('shake');
+    setTimeout(() => enemyEl.parentElement.classList.remove('shake'), 300);
+    showDamagePop(enemyEl, finalDmg, isCrit ? 'crit' : 'damage');
+  }
+
+  battleLog(`${player.name} attacks! ${isCrit ? 'Critical hit! ' : ''}Deals ${finalDmg} damage.`, isCrit ? 'gold' : '');
+
+  renderBattleEnemies();
+  afterPlayerAction();
+}
+
+function showSkills() {
+  if (battleState.turn !== 'player') return;
+  const submenu = document.getElementById('battle-submenu');
+  submenu.style.display = 'grid';
+  submenu.innerHTML = '';
+
+  for (const skillId of player.skills) {
+    const skill = SKILLS[skillId];
+    const btn = document.createElement('button');
+    btn.className = 'battle-action-btn';
+    btn.disabled = player.mp < skill.mpCost;
+    btn.innerHTML = `${skill.name}<br><span style="font-size:8px;color:#29adff;">${skill.mpCost} MP</span>`;
+    btn.onclick = () => useSkill(skillId);
+    submenu.appendChild(btn);
+  }
+
+  const backBtn = document.createElement('button');
+  backBtn.className = 'battle-action-btn back-btn';
+  backBtn.textContent = '← BACK';
+  backBtn.onclick = () => { submenu.style.display = 'none'; };
+  submenu.appendChild(backBtn);
+}
+
+function useSkill(skillId) {
+  const skill = SKILLS[skillId];
+  if (player.mp < skill.mpCost) return;
+
+  player.mp -= skill.mpCost;
+  document.getElementById('battle-submenu').style.display = 'none';
+
+  if (skill.type === 'physical' || skill.type === 'magic') {
+    if (skill.aoe) {
+      battleLog(`${player.name} uses ${skill.name}!`, 'cyan');
+      let totalDmg = 0;
+      battleState.enemies.forEach((enemy, idx) => {
+        if (enemy.hp <= 0) return;
+        const baseDmg = skill.type === 'physical'
+          ? calcPhysicalDamage(getPlayerAtk() * skill.damage, enemy.def)
+          : calcMagicDamage(getPlayerInt() * skill.damage, enemy.def * 0.5);
+        enemy.hp = Math.max(0, enemy.hp - baseDmg);
+        totalDmg += baseDmg;
+
+        const enemyEl = document.getElementById(`enemy-body-${idx}`);
+        if (enemyEl) showDamagePop(enemyEl, baseDmg, 'damage');
+      });
+      battleLog(`Hits all enemies for a total of ${totalDmg} damage!`);
+    } else {
+      const enemy = battleState.enemies[battleState.selectedEnemy];
+      if (!enemy || enemy.hp <= 0) {
+        battleState.selectedEnemy = findNextAliveEnemy();
+        if (battleState.selectedEnemy === -1) { renderBattlePlayers(); return; }
+      }
+      const target = battleState.enemies[battleState.selectedEnemy];
+
+      const isCrit = Math.random() * 100 < (5 + getPlayerStat('luk') / 2 + (skill.critBonus || 0));
+      let baseDmg;
+      if (skill.type === 'physical') {
+        baseDmg = calcPhysicalDamage(getPlayerAtk() * skill.damage, target.def);
+      } else {
+        baseDmg = calcMagicDamage(getPlayerInt() * skill.damage, target.def * 0.5);
+      }
+      const finalDmg = isCrit ? Math.floor(baseDmg * 2) : baseDmg;
+      target.hp = Math.max(0, target.hp - finalDmg);
+
+      const enemyEl = document.getElementById(`enemy-body-${battleState.selectedEnemy}`);
+      if (enemyEl) {
+        enemyEl.parentElement.classList.add('shake');
+        setTimeout(() => enemyEl.parentElement.classList.remove('shake'), 300);
+        showDamagePop(enemyEl, finalDmg, isCrit ? 'crit' : 'damage');
+      }
+
+      battleLog(`${player.name} uses ${skill.name}! ${isCrit ? 'Critical! ' : ''}${finalDmg} damage!`, isCrit ? 'gold' : 'cyan');
+
+      if (skill.status && Math.random() < 0.4) {
+        target.statuses.push({ type: skill.status, turns: 3 });
+        battleLog(`${target.name} is ${skill.status}ed!`, 'red');
+      }
+    }
+  } else if (skill.type === 'heal') {
+    const healAmount = skill.heal + Math.floor(getPlayerInt() * 0.5);
+    player.hp = Math.min(player.hpMax, player.hp + healAmount);
+    battleLog(`${player.name} uses ${skill.name}! Recovers ${healAmount} HP.`, 'green');
+    const playerBody = document.getElementById('player-body');
+    if (playerBody) showDamagePop(playerBody, healAmount, 'heal');
+  } else if (skill.type === 'buff') {
+    battleState.playerBuffs.push({ stat: skill.buff, amount: skill.amount, turns: skill.turns });
+    battleLog(`${player.name} uses ${skill.name}! ${skill.buff.toUpperCase()} +${skill.amount} for ${skill.turns} turns.`, 'cyan');
+  } else if (skill.type === 'steal') {
+    const enemy = battleState.enemies[battleState.selectedEnemy];
+    const stealAmount = Math.floor(Math.random() * 20 + 10) + getPlayerStat('luk');
+    player.gold += stealAmount;
+    battleLog(`${player.name} steals ${stealAmount} gold!`, 'gold');
+  }
+
+  renderBattleEnemies();
+  renderBattlePlayers();
+  afterPlayerAction();
+}
+
+function showBattleItems() {
+  if (battleState.turn !== 'player') return;
+  const submenu = document.getElementById('battle-submenu');
+  submenu.style.display = 'grid';
+  submenu.innerHTML = '';
+
+  const consumables = player.inventory.filter(i => {
+    const item = ITEMS[i.id];
+    return item && item.type === 'consumable' && i.count > 0;
+  });
+
+  if (consumables.length === 0) {
+    submenu.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#94b0c2;font-size:10px;padding:10px;">No items!</div>';
+  } else {
+    for (const inv of consumables) {
+      const item = ITEMS[inv.id];
+      const btn = document.createElement('button');
+      btn.className = 'battle-action-btn';
+      btn.innerHTML = `${item.icon} ${item.name}<br><span style="font-size:8px;color:#94b0c2;">x${inv.count}</span>`;
+      btn.onclick = () => useBattleItem(inv.id);
+      submenu.appendChild(btn);
+    }
+  }
+
+  const backBtn = document.createElement('button');
+  backBtn.className = 'battle-action-btn back-btn';
+  backBtn.textContent = '← BACK';
+  backBtn.onclick = () => { submenu.style.display = 'none'; };
+  submenu.appendChild(backBtn);
+}
+
+function useBattleItem(itemId) {
+  const item = ITEMS[itemId];
+  const invItem = player.inventory.find(i => i.id === itemId);
+  if (!invItem || invItem.count <= 0) return;
+
+  invItem.count--;
+  if (invItem.count <= 0) {
+    player.inventory = player.inventory.filter(i => i.id !== itemId);
+  }
+  document.getElementById('battle-submenu').style.display = 'none';
+
+  if (item.hp) {
+    player.hp = Math.min(player.hpMax, player.hp + item.hp);
+    battleLog(`Used ${item.name}! +${item.hp} HP`, 'green');
+    const playerBody = document.getElementById('player-body');
+    if (playerBody) showDamagePop(playerBody, item.hp, 'heal');
+  }
+  if (item.mp) {
+    player.mp = Math.min(player.mpMax, player.mp + item.mp);
+    battleLog(`Used ${item.name}! +${item.mp} MP`, 'cyan');
+    const playerBody = document.getElementById('player-body');
+    if (playerBody) showDamagePop(playerBody, item.mp, 'mp');
+  }
+  if (item.damage) {
+    battleState.enemies.forEach((enemy, idx) => {
+      if (enemy.hp <= 0) return;
+      enemy.hp = Math.max(0, enemy.hp - item.damage);
+      const enemyEl = document.getElementById(`enemy-body-${idx}`);
+      if (enemyEl) showDamagePop(enemyEl, item.damage, 'damage');
+    });
+    battleLog(`Used ${item.name}! ${item.damage} damage to all!`, 'red');
+  }
+  if (item.cure) {
+    player.statuses = player.statuses.filter(s => !item.cure.includes(s.type));
+    battleLog(`Used ${item.name}! Cured status ailments.`, 'green');
+  }
+
+  renderBattleEnemies();
+  renderBattlePlayers();
+  afterPlayerAction();
+}
+
+function battleDefend() {
+  if (battleState.turn !== 'player') return;
+  battleState.defending = true;
+  battleLog(`${player.name} takes a defensive stance!`, 'cyan');
+  afterPlayerAction();
+}
+
+function afterPlayerAction() {
+  updateBattleButtons(false);
+  checkBattleEnd().then(ended => {
+    if (ended) return;
+    setTimeout(() => enemyTurn(), 800);
+  });
+}
+
+function enemyTurn() {
+  battleState.turn = 'enemy';
+  const aliveEnemies = battleState.enemies.filter(e => e.hp > 0);
+  let delay = 0;
+
+  for (const enemy of aliveEnemies) {
+    setTimeout(() => {
+      if (player.hp <= 0) return;
+
+      // Check status effects
+      const poison = enemy.statuses.find(s => s.type === 'poison');
+      if (poison) {
+        const poisonDmg = Math.floor(enemy.hpMax * 0.08);
+        enemy.hp = Math.max(0, enemy.hp - poisonDmg);
+        battleLog(`${enemy.name} takes ${poisonDmg} poison damage!`, 'green');
+        renderBattleEnemies();
+        if (enemy.hp <= 0) return;
+      }
+
+      const stun = enemy.statuses.find(s => s.type === 'stun');
+      if (stun) {
+        battleLog(`${enemy.name} is stunned!`, 'cyan');
+        return;
+      }
+
+      // Enemy action
+      const atk = enemy.atk;
+      let damage = calcPhysicalDamage(atk, getPlayerDef());
+      if (battleState.defending) {
+        damage = Math.floor(damage * 0.5);
+      }
+
+      player.hp = Math.max(0, player.hp - damage);
+
+      const playerBody = document.getElementById('player-body');
+      if (playerBody) {
+        playerBody.parentElement.classList.add('shake');
+        setTimeout(() => playerBody.parentElement.classList.remove('shake'), 300);
+        showDamagePop(playerBody, damage, 'damage');
+      }
+
+      battleLog(`${enemy.name} attacks! Deals ${damage} damage.`, 'red');
+
+      // Burn status
+      const burn = enemy.statuses.find(s => s.type === 'burn');
+      if (burn) {
+        const burnDmg = Math.floor(enemy.hpMax * 0.05);
+        enemy.hp = Math.max(0, enemy.hp - burnDmg);
+        battleLog(`${enemy.name} takes ${burnDmg} burn damage!`, 'gold');
+      }
+
+      renderBattleEnemies();
+      renderBattlePlayers();
+    }, delay);
+    delay += 700;
+  }
+
+  setTimeout(() => endEnemyTurn(), delay + 300);
+}
+
+function endEnemyTurn() {
+  // Decrement status turns
+  battleState.enemies.forEach(enemy => {
+    enemy.statuses = enemy.statuses.map(s => ({...s, turns: s.turns - 1})).filter(s => s.turns > 0);
+  });
+
+  battleState.playerBuffs = battleState.playerBuffs.map(b => ({...b, turns: b.turns - 1})).filter(b => b.turns > 0);
+  battleState.defending = false;
+  battleState.turnCount++;
+
+  // Poison tick on player
+  const playerPoison = player.statuses.find(s => s.type === 'poison');
+  if (playerPoison) {
+    const dmg = Math.floor(player.hpMax * 0.05);
+    player.hp = Math.max(0, player.hp - dmg);
+    battleLog(`${player.name} takes ${dmg} poison damage!`, 'red');
+    renderBattlePlayers();
+  }
+  player.statuses = player.statuses.map(s => ({...s, turns: s.turns - 1})).filter(s => s.turns > 0);
+
+  checkBattleEnd().then(ended => {
+    if (ended) return;
+    battleState.turn = 'player';
+    updateBattleButtons(true);
+  });
+}
+
+function checkBattleEnd() {
+  return new Promise(resolve => {
+    // Check if all enemies dead
+    const allDead = battleState.enemies.every(e => e.hp <= 0);
+    if (allDead) {
+      setTimeout(() => endBattle(true), 1000);
+      resolve(true);
+      return;
+    }
+
+    // Check if player dead
+    if (player.hp <= 0) {
+      setTimeout(() => endBattle(false), 1000);
+      resolve(true);
+      return;
+    }
+
+    resolve(false);
+  });
+}
+
+function endBattle(victory) {
+  battleState.active = false;
+
+  if (victory) {
+    let totalExp = 0;
+    let totalGold = 0;
+    const lootItems = [];
+
+    for (const enemy of battleState.enemies) {
+      totalExp += enemy.expReward;
+      const goldRange = enemy.goldReward;
+      const gold = Math.floor(Math.random() * (goldRange[1] - goldRange[0] + 1)) + goldRange[0];
+      totalGold += gold;
+
+      if (enemy.loot) {
+        for (const drop of enemy.loot) {
+          if (Math.random() < drop.rate) {
+            lootItems.push(drop.item);
+          }
+        }
+      }
+
+      // Quest progress
+      updateQuestKills(enemy.id);
+    }
+
+    battleLog('Victory!', 'gold');
+    battleLog(`EXP +${totalExp} | Gold +${totalGold}`, 'gold');
+
+    player.exp += totalExp;
+    player.gold += totalGold;
+
+    for (const itemId of lootItems) {
+      addItem(itemId, 1);
+      battleLog(`Found: ${ITEMS[itemId].name}!`, 'cyan');
+    }
+
+    checkLevelUp();
+    checkQuestCompletions();
+
+    // Boss victory
+    const loc = LOCATIONS[currentLocation];
+    if (loc.boss && encounteredBoss) {
+      if (QUESTS.main_dragon) {
+        QUESTS.main_dragon.status = 'completed';
+      }
+      setTimeout(() => {
+        showScreen('victory-screen');
+      }, 2000);
+      return;
+    }
+
+    setTimeout(() => {
+      showScreen('explore-screen');
+      updateUI();
+      logMessage(`Victory! +${totalExp} EXP, +${totalGold} Gold`, 'gold');
+      if (lootItems.length > 0) {
+        logMessage(`Found: ${lootItems.map(i => ITEMS[i].name).join(', ')}`, 'cyan');
+      }
+    }, 1500);
+  } else {
+    battleLog('You have been defeated...', 'red');
+    setTimeout(() => {
+      showScreen('gameover-screen');
+    }, 1500);
+  }
+}
+
+function findNextAliveEnemy() {
+  for (let i = 0; i < battleState.enemies.length; i++) {
+    if (battleState.enemies[i].hp > 0) return i;
+  }
+  return -1;
+}
+
+function showDamagePop(element, value, type) {
+  const pop = document.createElement('div');
+  pop.className = `damage-pop ${type}`;
+  pop.textContent = type === 'heal' || type === 'mp' ? `+${value}` : `-${value}`;
+  const rect = element.getBoundingClientRect();
+  const arenaRect = document.getElementById('battle-arena').getBoundingClientRect();
+
+  pop.style.left = (rect.left - arenaRect.left + rect.width / 2) + 'px';
+  pop.style.top = (rect.top - arenaRect.top) + 'px';
+
+  document.getElementById('battle-arena').appendChild(pop);
+  setTimeout(() => pop.remove(), 1000);
+}
+
+// ============================================================
+// STAT CALCULATIONS
+// ============================================================
+
+function getPlayerStat(stat) {
+  let base = player.baseStats[stat];
+  for (const slot of Object.values(player.equipment)) {
+    if (slot && ITEMS[slot] && ITEMS[slot][stat]) {
+      base += ITEMS[slot][stat];
+    }
+  }
+  for (const buff of battleState.playerBuffs || []) {
+    if (buff.stat === stat) base += buff.amount;
+  }
+  return base;
+}
+
+function getPlayerAtk() {
+  return getPlayerStat('str');
+}
+
+function getPlayerDef() {
+  return getPlayerStat('def');
+}
+
+function getPlayerInt() {
+  return getPlayerStat('int');
+}
+
+function calcPhysicalDamage(atk, def) {
+  const base = Math.max(1, atk * 2 - def / 2);
+  const variance = Math.floor(Math.random() * 11) - 5;
+  return Math.max(1, Math.floor(base + variance));
+}
+
+function calcMagicDamage(int, mdef) {
+  const base = Math.max(1, int * 3 - mdef / 2);
+  const variance = Math.floor(Math.random() * 21) - 10;
+  return Math.max(1, Math.floor(base + variance));
+}
+
+// ============================================================
+// LEVELING
+// ============================================================
+
+function checkLevelUp() {
+  while (player.exp >= player.expNext) {
+    player.exp -= player.expNext;
+    player.level++;
+    player.expNext = player.level * 100 + (player.level - 1) * 50;
+
+    const growth = CLASS_DATA[player.class].growth;
+    const hpGain = growth.hp + Math.floor(Math.random() * 3);
+    const mpGain = growth.mp + Math.floor(Math.random() * 2);
+
+    player.hpMax += hpGain;
+    player.mpMax += mpGain;
+    player.hp = player.hpMax;
+    player.mp = player.mpMax;
+
+    player.baseStats.str += growth.str;
+    player.baseStats.def += growth.def;
+    player.baseStats.int += growth.int;
+    player.baseStats.agi += growth.agi;
+    player.baseStats.luk += growth.luk;
+
+    battleLog(`LEVEL UP! Now Lv.${player.level}!`, 'gold');
+    battleLog(`HP +${hpGain} | MP +${mpGain}`, 'green');
+
+    showLevelUpEffect();
+  }
+}
+
+function showLevelUpEffect() {
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay';
+  const text = document.createElement('div');
+  text.className = 'levelup-text';
+  text.textContent = `LEVEL ${player.level}!`;
+
+  const container = currentState === GameState.BATTLE
+    ? document.getElementById('battle-arena')
+    : document.querySelector('.canvas-area');
+
+  container.appendChild(overlay);
+  container.appendChild(text);
+
+  setTimeout(() => { overlay.remove(); text.remove(); }, 2000);
+}
+
+// ============================================================
+// INVENTORY
+// ============================================================
+
+function addItem(itemId, count = 1) {
+  const item = ITEMS[itemId];
+  if (!item) return;
+
+  if (item.stackable) {
+    const existing = player.inventory.find(i => i.id === itemId);
+    if (existing) {
+      existing.count += count;
+    } else {
+      player.inventory.push({ id: itemId, count: count });
+    }
+  } else {
+    for (let i = 0; i < count; i++) {
+      if (player.inventory.length < 20) {
+        player.inventory.push({ id: itemId, count: 1 });
+      }
+    }
+  }
+
+  updateQuestCollects(itemId, count);
+}
+
+function removeItem(itemId, count = 1) {
+  const item = ITEMS[itemId];
+  if (!item) return false;
+
+  const invIdx = player.inventory.findIndex(i => i.id === itemId);
+  if (invIdx === -1) return false;
+
+  const inv = player.inventory[invIdx];
+  if (inv.count < count) return false;
+
+  inv.count -= count;
+  if (inv.count <= 0) {
+    player.inventory.splice(invIdx, 1);
+  }
+  return true;
+}
+
+function getItemCount(itemId) {
+  const inv = player.inventory.find(i => i.id === itemId);
+  return inv ? inv.count : 0;
+}
+
+function openInventory() {
+  if (currentState !== GameState.EXPLORE) return;
+  document.getElementById('inventory-modal').classList.add('active');
+  currentInvTab = 'all';
+  renderInventory();
+}
+
+function closeInventory() {
+  document.getElementById('inventory-modal').classList.remove('active');
+  selectedInvItem = null;
+}
+
+let currentInvTab = 'all';
+let selectedInvItem = null;
+
+function switchInvTab(tab) {
+  currentInvTab = tab;
+  selectedInvItem = null;
+  document.querySelectorAll('#inventory-modal .modal-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderInventory();
+}
+
+function renderInventory() {
+  const grid = document.getElementById('inventory-grid');
+  grid.innerHTML = '';
+
+  let items = [...player.inventory];
+  if (currentInvTab !== 'all') {
+    items = items.filter(i => ITEMS[i.id] && ITEMS[i.id].type === currentInvTab);
+  }
+
+  for (let i = 0; i < 20; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'item-slot';
+
+    if (i < items.length) {
+      const inv = items[i];
+      const item = ITEMS[inv.id];
+      const isEquipped = Object.values(player.equipment).includes(inv.id);
+      if (isEquipped) slot.classList.add('equipped');
+
+      slot.innerHTML = `
+        <div class="item-icon">${item.icon}</div>
+        ${item.stackable ? `<div class="item-count">x${inv.count}</div>` : ''}
+      `;
+      slot.onclick = () => selectInvItem(inv.id);
+    } else {
+      slot.innerHTML = '<div style="color:#333c57;font-size:20px;">·</div>';
+    }
+
+    grid.appendChild(slot);
+  }
+
+  // Detail panel
+  const detail = document.getElementById('item-detail');
+  if (selectedInvItem) {
+    const item = ITEMS[selectedInvItem];
+    const count = getItemCount(selectedInvItem);
+    detail.style.display = 'block';
+
+    document.getElementById('detail-name').textContent = `${item.icon} ${item.name} (${count})`;
+    document.getElementById('detail-desc').textContent = item.description;
+
+    const stats = [];
+    if (item.atk) stats.push(`ATK +${item.atk}`);
+    if (item.def) stats.push(`DEF +${item.def}`);
+    if (item.int) stats.push(`INT +${item.int}`);
+    if (item.agi) stats.push(`AGI +${item.agi}`);
+    if (item.luk) stats.push(`LUK +${item.luk}`);
+    if (item.hp) stats.push(`HP +${item.hp}`);
+    if (item.mp) stats.push(`MP +${item.mp}`);
+    if (item.hpMax) stats.push(`Max HP +${item.hpMax}`);
+    if (item.mpMax) stats.push(`Max MP +${item.mpMax}`);
+
+    document.getElementById('detail-stats').innerHTML = stats.length > 0
+      ? `<div style="color:#f4b41b;">${stats.join(' | ')}</div>`
+      : '';
+
+    const actions = document.getElementById('detail-actions');
+    actions.innerHTML = '';
+
+    if (item.type === 'weapon' || item.type === 'armor') {
+      const isEquipped = player.equipment[item.slot] === selectedInvItem;
+      const equipBtn = document.createElement('button');
+      equipBtn.className = 'item-action-btn';
+      equipBtn.textContent = isEquipped ? 'UNEQUIP' : 'EQUIP';
+      equipBtn.onclick = () => toggleEquip(selectedInvItem);
+      actions.appendChild(equipBtn);
+    }
+
+    if (item.type === 'consumable') {
+      const useBtn = document.createElement('button');
+      useBtn.className = 'item-action-btn';
+      useBtn.textContent = 'USE';
+      useBtn.onclick = () => useItem(selectedInvItem);
+      actions.appendChild(useBtn);
+    }
+
+    if (item.type !== 'key') {
+      const sellBtn = document.createElement('button');
+      sellBtn.className = 'item-action-btn';
+      sellBtn.textContent = `SELL (${Math.floor(item.value * 0.5)}G)`;
+      sellBtn.onclick = () => sellItem(selectedInvItem);
+      actions.appendChild(sellBtn);
+    }
+  } else {
+    detail.style.display = 'none';
+  }
+}
+
+function selectInvItem(itemId) {
+  selectedInvItem = itemId;
+  renderInventory();
+}
+
+function toggleEquip(itemId) {
+  const item = ITEMS[itemId];
+  if (!item || !item.slot) return;
+
+  const currentEquipped = player.equipment[item.slot];
+  if (currentEquipped === itemId) {
+    player.equipment[item.slot] = null;
+    logMessage(`Unequipped ${item.name}.`, 'cyan');
+  } else {
+    player.equipment[item.slot] = itemId;
+    if (item.hpMax) player.hp = Math.min(player.hp + item.hpMax, player.hpMax + item.hpMax);
+    if (item.mpMax) player.mp = Math.min(player.mp + item.mpMax, player.mpMax + item.mpMax);
+    logMessage(`Equipped ${item.name}!`, 'gold');
+  }
+
+  updateUI();
+  renderInventory();
+}
+
+function useItem(itemId) {
+  const item = ITEMS[itemId];
+  if (!item || item.type !== 'consumable') return;
+
+  const invItem = player.inventory.find(i => i.id === itemId);
+  if (!invItem || invItem.count <= 0) return;
+
+  let used = false;
+
+  if (item.hp && player.hp < player.hpMax) {
+    player.hp = Math.min(player.hpMax, player.hp + item.hp);
+    used = true;
+  }
+  if (item.mp && player.mp < player.mpMax) {
+    player.mp = Math.min(player.mpMax, player.mp + item.mp);
+    used = true;
+  }
+  if (item.cure && player.statuses.length > 0) {
+    player.statuses = player.statuses.filter(s => !item.cure.includes(s.type));
+    used = true;
+  }
+
+  if (!used && !item.damage) {
+    logMessage('Nothing to do!', 'red');
+    return;
+  }
+
+  invItem.count--;
+  if (invItem.count <= 0) {
+    player.inventory = player.inventory.filter(i => i.id !== itemId);
+    selectedInvItem = null;
+  }
+
+  logMessage(`Used ${item.name}!`, 'green');
+  updateUI();
+  renderInventory();
+}
+
+function sellItem(itemId) {
+  const item = ITEMS[itemId];
+  const invItem = player.inventory.find(i => i.id === itemId);
+  if (!invItem || invItem.count <= 0) return;
+
+  if (Object.values(player.equipment).includes(itemId)) {
+    logMessage('Cannot sell equipped item!', 'red');
+    return;
+  }
+
+  const sellPrice = Math.floor(item.value * 0.5);
+  player.gold += sellPrice;
+
+  if (item.stackable) {
+    invItem.count--;
+    if (invItem.count <= 0) {
+      player.inventory = player.inventory.filter(i => i.id !== itemId);
+      selectedInvItem = null;
+    }
+  } else {
+    player.inventory = player.inventory.filter(i => i.id !== itemId);
+    selectedInvItem = null;
+  }
+
+  logMessage(`Sold ${item.name} for ${sellPrice} gold.`, 'gold');
+  updateUI();
+  renderInventory();
+}
+
+// ============================================================
+// UI UPDATE
+// ============================================================
+
+function updateUI() {
+  if (!player) return;
+
+  const hpPct = (player.hp / player.hpMax) * 100;
+  const mpPct = (player.mp / player.mpMax) * 100;
+  const xpPct = (player.exp / player.expNext) * 100;
+
+  document.getElementById('stat-name').textContent = player.name;
+  document.getElementById('stat-class-level').textContent = `Lv.${player.level} ${player.className}`;
+  document.getElementById('stat-hp-text').textContent = `${player.hp}/${player.hpMax}`;
+  document.getElementById('stat-hp-bar').style.width = hpPct + '%';
+  document.getElementById('stat-mp-text').textContent = `${player.mp}/${player.mpMax}`;
+  document.getElementById('stat-mp-bar').style.width = mpPct + '%';
+  document.getElementById('stat-xp-text').textContent = `${player.exp}/${player.expNext}`;
+  document.getElementById('stat-xp-bar').style.width = xpPct + '%';
+
+  document.getElementById('stat-str').textContent = getPlayerStat('str');
+  document.getElementById('stat-def').textContent = getPlayerStat('def');
+  document.getElementById('stat-int').textContent = getPlayerStat('int');
+  document.getElementById('stat-agi').textContent = getPlayerStat('agi');
+  document.getElementById('stat-luk').textContent = getPlayerStat('luk');
+  document.getElementById('stat-gold').textContent = player.gold;
+
+  document.getElementById('equip-weapon').textContent = player.equipment.weapon ? ITEMS[player.equipment.weapon].name : 'None';
+  document.getElementById('equip-armor').textContent = player.equipment.armor ? ITEMS[player.equipment.armor].name : 'None';
+  document.getElementById('equip-accessory').textContent = player.equipment.accessory ? ITEMS[player.equipment.accessory].name : 'None';
+}
+
+function logMessage(text, type = '') {
+  const log = document.getElementById('game-log');
+  if (!log) return;
+  const line = document.createElement('div');
+  line.className = `log-line ${type}`;
+  line.textContent = `> ${text}`;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+
+  while (log.children.length > 100) {
+    log.removeChild(log.firstChild);
+  }
+}
+
+// ============================================================
+// QUEST SYSTEM
+// ============================================================
+
+let currentQuestTab = 'active';
+
+function openQuests() {
+  if (currentState !== GameState.EXPLORE) return;
+  document.getElementById('quest-modal').classList.add('active');
+  currentQuestTab = 'active';
+  renderQuests();
+}
+
+function closeQuests() {
+  document.getElementById('quest-modal').classList.remove('active');
+}
+
+function switchQuestTab(tab) {
+  currentQuestTab = tab;
+  document.querySelectorAll('#quest-modal .modal-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderQuests();
+}
+
+function renderQuests() {
+  const list = document.getElementById('quest-list');
+  list.innerHTML = '';
+
+  let quests = Object.values(QUESTS);
+  if (currentQuestTab === 'active') {
+    quests = quests.filter(q => q.status === 'active');
+  } else if (currentQuestTab === 'completed') {
+    quests = quests.filter(q => q.status === 'completed');
+  } else {
+    quests = quests.filter(q => q.status === 'available');
+  }
+
+  if (quests.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:#566c86;font-size:10px;padding:20px;">No quests here.</div>';
+    return;
+  }
+
+  for (const quest of quests) {
+    const div = document.createElement('div');
+    div.className = `quest-item ${quest.status === 'completed' ? 'completed' : ''} ${quest.status === 'active' ? 'active-quest' : ''}`;
+
+    let objectivesHtml = '';
+    for (const obj of quest.objectives) {
+      const done = obj.current >= obj.count;
+      objectivesHtml += `<div class="quest-objective ${done ? 'done' : ''}">${obj.desc} (${Math.min(obj.current, obj.count)}/${obj.count})</div>`;
+    }
+
+    let rewardsHtml = '';
+    if (quest.rewards) {
+      const parts = [];
+      if (quest.rewards.exp) parts.push(`${quest.rewards.exp} EXP`);
+      if (quest.rewards.gold) parts.push(`${quest.rewards.gold} Gold`);
+      if (quest.rewards.items) parts.push(quest.rewards.items.map(i => ITEMS[i]?.name || i).join(', '));
+      rewardsHtml = `<div class="quest-rewards">Reward: ${parts.join(' | ')}</div>`;
+    }
+
+    div.innerHTML = `
+      <div class="quest-name">${quest.type === 'main' ? '★ ' : ''}${quest.name}</div>
+      <div class="quest-desc">${quest.description}</div>
+      <div class="quest-objectives">${objectivesHtml}</div>
+      ${rewardsHtml}
+    `;
+    list.appendChild(div);
+  }
+}
+
+function updateQuestKills(enemyId) {
+  for (const quest of Object.values(QUESTS)) {
+    if (quest.status !== 'active') continue;
+    for (const obj of quest.objectives) {
+      if (obj.type === 'kill' && obj.target === enemyId) {
+        obj.current++;
+      }
+    }
+  }
+}
+
+function updateQuestCollects(itemId, count) {
+  for (const quest of Object.values(QUESTS)) {
+    if (quest.status !== 'active') continue;
+    for (const obj of quest.objectives) {
+      if (obj.type === 'collect' && obj.target === itemId) {
+        obj.current += count;
+      }
+    }
+  }
+}
+
+function checkQuestCompletions() {
+  for (const quest of Object.values(QUESTS)) {
+    if (quest.status !== 'active') continue;
+    const allDone = quest.objectives.every(o => o.current >= o.count);
+    if (allDone && !quest.turnInDialog) {
+      completeQuest(quest.id);
+    }
+  }
+}
+
+function completeQuest(questId) {
+  const quest = QUESTS[questId];
+  if (!quest || quest.status === 'completed') return;
+
+  quest.status = 'completed';
+
+  if (quest.rewards) {
+    if (quest.rewards.exp) {
+      player.exp += quest.rewards.exp;
+      logMessage(`Quest complete! +${quest.rewards.exp} EXP`, 'gold');
+    }
+    if (quest.rewards.gold) {
+      player.gold += quest.rewards.gold;
+      logMessage(`+${quest.rewards.gold} Gold!`, 'gold');
+    }
+    if (quest.rewards.items) {
+      for (const itemId of quest.rewards.items) {
+        addItem(itemId, 1);
+        logMessage(`Obtained: ${ITEMS[itemId].name}!`, 'cyan');
+      }
+    }
+    checkLevelUp();
+  }
+
+  updateUI();
+}
+
+function acceptQuest(questId) {
+  const quest = QUESTS[questId];
+  if (!quest || quest.status !== 'available') return;
+  quest.status = 'active';
+  logMessage(`Quest accepted: ${quest.name}`, 'gold');
+}
+
+// ============================================================
+// DIALOGUE SYSTEM
+// ============================================================
+
+let currentDialog = null;
+let dialogIndex = 0;
+let currentNPC = null;
+
+function startDialog(dialogId, npc) {
+  currentDialog = DIALOGUES[dialogId];
+  if (!currentDialog) return;
+  currentNPC = npc;
+  dialogIndex = 0;
+  document.getElementById('dialog-box').classList.add('active');
+  showDialogLine();
+}
+
+function showDialogLine() {
+  if (!currentDialog || dialogIndex >= currentDialog.length) {
+    closeDialog();
+    return;
+  }
+
+  const line = currentDialog[dialogIndex];
+  const dialogBox = document.getElementById('dialog-box');
+  const choicesEl = document.getElementById('dialog-choices');
+  const continueEl = document.getElementById('dialog-continue');
+
+  if (line.action) {
+    handleDialogAction(line.action);
+    if (dialogIndex >= currentDialog.length - 1) {
+      closeDialog();
+      return;
+    }
+    dialogIndex++;
+    showDialogLine();
+    return;
+  }
+
+  if (line.speaker) {
+    document.getElementById('dialog-speaker').textContent = line.speaker;
+  }
+  if (line.text) {
+    document.getElementById('dialog-text').textContent = line.text;
+  }
+
+  if (line.choices) {
+    choicesEl.innerHTML = '';
+    choicesEl.style.display = 'flex';
+    continueEl.style.display = 'none';
+    for (const choice of line.choices) {
+      const btn = document.createElement('button');
+      btn.className = 'dialog-choice';
+      btn.textContent = choice.text;
+      btn.onclick = () => handleDialogChoice(choice.action);
+      choicesEl.appendChild(btn);
+    }
+  } else {
+    choicesEl.style.display = 'none';
+    continueEl.style.display = 'block';
+  }
+}
+
+function advanceDialog() {
+  if (!currentDialog) return;
+  const line = currentDialog[dialogIndex];
+  if (line.choices) return;
+
+  dialogIndex++;
+  if (dialogIndex >= currentDialog.length) {
+    closeDialog();
+  } else {
+    showDialogLine();
+  }
+}
+
+function handleDialogChoice(action) {
+  switch (action) {
+    case 'close':
+      closeDialog();
+      break;
+    case 'accept_main_quest':
+      acceptQuest('main_dragon');
+      closeDialog();
+      break;
+    case 'accept_goblin_quest':
+      acceptQuest('goblin_problem');
+      closeDialog();
+      break;
+    case 'elder_more':
+      currentDialog = DIALOGUES['elder_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'open_shop':
+      closeDialog();
+      openShop();
+      break;
+    case 'rest_inn':
+      restAtInn();
+      closeDialog();
+      break;
+    case 'sage_more':
+      currentDialog = DIALOGUES['sage_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    default:
+      dialogIndex++;
+      showDialogLine();
+  }
+}
+
+function handleDialogAction(action) {
+  switch (action) {
+    case 'give_crystal':
+      if (!gameFlags.gotCrystal) {
+        gameFlags.gotCrystal = true;
+        addItem('magic_crystal', 1);
+        logMessage('Obtained: Magic Crystal!', 'gold');
+      }
+      break;
+    case 'reward_goblin_quest':
+      completeQuest('goblin_problem');
+      break;
+    case 'game_victory':
+      setTimeout(() => showScreen('victory-screen'), 1000);
+      break;
+  }
+}
+
+function closeDialog() {
+  document.getElementById('dialog-box').classList.remove('active');
+  currentDialog = null;
+  currentNPC = null;
+  dialogIndex = 0;
+  checkQuestTurnIns();
+}
+
+function checkQuestTurnIns() {
+  if (!currentNPC) return;
+
+  for (const quest of Object.values(QUESTS)) {
+    if (quest.status === 'active' && quest.questGiver === currentNPC.id) {
+      const allDone = quest.objectives.every(o => o.current >= o.count);
+      if (allDone && quest.turnInDialog) {
+        setTimeout(() => startDialog(quest.turnInDialog, currentNPC), 200);
+        break;
+      }
+    }
+  }
+}
+
+// ============================================================
+// SHOP SYSTEM
+// ============================================================
+
+function openShop() {
+  if (currentState !== GameState.EXPLORE) return;
+  document.getElementById('shop-modal').classList.add('active');
+  renderShop();
+}
+
+function closeShop() {
+  document.getElementById('shop-modal').classList.remove('active');
+}
+
+function renderShop() {
+  const shop = SHOPS['village'];
+  document.getElementById('shop-gold').textContent = `💰 GOLD: ${player.gold}`;
+
+  const buyEl = document.getElementById('shop-buy');
+  buyEl.innerHTML = '';
+  for (const itemId of shop.buy) {
+    const item = ITEMS[itemId];
+    if (!item) continue;
+    const div = document.createElement('div');
+    div.className = 'shop-item';
+    div.innerHTML = `<span>${item.icon} ${item.name}</span><span class="shop-item-price">${item.value}G</span>`;
+    div.onclick = () => buyItem(itemId);
+    buyEl.appendChild(div);
+  }
+
+  const sellEl = document.getElementById('shop-sell');
+  sellEl.innerHTML = '';
+  const sellable = player.inventory.filter(i => {
+    const item = ITEMS[i.id];
+    return item && item.type !== 'key' && !Object.values(player.equipment).includes(i.id);
+  });
+
+  if (sellable.length === 0) {
+    sellEl.innerHTML = '<div style="text-align:center;color:#566c86;font-size:9px;padding:10px;">Nothing to sell</div>';
+  } else {
+    for (const inv of sellable) {
+      const item = ITEMS[inv.id];
+      const sellPrice = Math.floor(item.value * 0.5);
+      const div = document.createElement('div');
+      div.className = 'shop-item';
+      div.innerHTML = `<span>${item.icon} ${item.name}${item.stackable ? ` x${inv.count}` : ''}</span><span class="shop-item-price">${sellPrice}G</span>`;
+      div.onclick = () => sellFromShop(inv.id);
+      sellEl.appendChild(div);
+    }
+  }
+}
+
+function buyItem(itemId) {
+  const item = ITEMS[itemId];
+  if (!item) return;
+
+  if (player.gold < item.value) {
+    logMessage('Not enough gold!', 'red');
+    return;
+  }
+
+  if (!item.stackable && player.inventory.length >= 20) {
+    logMessage('Inventory full!', 'red');
+    return;
+  }
+
+  player.gold -= item.value;
+  addItem(itemId, 1);
+  logMessage(`Bought ${item.name}!`, 'green');
+  renderShop();
+  updateUI();
+}
+
+function sellFromShop(itemId) {
+  const item = ITEMS[itemId];
+  const invItem = player.inventory.find(i => i.id === itemId);
+  if (!invItem || invItem.count <= 0) return;
+
+  const sellPrice = Math.floor(item.value * 0.5);
+  player.gold += sellPrice;
+
+  if (item.stackable) {
+    invItem.count--;
+    if (invItem.count <= 0) {
+      player.inventory = player.inventory.filter(i => i.id !== itemId);
+    }
+  } else {
+    player.inventory = player.inventory.filter(i => i.id !== itemId);
+  }
+
+  logMessage(`Sold ${item.name} for ${sellPrice} gold.`, 'gold');
+  renderShop();
+  updateUI();
+}
+
+// ============================================================
+// SAVE / LOAD SYSTEM
+// ============================================================
+
+let currentSaveTab = 'save';
+
+function openSaveMenu() {
+  if (currentState !== GameState.EXPLORE) return;
+  document.getElementById('save-modal').classList.add('active');
+  currentSaveTab = 'save';
+  renderSaveSlots();
+}
+
+function closeSaveMenu() {
+  document.getElementById('save-modal').classList.remove('active');
+}
+
+function switchSaveTab(tab) {
+  currentSaveTab = tab;
+  document.querySelectorAll('#save-modal .modal-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderSaveSlots();
+}
+
+function renderSaveSlots() {
+  const container = document.getElementById('save-slots');
+  container.innerHTML = '';
+
+  for (let i = 1; i <= 3; i++) {
+    const saveData = localStorage.getItem(`pixelquest_save_${i}`);
+    const div = document.createElement('div');
+    div.className = 'save-slot';
+
+    if (saveData) {
+      try {
+        const data = JSON.parse(saveData);
+        const date = new Date(data.timestamp);
+        const dateStr = date.toLocaleString();
+        div.innerHTML = `
+          <div class="save-slot-info">
+            <div class="slot-name">Slot ${i}: ${data.playerName} (Lv.${data.level})</div>
+            <div>Class: ${data.className} | Gold: ${data.gold}</div>
+            <div>Location: ${data.location}</div>
+            <div style="color:#566c86;font-size:8px;">${dateStr}</div>
+          </div>
+          <div class="save-slot-actions">
+            <button class="item-action-btn" onclick="${currentSaveTab === 'save' ? `saveToSlot(${i})` : `loadFromSlot(${i})`}">
+              ${currentSaveTab === 'save' ? 'SAVE' : 'LOAD'}
+            </button>
+          </div>
+        `;
+      } catch(e) {
+        div.innerHTML = `<span class="empty-slot">Slot ${i}: Corrupted</span>`;
+      }
+    } else {
+      if (currentSaveTab === 'save') {
+        div.innerHTML = `
+          <span class="empty-slot">Slot ${i}: Empty</span>
+          <button class="item-action-btn" onclick="saveToSlot(${i})">SAVE</button>
+        `;
+      } else {
+        div.innerHTML = `<span class="empty-slot">Slot ${i}: Empty</span>`;
+      }
+    }
+
+    container.appendChild(div);
+  }
+}
+
+function saveToSlot(slot) {
+  const saveData = {
+    version: '1.0',
+    timestamp: Date.now(),
+    playerName: player.name,
+    level: player.level,
+    className: player.className,
+    gold: player.gold,
+    location: LOCATIONS[currentLocation].name,
+    player: JSON.parse(JSON.stringify(player)),
+    currentLocation,
+    playerX, playerY,
+    gameFlags: JSON.parse(JSON.stringify(gameFlags)),
+    encounteredBoss,
+    quests: JSON.parse(JSON.stringify(QUESTS))
+  };
+
+  localStorage.setItem(`pixelquest_save_${slot}`, JSON.stringify(saveData));
+  lastSaveSlot = slot;
+  logMessage(`Game saved to Slot ${slot}!`, 'gold');
+  renderSaveSlots();
+}
+
+function loadFromSlot(slot) {
+  const saveData = localStorage.getItem(`pixelquest_save_${slot}`);
+  if (!saveData) return;
+
+  try {
+    const data = JSON.parse(saveData);
+    player = data.player;
+    currentLocation = data.currentLocation;
+    playerX = data.playerX;
+    playerY = data.playerY;
+    gameFlags = data.gameFlags || {};
+    encounteredBoss = data.encounteredBoss || false;
+    lastSaveSlot = slot;
+
+    if (data.quests) {
+      for (const [qid, qdata] of Object.entries(data.quests)) {
+        if (QUESTS[qid]) {
+          QUESTS[qid].status = qdata.status;
+          QUESTS[qid].objectives = qdata.objectives;
+        }
+      }
+    }
+
+    document.getElementById('location-name').textContent = LOCATIONS[currentLocation].name;
+    closeSaveMenu();
+    showScreen('explore-screen');
+    logMessage(`Loaded Slot ${slot}!`, 'gold');
+    drawMap();
+  } catch(e) {
+    logMessage('Failed to load save!', 'red');
+  }
+}
+
+function showLoadScreen() {
+  showScreen('title-screen');
+  setTimeout(() => {
+    currentState = GameState.TITLE;
+    document.getElementById('save-modal').classList.add('active');
+    currentSaveTab = 'load';
+    document.querySelectorAll('#save-modal .modal-tab').forEach((t, i) => {
+      t.classList.toggle('active', i === 1);
+    });
+    renderSaveSlots();
+  }, 100);
+}
+
+function loadLastSave() {
+  if (lastSaveSlot) {
+    loadFromSlot(lastSaveSlot);
+  } else {
+    showScreen('title-screen');
+  }
+}
+
+// ============================================================
+// STATUS SCREEN
+// ============================================================
+
+function openStatus() {
+  if (currentState !== GameState.EXPLORE) return;
+  document.getElementById('status-modal').classList.add('active');
+  renderStatus();
+}
+
+function closeStatus() {
+  document.getElementById('status-modal').classList.remove('active');
+}
+
+function renderStatus() {
+  const body = document.getElementById('status-body');
+  const cls = CLASS_DATA[player.class];
+  const hpPct = Math.floor((player.hp / player.hpMax) * 100);
+  const mpPct = Math.floor((player.mp / player.mpMax) * 100);
+  const xpPct = Math.floor((player.exp / player.expNext) * 100);
+
+  let skillsHtml = '';
+  for (const skillId of player.skills) {
+    const skill = SKILLS[skillId];
+    if (skill) {
+      skillsHtml += `<div style="padding:4px 0;border-bottom:1px solid #333c57;font-size:9px;">
+        <span style="color:#f4b41b;">${skill.name}</span>
+        <span style="color:#29adff;margin-left:10px;">${skill.mpCost} MP</span>
+        <div style="color:#94b0c2;font-size:8px;margin-top:2px;">${skill.desc}</div>
+      </div>`;
+    }
+  }
+
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div style="font-size:11px;color:#f4b41b;margin-bottom:8px;">${cls.sprite} ${player.name}</div>
+        <div style="font-size:9px;color:#94b0c2;margin-bottom:12px;">Lv.${player.level} ${player.className}</div>
+        <div style="margin-bottom:8px;">
+          <div style="font-size:8px;color:#94b0c2;display:flex;justify-content:space-between;">
+            <span>HP</span><span>${player.hp}/${player.hpMax} (${hpPct}%)</span>
+          </div>
+          <div style="height:10px;background:#0f0d1d;border:2px solid #333c57;">
+            <div style="height:100%;width:${hpPct}%;background:linear-gradient(180deg,#ff6b7a,#ef4155,#b13e53);"></div>
+          </div>
+        </div>
+        <div style="margin-bottom:8px;">
+          <div style="font-size:8px;color:#94b0c2;display:flex;justify-content:space-between;">
+            <span>MP</span><span>${player.mp}/${player.mpMax} (${mpPct}%)</span>
+          </div>
+          <div style="height:10px;background:#0f0d1d;border:2px solid #333c57;">
+            <div style="height:100%;width:${mpPct}%;background:linear-gradient(180deg,#5cc9ff,#29adff,#1d6fa5);"></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:8px;color:#94b0c2;display:flex;justify-content:space-between;">
+            <span>EXP</span><span>${player.exp}/${player.expNext} (${xpPct}%)</span>
+          </div>
+          <div style="height:10px;background:#0f0d1d;border:2px solid #333c57;">
+            <div style="height:100%;width:${xpPct}%;background:linear-gradient(180deg,#5eff8e,#38b764,#257179);"></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#f4b41b;margin-bottom:8px;">📊 Stats</div>
+        <div style="font-size:9px;line-height:2;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:#94b0c2;">STR</span><span>${getPlayerStat('str')}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#94b0c2;">DEF</span><span>${getPlayerStat('def')}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#94b0c2;">INT</span><span>${getPlayerStat('int')}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#94b0c2;">AGI</span><span>${getPlayerStat('agi')}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#94b0c2;">LUK</span><span>${getPlayerStat('luk')}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#f4b41b;">GOLD</span><span>${player.gold}</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:16px;">
+      <div style="font-size:11px;color:#f4b41b;margin-bottom:8px;">✨ Skills</div>
+      ${skillsHtml}
+    </div>
+  `;
+}
+
+// ============================================================
+// MISC FEATURES
+// ============================================================
+
+function toggleMap() {
+  const mapEl = document.getElementById('map-overlay');
+  if (mapEl.classList.contains('active')) {
+    mapEl.classList.remove('active');
+  } else {
+    mapEl.classList.add('active');
+    drawMap();
+  }
+}
+
+function restAtInn() {
+  if (player.gold < 20) {
+    logMessage('Not enough gold!', 'red');
+    return;
+  }
+  player.gold -= 20;
+  player.hp = player.hpMax;
+  player.mp = player.mpMax;
+  player.statuses = [];
+  logMessage('You rested at the inn. HP and MP fully restored!', 'green');
+  updateUI();
+}
+
+function returnToTitle() {
+  if (confirm('Return to title screen? Unsaved progress will be lost.')) {
+    closeAllModals();
+    showScreen('title-screen');
+  }
+}
+
+function showCredits() {
+  alert('PIXEL QUEST RPG\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
+}
+
+// ============================================================
+// START
+// ============================================================
+
+window.onload = init;
+</script>
+</body>
+</html>

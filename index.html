@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PIXEL QUEST RPG</title>
+<title>PIXEL QUEST RPG v0.2.0</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -1064,6 +1064,68 @@
     font-style: italic;
   }
 
+  /* ADVENTURE STYLES */
+  .adventure-card {
+    padding: 12px;
+    background: var(--bg-deep);
+    border: 3px solid var(--border-dark);
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  .adventure-card:hover {
+    border-color: var(--text-gold);
+    transform: translateX(4px);
+  }
+
+  .adventure-card.selected {
+    border-color: var(--text-gold);
+    box-shadow: 0 0 10px rgba(244, 180, 27, 0.3);
+  }
+
+  .adventure-card.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .adventure-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .adventure-name {
+    font-size: 12px;
+    color: var(--text-gold);
+  }
+
+  .adventure-difficulty {
+    font-size: 8px;
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+
+  .adventure-desc {
+    font-size: 8px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .adventure-progress {
+    display: flex;
+    gap: 15px;
+    font-size: 8px;
+  }
+
+  .adventure-stat {
+    color: var(--text-secondary);
+  }
+
+  .adventure-stat span {
+    color: var(--cyan);
+  }
+
   /* GAME OVER */
   #gameover-screen {
     justify-content: center;
@@ -1187,13 +1249,14 @@
   <!-- TITLE SCREEN -->
   <div id="title-screen" class="screen active">
     <div class="title-logo">PIXEL QUEST</div>
-    <div class="title-sub">— DRAGON'S AWAKENING —</div>
+    <div class="title-sub">— ADVENTURES —</div>
+    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.2.0</div>
     <div class="title-menu">
       <button class="pixel-btn gold" onclick="showScreen('char-screen')">⚔ NEW GAME</button>
       <button class="pixel-btn" onclick="showLoadScreen()">📂 CONTINUE</button>
       <button class="pixel-btn" onclick="showCredits()">❓ HELP</button>
     </div>
-    <div style="margin-top:60px;font-size:8px;color:#566c86;">
+    <div style="margin-top:40px;font-size:8px;color:#566c86;">
       WASD / ARROWS: Move | SPACE/ENTER: Confirm | ESC: Menu
     </div>
   </div>
@@ -1261,6 +1324,7 @@
 
     <div class="action-panel">
       <div class="panel-title">📋 ACTIONS</div>
+      <button class="action-btn" onclick="openAdventures()">🗺️ ADVENTURES</button>
       <button class="action-btn" onclick="openInventory()">🎒 INVENTORY</button>
       <button class="action-btn" onclick="openQuests()">📜 QUESTS</button>
       <button class="action-btn" onclick="openStatus()">📊 STATUS</button>
@@ -1389,6 +1453,22 @@
       </div>
       <div class="modal-body">
         <div class="save-slots" id="save-slots"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADVENTURE SELECT MODAL -->
+  <div class="modal-overlay" id="adventure-modal">
+    <div class="modal" style="width:700px;">
+      <div class="modal-header">
+        <div class="modal-title">🗺️ ADVENTURES</div>
+        <button class="modal-close" onclick="closeAdventures()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:15px;font-size:9px;color:#94b0c2;">
+          Choose your adventure path. Each adventure has unique challenges and bosses!
+        </div>
+        <div id="adventure-list" style="display:grid;gap:10px;"></div>
       </div>
     </div>
   </div>
@@ -1664,6 +1744,239 @@ const LOCATIONS = {
     boss: 'dragon',
     connections: { south: 'mountain_pass' },
     npcs: []
+  },
+  
+  // UNDER THE SEA ADVENTURE LOCATIONS
+  beach: {
+    id:'beach', name:'🏖️ Shallow Beach', bgColor:'#e0f7fa', groundColor:'#b2ebf2',
+    type:'adventure_under_sea', safe:true,
+    adventureId: 'under_sea',
+    encounterRate: 0,
+    connections: { south: 'under_sea_1' },
+    npcs: []
+  },
+  under_sea_1: {
+    id:'under_sea_1', name:'🌊 Coral Reef (Depth -2)', bgColor:'#00bcd4', groundColor:'#4dd0e1',
+    type:'adventure_under_sea', safe:false,
+    adventureId: 'under_sea',
+    enemies: ['jellyfish', 'crab'],
+    encounterRate: 0.12,
+    depth: -2, lane: true,
+    connections: { south: 'beach', north: 'under_sea_2', west: 'under_sea_fork1', east: 'under_sea_fork2' },
+    npcs: []
+  },
+  under_sea_fork1: {
+    id:'under_sea_fork1', name:'🐠 Lane 1 - Coral Maze', bgColor:'#0097a7', groundColor:'#26c6da',
+    type:'adventure_under_sea', safe:false,
+    adventureId: 'under_sea',
+    enemies: ['jellyfish', 'octopus'],
+    encounterRate: 0.15,
+    depth: -3, lane: 0,
+    connections: { east: 'under_sea_1' },
+    npcs: []
+  },
+  under_sea_fork2: {
+    id:'under_sea_fork2', name:'🦈 Lane 2 - Shark Waters', bgColor:'#006064', groundColor:'#00838f',
+    type:'adventure_under_sea', safe:false,
+    adventureId: 'under_sea',
+    enemies: ['shark', 'sea_urchin'],
+    encounterRate: 0.18,
+    depth: -3, lane: 1,
+    connections: { west: 'under_sea_1' },
+    npcs: []
+  },
+  under_sea_2: {
+    id:'under_sea_2', name:'🐙 Mid Ocean (Depth -5)', bgColor:'#00838f', groundColor:'#00acc1',
+    type:'adventure_under_sea', safe:false,
+    adventureId: 'under_sea',
+    enemies: ['octopus', 'shark', 'sea_urchin'],
+    encounterRate: 0.18,
+    depth: -5, lane: true,
+    connections: { south: 'under_sea_1', north: 'under_sea_3', east: 'under_sea_fork3', west: 'under_sea_fork4' },
+    npcs: []
+  },
+  under_sea_fork3: {
+    id:'under_sea_fork3', name:'🐢 Lane 2 - Turtle Bay', bgColor:'#006064', groundColor:'#0097a7',
+    type:'adventure_under_sea', safe:false,
+    adventureId: 'under_sea',
+    enemies: ['giant_turtle', 'electric_eel'],
+    encounterRate: 0.2,
+    depth: -7, lane: 1,
+    miniBoss: 'giant_turtle',
+    connections: { west: 'under_sea_2' },
+    npcs: []
+  },
+  under_sea_fork4: {
+    id:'under_sea_fork4', name:'⚡ Lane 3 - Eel Caves', bgColor:'#004d61', groundColor:'#006064',
+    type:'adventure_under_sea', safe:false,
+    adventureId: 'under_sea',
+    enemies: ['electric_eel', 'octopus'],
+    encounterRate: 0.22,
+    depth: -8, lane: 2,
+    miniBoss: 'electric_eel',
+    connections: { east: 'under_sea_2' },
+    npcs: []
+  },
+  under_sea_3: {
+    id:'under_sea_3', name:'🌑 The Abyss (Depth -10)', bgColor:'#004d61', groundColor:'#006064',
+    type:'adventure_under_sea', safe:false,
+    adventureId: 'under_sea',
+    enemies: ['shark', 'electric_eel', 'sea_urchin'],
+    encounterRate: 0.25,
+    depth: -10, lane: true,
+    connections: { south: 'under_sea_2', north: 'under_sea_4' },
+    npcs: []
+  },
+  under_sea_4: {
+    id:'under_sea_4', name:'👑 Jellyfish Throne (Depth -20)', bgColor:'#00263a', groundColor:'#004d61',
+    type:'boss', safe:false,
+    adventureId: 'under_sea',
+    enemies: ['jellyfish_king'],
+    encounterRate: 0,
+    depth: -20, lane: true,
+    boss: 'jellyfish_king',
+    connections: { south: 'under_sea_3' },
+    npcs: []
+  },
+  
+  // MONSTER SLIME ADVENTURE LOCATIONS
+  slime_swamp: {
+    id:'slime_swamp', name:'🟢 Slime Swamp', bgColor:'#1a1a2e', groundColor:'#2d2d44',
+    type:'adventure_slime', safe:false,
+    adventureId: 'monster_slime',
+    enemies: ['slime', 'mega_slime'],
+    encounterRate: 0.15,
+    connections: { south: 'slime_marsh', north: 'slime_castle' },
+    npcs: []
+  },
+  slime_marsh: {
+    id:'slime_marsh', name:'🟣 Toxic Marsh', bgColor:'#2d2d44', groundColor:'#3d3d5c',
+    type:'adventure_slime', safe:false,
+    adventureId: 'monster_slime',
+    enemies: ['mega_slime', 'king_slime'],
+    encounterRate: 0.18,
+    connections: { north: 'slime_swamp', south: 'slime_cavern' },
+    npcs: []
+  },
+  slime_cavern: {
+    id:'slime_cavern', name:'🔮 Mutant Cavern', bgColor:'#3d3d5c', groundColor:'#5a189a',
+    type:'adventure_slime', safe:false,
+    adventureId: 'monster_slime',
+    enemies: ['king_slime', 'slime_queen'],
+    encounterRate: 0.2,
+    miniBoss: 'slime_queen',
+    connections: { north: 'slime_marsh', south: 'slime_castle' },
+    npcs: []
+  },
+  slime_castle: {
+    id:'slime_castle', name:'🏰 Slime Castle', bgColor:'#5a189a', groundColor:'#7b1fa2',
+    type:'boss', safe:false,
+    adventureId: 'monster_slime',
+    enemies: ['slime_lord'],
+    encounterRate: 0,
+    boss: 'slime_lord',
+    connections: { south: 'slime_cavern' },
+    npcs: []
+  },
+  
+  // WITCH ADVENTURE LOCATIONS
+  haunted_forest: {
+    id:'haunted_forest', name:'🌲 Haunted Forest', bgColor:'#1a0a2e', groundColor:'#2d1b4e',
+    type:'adventure_witch', safe:false,
+    adventureId: 'witch',
+    enemies: ['ghost', 'banshee'],
+    encounterRate: 0.15,
+    connections: { south: 'dark_woods', north: 'witch_tower' },
+    npcs: []
+  },
+  dark_woods: {
+    id:'dark_woods', name:'🌑 Dark Woods', bgColor:'#2d1b4e', groundColor:'#4a1b7a',
+    type:'adventure_witch', safe:false,
+    adventureId: 'witch',
+    enemies: ['banshee', 'wizard', 'dark_spirit'],
+    encounterRate: 0.18,
+    connections: { north: 'haunted_forest', south: 'enchanted_castle' },
+    npcs: []
+  },
+  witch_tower: {
+    id:'witch_tower', name:'🧹 Witch Tower', bgColor:'#4a1b7a', groundColor:'#6a2c9a',
+    type:'adventure_witch', safe:false,
+    adventureId: 'witch',
+    enemies: ['wizard', 'warlock', 'evil_witch'],
+    encounterRate: 0.2,
+    miniBoss: 'evil_witch',
+    connections: { south: 'haunted_forest', east: 'enchanted_castle' },
+    npcs: []
+  },
+  enchanted_castle: {
+    id:'enchanted_castle', name:'🏰 Enchanted Castle', bgColor:'#6a2c9a', groundColor:'#8a4ca2',
+    type:'adventure_witch', safe:false,
+    adventureId: 'witch',
+    enemies: ['dark_spirit', 'cursed_puppet', 'warlock'],
+    encounterRate: 0.22,
+    miniBoss: 'cursed_puppet',
+    connections: { west: 'witch_tower', north: 'witch_sanctum' },
+    npcs: []
+  },
+  witch_sanctum: {
+    id:'witch_sanctum', name:'👸 Witch Sanctum', bgColor:'#8a4ca2', groundColor:'#aa5caa',
+    type:'boss', safe:false,
+    adventureId: 'witch',
+    enemies: ['witch_queen'],
+    encounterRate: 0,
+    boss: 'witch_queen',
+    connections: { south: 'enchanted_castle' },
+    npcs: []
+  },
+  
+  // HELL ADVENTURE LOCATIONS
+  inferno_gate: {
+    id:'inferno_gate', name:'🔥 Inferno Gate', bgColor:'#1a0000', groundColor:'#4a0000',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['imp', 'hell_hound'],
+    encounterRate: 0.15,
+    connections: { south: 'burning_sands', north: 'demon_citadel' },
+    npcs: []
+  },
+  burning_sands: {
+    id:'burning_sands', name:'🏜️ Burning Sands', bgColor:'#4a0000', groundColor:'#6a1a1a',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['hell_hound', 'demon', 'tortured_soul'],
+    encounterRate: 0.18,
+    connections: { north: 'inferno_gate', south: 'lake_of_fire' },
+    npcs: []
+  },
+  lake_of_fire: {
+    id:'lake_of_fire', name:'🌋 Lake of Fire', bgColor:'#6a1a1a', groundColor:'#8b2500',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['demon', 'pit_fiend', 'balrog'],
+    encounterRate: 0.22,
+    miniBoss: 'balrog',
+    connections: { north: 'burning_sands', east: 'demon_citadel' },
+    npcs: []
+  },
+  demon_citadel: {
+    id:'demon_citadel', name:'🏰 Demon Citadel', bgColor:'#8b2500', groundColor:'#aa2a00',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['pit_fiend', 'demon_lord_minion', 'demon'],
+    encounterRate: 0.25,
+    miniBoss: 'demon_lord_minion',
+    connections: { west: 'lake_of_fire', north: 'abyssal_throne' },
+    npcs: []
+  },
+  abyssal_throne: {
+    id:'abyssal_throne', name:'😈 Abyssal Throne', bgColor:'#aa2a00', groundColor:'#cc3300',
+    type:'boss', safe:false,
+    adventureId: 'hell',
+    enemies: ['demon_lord'],
+    encounterRate: 0,
+    boss: 'demon_lord',
+    connections: { south: 'demon_citadel' },
+    npcs: []
   }
 };
 
@@ -1771,6 +2084,336 @@ const QUESTS = {
     status:'available'
   }
 };
+
+// --- ADVENTURE DATABASE ---
+const ADVENTURES = {
+  fire_dragon: {
+    id: 'fire_dragon',
+    name: 'The Fire Dragon',
+    description: 'Face the ancient dragon that terrorizes the kingdom.',
+    difficulty: 1,
+    unlocked: true,
+    color: '#ff6b35',
+    bgGradient: ['#4a1c1c', '#8b2500', '#ff4500'],
+    enemies: ['slime', 'wolf', 'skeleton', 'orc'],
+    miniBosses: ['gargoyle'],
+    finalBoss: 'dragon',
+    mapLevel: 1,
+    progression: {
+      areas: ['Forest Path', 'Deep Forest', 'Cave', 'Mountain Foothills', "Dragon's Lair"],
+      enemyMultiplier: 1.0,
+      bossMultiplier: 1.0
+    }
+  },
+  under_sea: {
+    id: 'under_sea',
+    name: 'Under the Sea',
+    description: 'Dive deep into the ocean to defeat the Jellyfish King.',
+    difficulty: 2,
+    unlocked: true,
+    color: '#00bcd4',
+    bgGradient: ['#e0f7fa', '#00acc1', '#004d61'],
+    depthSystem: true,
+    startDepth: -2,
+    lanes: 3,
+    forks: 2,
+    enemies: ['jellyfish', 'crab', 'octopus', 'shark', 'sea_urchin'],
+    miniBosses: ['giant_turtle', 'electric_eel'],
+    finalBoss: 'jellyfish_king',
+    mapLevel: 2,
+    progression: {
+      areas: ['Shallow Beach', 'Coral Reef', 'Mid Ocean', 'The Abyss', 'Jellyfish Throne'],
+      depths: [-2, -5, -10, -20, -35],
+      lanes: [0, 1, 2],
+      enemyMultiplier: 1.3,
+      bossMultiplier: 1.2
+    }
+  },
+  monster_slime: {
+    id: 'monster_slime',
+    name: 'Monster Slime',
+    description: 'Defeat the corrupted slimes that plague the lands.',
+    difficulty: 3,
+    unlocked: true,
+    color: '#7c4dff',
+    bgGradient: ['#1a1a2e', '#2d2d44', '#5a189a'],
+    enemies: ['slime', 'mega_slime', 'king_slime', 'slime_king'],
+    miniBosses: ['slime_queen'],
+    finalBoss: 'slime_lord',
+    mapLevel: 3,
+    progression: {
+      areas: ['Slime Swamp', 'Toxic Marsh', 'Mutant Cavern', 'Slime Castle', 'Throne Room'],
+      enemyMultiplier: 1.5,
+      bossMultiplier: 1.4
+    }
+  },
+  witch: {
+    id: 'witch',
+    name: 'Abracadabra Witch',
+    description: 'Enter the witch\'s domain and break her dark magic.',
+    difficulty: 4,
+    unlocked: true,
+    color: '#9c27b0',
+    bgGradient: ['#1a0a2e', '#3c1a5e', '#7b1fa2'],
+    enemies: ['wizard', 'warlock', 'banshee', 'ghost', 'dark_spirit'],
+    miniBosses: ['evil_witch', 'cursed_puppet'],
+    finalBoss: 'witch_queen',
+    mapLevel: 4,
+    progression: {
+      areas: ['Haunted Forest', 'Dark Woods', 'Witch Tower', 'Enchanted Castle', 'Witch Sanctum'],
+      enemyMultiplier: 1.8,
+      bossMultiplier: 1.6
+    }
+  },
+  hell: {
+    id: 'hell',
+    name: 'Boundless Hell',
+    description: 'Descend into the endless abyss and defeat the Demon Lord.',
+    difficulty: 5,
+    unlocked: true,
+    color: '#ff1744',
+    bgGradient: ['#1a0000', '#4a0000', '#8b0000'],
+    enemies: ['imp', 'demon', 'hell_hound', 'tortured_soul', 'pit_fiend'],
+    miniBosses: ['balrog', 'demon_lord_minion'],
+    finalBoss: 'demon_lord',
+    mapLevel: 5,
+    progression: {
+      areas: ['Inferno Gate', 'Burning Sands', 'Lake of Fire', 'Demon Citadel', 'Abyssal Throne'],
+      enemyMultiplier: 2.2,
+      bossMultiplier: 2.0
+    }
+  }
+};
+
+// --- ADVENTURE ENEMIES ---
+const ADVENTURE_ENEMIES = {
+  // Under the Sea
+  jellyfish: {
+    id:'jellyfish', name:'Electric Jellyfish', sprite:'🎐',
+    hp:25, atk:10, def:1, int:5, agi:12,
+    expReward:18, goldReward:[5, 12],
+    loot:[{item:'hp_potion', rate:0.25}],
+    ai:'aggressive', statuses:['stun']
+  },
+  crab: {
+    id:'crab', name:'Giant Crab', sprite:'🦀',
+    hp:45, atk:12, def:8, int:2, agi:7,
+    expReward:22, goldReward:[8, 15],
+    loot:[{item:'chain_mail', rate:0.05}],
+    ai:'defensive', statuses:[]
+  },
+  octopus: {
+    id:'octopus', name:'Deep Octopus', sprite:'🐙',
+    hp:60, atk:15, def:5, int:8, agi:9,
+    expReward:35, goldReward:[12, 20],
+    loot:[{item:'mp_potion', rate:0.3}],
+    ai:'balanced', statuses:['stun']
+  },
+  shark: {
+    id:'shark', name:'Razor Shark', sprite:'🦈',
+    hp:80, atk:22, def:6, int:3, agi:15,
+    expReward:50, goldReward:[15, 30],
+    loot:[{item:'hp_potion_big', rate:0.35}],
+    ai:'aggressive', statuses:[]
+  },
+  sea_urchin: {
+    id:'sea_urchin', name:'Spiked Urchin', sprite:'🦔',
+    hp:30, atk:18, def:12, int:2, agi:5,
+    expReward:28, goldReward:[8, 18],
+    loot:[{item:'antidote', rate:0.4}],
+    ai:'defensive', statuses:['poison']
+  },
+  giant_turtle: {
+    id:'giant_turtle', name:'Giant Sea Turtle', sprite:'🐢',
+    hp:150, atk:15, def:25, int:5, agi:4,
+    expReward:120, goldReward:[60, 100],
+    loot:[{item:'wise_amulet', rate:0.15}],
+    ai:'defensive', statuses:[]
+  },
+  electric_eel: {
+    id:'electric_eel', name:'Electric Eel', sprite:'⚡🐍',
+    hp:100, atk:28, def:8, int:15, agi:12,
+    expReward:140, goldReward:[70, 120],
+    loot:[{item:'power_ring', rate:0.2}],
+    ai:'aggressive', statuses:['stun']
+  },
+  jellyfish_king: {
+    id:'jellyfish_king', name:'Jellyfish King', sprite:'👑🎐',
+    hp:500, atk:35, def:20, int:40, agi:14,
+    expReward:800, goldReward:[400, 700],
+    loot:[{item:'hero_medal', rate:1.0},{item:'wise_amulet', rate:0.5}],
+    ai:'balanced', statuses:['stun'],
+    specialAbility: 'electric_surge'
+  },
+  
+  // Monster Slime
+  mega_slime: {
+    id:'mega_slime', name:'Mega Slime', sprite:'🟣',
+    hp:60, atk:14, def:6, int:3, agi:6,
+    expReward:40, goldReward:[15, 25],
+    loot:[{item:'hp_potion_big', rate:0.3}],
+    ai:'balanced', statuses:['poison']
+  },
+  king_slime: {
+    id:'king_slime', name:'King Slime', sprite:'🟡',
+    hp:90, atk:18, def:10, int:5, agi:8,
+    expReward:70, goldReward:[30, 50],
+    loot:[{item:'steel_blade', rate:0.1}],
+    ai:'aggressive', statuses:['poison']
+  },
+  slime_queen: {
+    id:'slime_queen', name:'Slime Queen', sprite:'👸🟢',
+    hp:200, atk:25, def:15, int:12, agi:10,
+    expReward:200, goldReward:[120, 200],
+    loot:[{item:'plate_armor', rate:0.2}],
+    ai:'balanced', statuses:['poison']
+  },
+  slime_lord: {
+    id:'slime_lord', name:'Slime Lord', sprite:'🐌👑',
+    hp:600, atk:40, def:30, int:25, agi:8,
+    expReward:1000, goldReward:[600, 1000],
+    loot:[{item:'hero_sword', rate:1.0},{item:'lucky_charm', rate:0.5}],
+    ai:'balanced', statuses:['poison'],
+    specialAbility: 'slime_rain'
+  },
+  
+  // Witch
+  wizard: {
+    id:'wizard', name:'Dark Wizard', sprite:'🧙‍♂️',
+    hp:70, atk:8, def:5, int:25, agi:10,
+    expReward:65, goldReward:[35, 60],
+    loot:[{item:'mp_potion_big', rate:0.4}],
+    ai:'defensive', statuses:[],
+    skills:['fireball','ice_lance']
+  },
+  warlock: {
+    id:'warlock', name:'Warlock', sprite:'🧙‍♀️',
+    hp:85, atk:10, def:7, int:30, agi:8,
+    expReward:80, goldReward:[45, 75],
+    loot:[{item:'crystal_staff', rate:0.1}],
+    ai:'balanced', statuses:[],
+    skills:['heal','fireball']
+  },
+  banshee: {
+    id:'banshee', name:'Banshee', sprite:'👻',
+    hp:55, atk:20, def:3, int:20, agi:18,
+    expReward:90, goldReward:[50, 85],
+    loot:[{item:'antidote', rate:0.5}],
+    ai:'aggressive', statuses:['stun']
+  },
+  ghost: {
+    id:'ghost', name:'Vengeful Ghost', sprite:'💀',
+    hp:65, atk:18, def:2, int:22, agi:16,
+    expReward:95, goldReward:[55, 90],
+    loot:[{item:'hp_potion_big', rate:0.35}],
+    ai:'aggressive', statuses:['burn']
+  },
+  dark_spirit: {
+    id:'dark_spirit', name:'Dark Spirit', sprite:'🔥💀',
+    hp:120, atk:25, def:10, int:28, agi:12,
+    expReward:150, goldReward:[80, 140],
+    loot:[{item:'shadow_dagger', rate:0.15}],
+    ai:'balanced', statuses:['burn','poison']
+  },
+  evil_witch: {
+    id:'evil_witch', name:'Evil Witch', sprite:'🧹👩‍⚰️',
+    hp:250, atk:20, def:15, int:40, agi:12,
+    expReward:280, goldReward:[180, 300],
+    loot:[{item:'mage_robes', rate:0.25}],
+    ai:'defensive', statuses:[],
+    skills:['fireball','heal']
+  },
+  cursed_puppet: {
+    id:'cursed_puppet', name:'Cursed Puppet', sprite:'🎭',
+    hp:180, atk:30, def:20, int:15, agi:6,
+    expReward:250, goldReward:[150, 250],
+    loot:[{item:'power_ring', rate:0.2}],
+    ai:'aggressive', statuses:['stun']
+  },
+  witch_queen: {
+    id:'witch_queen', name:'Witch Queen', sprite:'👸🧹',
+    hp:700, atk:35, def:25, int:50, agi:15,
+    expReward:1200, goldReward:[800, 1500],
+    loot:[{item:'hero_medal', rate:1.0},{item:'crystal_staff', rate:0.8}],
+    ai:'defensive', statuses:['burn'],
+    skills:['fireball','ice_lance','heal'],
+    specialAbility: 'dark_curse'
+  },
+  
+  // Hell
+  imp: {
+    id:'imp', name:'Hell Imp', sprite:'👿',
+    hp:35, atk:15, def:4, int:8, agi:14,
+    expReward:30, goldReward:[15, 30],
+    loot:[{item:'hp_potion', rate:0.3}],
+    ai:'aggressive', statuses:['burn']
+  },
+  demon: {
+    id:'demon', name:'Lesser Demon', sprite:'😈',
+    hp:100, atk:25, def:12, int:10, agi:10,
+    expReward:85, goldReward:[50, 90],
+    loot:[{item:'hp_potion_big', rate:0.35}],
+    ai:'aggressive', statuses:['burn']
+  },
+  hell_hound: {
+    id:'hell_hound', name:'Hell Hound', sprite:'🐕‍🦺🔥',
+    hp:85, atk:30, def:8, int:5, agi:16,
+    expReward:75, goldReward:[40, 80],
+    loot:[{item:'fire_sword', rate:0.08}],
+    ai:'aggressive', statuses:['burn']
+  },
+  tortured_soul: {
+    id:'tortured_soul', name:'Tortured Soul', sprite:'💔👻',
+    hp:60, atk:22, def:5, int:18, agi:15,
+    expReward:70, goldReward:[45, 85],
+    loot:[{item:'mp_potion_big', rate:0.4}],
+    ai:'balanced', statuses:['stun','burn']
+  },
+  pit_fiend: {
+    id:'pit_fiend', name:'Pit Fiend', sprite:'🦇😈',
+    hp:150, atk:32, def:18, int:15, agi:12,
+    expReward:160, goldReward:[100, 180],
+    loot:[{item:'plate_armor', rate:0.15}],
+    ai:'balanced', statuses:['burn','poison']
+  },
+  balrog: {
+    id:'balrog', name:'Balrog', sprite:'🔥🦇',
+    hp:350, atk:40, def:30, int:20, agi:14,
+    expReward:400, goldReward:[300, 500],
+    loot:[{item:'dragon_armor', rate:0.3}],
+    ai:'aggressive', statuses:['burn'],
+    skills:['fireball']
+  },
+  demon_lord_minion: {
+    id:'demon_lord_minion', name:'Demon Commander', sprite:'👹⚔️',
+    hp:400, atk:45, def:35, int:25, agi:10,
+    expReward:450, goldReward:[350, 600],
+    loot:[{item:'hero_sword', rate:0.4}],
+    ai:'balanced', statuses:['burn']
+  },
+  demon_lord: {
+    id:'demon_lord', name:'Demon Lord', sprite:'😈🔥👑',
+    hp:900, atk:55, def:40, int:45, agi:18,
+    expReward:2000, goldReward:[1500, 3000],
+    loot:[{item:'hero_medal', rate:1.0},{item:'dragon_armor', rate:1.0},{item:'hero_sword', rate:1.0}],
+    ai:'aggressive', statuses:['burn','poison'],
+    skills:['fireball','heal'],
+    specialAbility: 'hellfire'
+  }
+};
+
+// --- ADVENTURE STATE ---
+let currentAdventure = 'fire_dragon';
+let adventureProgress = {
+  fire_dragon: { currentArea: 0, completed: false, clearedAreas: [] },
+  under_sea: { currentArea: 0, currentDepth: -2, currentLane: 1, currentFork: 0, completed: false, clearedAreas: [] },
+  monster_slime: { currentArea: 0, completed: false, clearedAreas: [] },
+  witch: { currentArea: 0, completed: false, clearedAreas: [] },
+  hell: { currentArea: 0, completed: false, clearedAreas: [] }
+};
+let oceanDepth = -2;
+let currentLane = 1;
+let lanePositions = [150, 300, 450];
 
 // --- SHOP INVENTORIES ---
 const SHOPS = {
@@ -2386,27 +3029,62 @@ function drawMap() {
 function triggerRandomEncounter() {
   const loc = LOCATIONS[currentLocation];
   if (!loc.enemies || loc.enemies.length === 0) return;
-
+  
+  // Check if we're in an adventure location
+  const adventure = ADVENTURES[currentAdventure];
+  
   const numEnemies = Math.random() < 0.3 ? 2 : 1;
   const enemies = [];
 
   for (let i = 0; i < numEnemies; i++) {
     const enemyId = loc.enemies[Math.floor(Math.random() * loc.enemies.length)];
-    enemies.push(createEnemy(enemyId));
+    
+    // Use scaled adventure enemy if in adventure
+    if (adventure) {
+      const scaled = getScaledEnemy(enemyId);
+      if (scaled) {
+        enemies.push(scaled);
+      } else {
+        enemies.push(createEnemy(enemyId));
+      }
+    } else {
+      enemies.push(createEnemy(enemyId));
+    }
   }
 
   startBattle(enemies);
 }
 
 function startBossBattle(bossId) {
-  logMessage('The great dragon appears!', 'red');
-  const boss = createEnemy(bossId);
-  boss.hp = boss.hpMax = Math.floor(boss.hp * 1.2);
+  // Check if this is an adventure boss
+  const adventure = ADVENTURES[currentAdventure];
+  let boss;
+  
+  if (adventure && adventure.enemies.includes(bossId) || adventure && adventure.miniBosses && adventure.miniBosses.includes(bossId)) {
+    // Use scaled adventure enemy
+    boss = getScaledEnemy(bossId);
+    boss.hp = boss.hpMax = Math.floor(boss.hp * 1.5);
+    logMessage(`A powerful ${boss.name} appears!`, 'red');
+  } else if (adventure && adventure.finalBoss === bossId) {
+    // Final boss with extra scaling
+    boss = getScaledEnemy(bossId);
+    boss.hp = boss.hpMax = Math.floor(boss.hp * 2);
+    logMessage(`The legendary ${boss.name} emerges!`, 'red');
+  } else {
+    // Default boss
+    boss = createEnemy(bossId);
+    boss.hp = boss.hpMax = Math.floor(boss.hp * 1.2);
+    logMessage('A powerful enemy appears!', 'red');
+  }
+  
   startBattle([boss]);
 }
 
 function createEnemy(id) {
-  const template = ENEMIES[id];
+  // Check adventure-specific enemies first
+  const template = ADVENTURE_ENEMIES[id] || ENEMIES[id];
+  if (!template) return null;
+  
   return {
     ...template,
     hp: template.hp,
@@ -3450,6 +4128,251 @@ function acceptQuest(questId) {
 }
 
 // ============================================================
+// ADVENTURE SYSTEM
+// ============================================================
+
+function openAdventures() {
+  if (currentState !== GameState.EXPLORE) return;
+  renderAdventureList();
+  document.getElementById('adventure-modal').classList.add('active');
+}
+
+function closeAdventures() {
+  document.getElementById('adventure-modal').classList.remove('active');
+}
+
+function renderAdventureList() {
+  const list = document.getElementById('adventure-list');
+  list.innerHTML = '';
+
+  for (const [id, adventure] of Object.entries(ADVENTURES)) {
+    const progress = adventureProgress[id];
+    const isSelected = currentAdventure === id;
+    const isLocked = !adventure.unlocked;
+    const areas = adventure.progression.areas;
+    const currentArea = progress.currentArea;
+    
+    const div = document.createElement('div');
+    div.className = `adventure-card ${isSelected ? 'selected' : ''} ${isLocked ? 'locked' : ''}`;
+    
+    const difficultyColors = {
+      1: 'background:#4CAF50;color:#fff;',
+      2: 'background:#2196F3;color:#fff;',
+      3: 'background:#FF9800;color:#fff;',
+      4: 'background:#9C27B0;color:#fff;',
+      5: 'background:#f44336;color:#fff;'
+    };
+
+    let depthInfo = '';
+    if (adventure.depthSystem) {
+      depthInfo = `<div class="adventure-stat">Depth: <span>Level ${progress.currentDepth}</span></div>`;
+    }
+
+    div.innerHTML = `
+      <div class="adventure-header">
+        <div class="adventure-name">${adventure.name}</div>
+        <div class="adventure-difficulty" style="${difficultyColors[adventure.difficulty]}">
+          ${isLocked ? '🔒' : ''} DIFF ${adventure.difficulty}
+        </div>
+      </div>
+      <div class="adventure-desc">${adventure.description}</div>
+      <div class="adventure-progress">
+        <div class="adventure-stat">Area: <span>${currentArea + 1}/${areas.length}</span></div>
+        ${depthInfo}
+        <div class="adventure-stat">Status: <span>${progress.completed ? '✅ Complete' : '⏳ In Progress'}</span></div>
+      </div>
+    `;
+
+    if (!isLocked) {
+      div.onclick = () => selectAdventure(id);
+    }
+
+    list.appendChild(div);
+  }
+}
+
+function selectAdventure(adventureId) {
+  const adventure = ADVENTURES[adventureId];
+  if (!adventure || !adventure.unlocked) return;
+
+  currentAdventure = adventureId;
+  logMessage(`Adventure selected: ${adventure.name}`, 'gold');
+  
+  // Reset progress for selected adventure
+  adventureProgress[adventureId].currentArea = 0;
+  if (adventure.depthSystem) {
+    adventureProgress[adventureId].currentDepth = adventure.startDepth;
+    adventureProgress[adventureId].currentLane = 1;
+  }
+  
+  // Teleport player to adventure start location
+  if (adventureId === 'fire_dragon') {
+    changeLocation('forest_path', 'north');
+  } else if (adventureId === 'under_sea') {
+    changeLocation('beach', 'north');
+  } else if (adventureId === 'monster_slime') {
+    changeLocation('slime_swamp', 'north');
+  } else if (adventureId === 'witch') {
+    changeLocation('haunted_forest', 'north');
+  } else if (adventureId === 'hell') {
+    changeLocation('inferno_gate', 'north');
+  }
+  
+  closeAdventures();
+  renderAdventureList();
+  updateUI();
+}
+
+function advanceAdventureArea() {
+  const adventure = ADVENTURES[currentAdventure];
+  const progress = adventureProgress[currentAdventure];
+  
+  if (progress.currentArea < adventure.progression.areas.length - 1) {
+    progress.currentArea++;
+    
+    // Update depth for underwater adventure
+    if (adventure.depthSystem && adventure.progression.depths) {
+      progress.currentDepth = adventure.progression.depths[progress.currentArea];
+      logMessage(`Descended to depth level ${progress.currentDepth}!`, 'cyan');
+    }
+    
+    const areaName = adventure.progression.areas[progress.currentArea];
+    logMessage(`Advanced to: ${areaName}`, 'gold');
+    
+    // Unlock next area
+    progress.clearedAreas.push(progress.currentArea);
+    
+    // Check for boss encounter
+    if (progress.currentArea === adventure.progression.areas.length - 1) {
+      logMessage(`Final boss area reached: ${areaName}`, 'red');
+    }
+  } else {
+    // Adventure completed
+    progress.completed = true;
+    logMessage(`🎉 Adventure "${adventure.name}" COMPLETED!`, 'gold');
+  }
+  
+  updateUI();
+}
+
+function getAdventureEnemies() {
+  const adventure = ADVENTURES[currentAdventure];
+  return adventure.enemies;
+}
+
+function getAdventureMiniBosses() {
+  const adventure = ADVENTURES[currentAdventure];
+  return adventure.miniBosses;
+}
+
+function getAdventureFinalBoss() {
+  const adventure = ADVENTURES[currentAdventure];
+  return adventure.finalBoss;
+}
+
+function getScaledEnemy(enemyId) {
+  const adventure = ADVENTURES[currentAdventure];
+  const progress = adventureProgress[currentAdventure];
+  
+  // Check if it's an adventure-specific enemy
+  let baseEnemy = ADVENTURE_ENEMIES[enemyId] || ENEMIES[enemyId];
+  if (!baseEnemy) return null;
+  
+  // Clone the enemy
+  const enemy = { ...baseEnemy };
+  
+  // Scale based on adventure difficulty and area progression
+  const areaMultiplier = 1 + (progress.currentArea * 0.15 * adventure.progression.enemyMultiplier);
+  const difficultyMultiplier = 1 + (adventure.difficulty * 0.1);
+  
+  const totalScale = areaMultiplier * difficultyMultiplier;
+  
+  // Apply scaling
+  enemy.hp = Math.floor(enemy.hp * totalScale);
+  enemy.atk = Math.floor(enemy.atk * totalScale);
+  enemy.def = Math.floor(enemy.def * totalScale);
+  enemy.int = Math.floor(enemy.int * totalScale);
+  enemy.expReward = Math.floor(enemy.expReward * totalScale);
+  enemy.goldReward = [
+    Math.floor(enemy.goldReward[0] * totalScale),
+    Math.floor(enemy.goldReward[1] * totalScale)
+  ];
+  
+  return enemy;
+}
+
+// Under Sea specific functions
+function updateOceanDepth(delta) {
+  const adventure = ADVENTURES.under_sea;
+  const progress = adventureProgress.under_sea;
+  
+  progress.currentDepth += delta;
+  
+  // Keep within bounds
+  const maxDepth = adventure.progression.depths[adventure.progression.depths.length - 1];
+  progress.currentDepth = Math.max(progress.currentDepth, maxDepth);
+  
+  // Check for area advancement
+  for (let i = 0; i < adventure.progression.depths.length; i++) {
+    if (progress.currentDepth <= adventure.progression.depths[i]) {
+      if (progress.currentArea < i) {
+        progress.currentArea = i;
+        advanceAdventureArea();
+      }
+    }
+  }
+  
+  updateUI();
+}
+
+function changeLane(newLane) {
+  const adventure = ADVENTURES.under_sea;
+  if (currentAdventure !== 'under_sea') return;
+  if (newLane >= 0 && newLane < adventure.lanes) {
+    adventureProgress.under_sea.currentLane = newLane;
+    logMessage(`Moved to lane ${newLane + 1}`, 'cyan');
+  }
+}
+
+function triggerAdventureEncounter() {
+  const adventure = ADVENTURES[currentAdventure];
+  const progress = adventureProgress[currentAdventure];
+  
+  // Decide encounter type
+  const encounterRoll = Math.random();
+  let enemyType;
+  
+  if (encounterRoll < 0.1 && progress.currentArea === adventure.progression.areas.length - 1) {
+    // Boss encounter (10% in final area)
+    enemyType = 'boss';
+  } else if (encounterRoll < 0.3) {
+    // Mini-boss (30% chance)
+    enemyType = 'miniboss';
+  } else {
+    // Normal encounter
+    enemyType = 'normal';
+  }
+  
+  // Select enemy
+  let enemyId;
+  if (enemyType === 'boss') {
+    enemyId = adventure.finalBoss;
+  } else if (enemyType === 'miniboss') {
+    const miniBosses = adventure.miniBosses;
+    enemyId = miniBosses[Math.floor(Math.random() * miniBosses.length)];
+  } else {
+    const enemies = adventure.enemies;
+    enemyId = enemies[Math.floor(Math.random() * enemies.length)];
+  }
+  
+  const enemy = getScaledEnemy(enemyId);
+  if (!enemy) return;
+  
+  // Start battle
+  startBossBattle(enemyId);
+}
+
+// ============================================================
 // DIALOGUE SYSTEM
 // ============================================================
 
@@ -3960,7 +4883,7 @@ function returnToTitle() {
 }
 
 function showCredits() {
-  alert('PIXEL QUEST RPG\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
+  alert('PIXEL QUEST RPG v0.2.0\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nNEW in v0.2.0:\n- 5 Unique Adventures!\n- Adventure Selection Menu\n- Progressive Difficulty Scaling\n- New Monsters & Bosses\n- Under the Sea Depths\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
 }
 
 // ============================================================

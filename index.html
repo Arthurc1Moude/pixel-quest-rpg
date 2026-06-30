@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PIXEL QUEST RPG v0.2.1</title>
+<title>PIXEL QUEST RPG v0.3.1</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -1250,7 +1250,7 @@
   <div id="title-screen" class="screen active">
     <div class="title-logo">PIXEL QUEST</div>
     <div class="title-sub">— ADVENTURES —</div>
-    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.2.1</div>
+    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.3.1</div>
     <div class="title-menu">
       <button class="pixel-btn gold" onclick="showScreen('char-screen')">⚔ NEW GAME</button>
       <button class="pixel-btn" onclick="showLoadScreen()">📂 CONTINUE</button>
@@ -1330,6 +1330,8 @@
       <button class="action-btn" onclick="openStatus()">📊 STATUS</button>
       <button class="action-btn" onclick="toggleMap()">🗺 MAP</button>
       <button class="action-btn" onclick="openSaveMenu()">💾 SAVE</button>
+      <button class="action-btn" id="mystery-btn" onclick="openMysteryPlace()" style="display:none;background:#9C27B0;border-color:#7B1FA2;">🔮 MYSTERY CAVE</button>
+      <button class="action-btn" id="free-xp-btn-action" onclick="openFreeExperience()" style="display:none;background:#f4b41b;border-color:#d4a017;color:#1a1c2c;">✨ FREE EXP</button>
       <div style="flex:1"></div>
       <button class="action-btn" onclick="restAtInn()" id="inn-btn">🏨 REST (20G)</button>
       <button class="action-btn" onclick="returnToTitle()">🚪 QUIT</button>
@@ -1471,6 +1473,47 @@
           Choose your adventure path. Each adventure has unique challenges and bosses!
         </div>
         <div id="adventure-list" style="display:grid;gap:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MYSTERY PLACE MODAL (v0.3.1) -->
+  <div class="modal-overlay" id="mystery-modal">
+    <div class="modal" style="width:600px;">
+      <div class="modal-header">
+        <div class="modal-title">🔮 MYSTERY CAVE</div>
+        <button class="modal-close" onclick="closeMysteryPlace()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align:center;margin-bottom:15px;">
+          <div style="font-size:32px;margin-bottom:10px;">🎁</div>
+          <div style="font-size:12px;color:#f4b41b;">Mystery Surprise Box</div>
+          <div style="font-size:9px;color:#94b0c2;margin:5px 0;">Open for a random rare reward!</div>
+          <button class="pixel-btn gold" onclick="openMysteryBox()" id="mystery-box-btn">🎁 OPEN BOX (100G)</button>
+        </div>
+        <div style="border-top:2px solid #566c86;margin:15px 0;padding-top:15px;text-align:center;">
+          <div style="font-size:32px;margin-bottom:10px;">💎</div>
+          <div style="font-size:12px;color:#9C27B0;">Mystery Trading Marketplace</div>
+          <div style="font-size:9px;color:#94b0c2;margin:5px 0;">Trade rare items with the mystery trader!</div>
+          <button class="pixel-btn" onclick="openMysteryShop()" style="background:#9C27B0;border-color:#7B1FA2;">💎 ENTER MARKETPLACE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FREE EXPERIENCE MODAL (v0.3.1) -->
+  <div class="modal-overlay" id="free-xp-modal">
+    <div class="modal" style="width:500px;">
+      <div class="modal-header">
+        <div class="modal-title">✨ FREE EXPERIENCE SHRINE</div>
+        <button class="modal-close" onclick="closeFreeExperience()">✕</button>
+      </div>
+      <div class="modal-body" style="text-align:center;">
+        <div style="font-size:48px;margin:10px 0;">✨</div>
+        <div style="font-size:12px;color:#f4b41b;margin-bottom:10px;">Experience Shrine</div>
+        <div style="font-size:9px;color:#94b0c2;margin-bottom:15px;">A mystical shrine that grants bonus experience.<br>Available once per day.</div>
+        <div id="free-xp-status" style="font-size:10px;margin-bottom:15px;"></div>
+        <button class="pixel-btn gold" onclick="claimFreeExperience()" id="free-xp-btn">✨ CLAIM +500 EXP</button>
       </div>
     </div>
   </div>
@@ -1979,6 +2022,51 @@ const LOCATIONS = {
     boss: 'demon_lord',
     connections: { south: 'demon_citadel' },
     npcs: []
+  },
+
+  // MYSTERY PLACE LOCATIONS (v0.3.1) - Hidden, not on normal maps
+  mystery_entrance: {
+    id:'mystery_entrance', name:'🔮 Mystery Cave Entrance', bgColor:'#1a0a2e', groundColor:'#2d1b4e',
+    type:'mystery', safe:true,
+    encounterRate: 0,
+    connections: { north: 'mystery_corridor' },
+    npcs: [
+      {id:'mystery_guardian', name:'Mystery Guardian', sprite:'👁️', x:300, y:200, dialog:'mystery_guardian_greeting'}
+    ]
+  },
+  mystery_corridor: {
+    id:'mystery_corridor', name:'🌑 Purple Corridor', bgColor:'#2d1b4e', groundColor:'#4a1b7a',
+    type:'mystery', safe:false,
+    enemies: ['ghost', 'dark_spirit'],
+    encounterRate: 0.15,
+    connections: { south: 'mystery_entrance', north: 'mystery_trading_hall', east: 'mystery_surprise_room' },
+    npcs: []
+  },
+  mystery_trading_hall: {
+    id:'mystery_trading_hall', name:'💎 Mystery Trading Hall', bgColor:'#4a1b7a', groundColor:'#6a2c9a',
+    type:'mystery', safe:true,
+    encounterRate: 0,
+    connections: { south: 'mystery_corridor', north: 'mystery_depths' },
+    npcs: [
+      {id:'mystery_trader', name:'Mystery Trader', sprite:'🧙‍♂️', x:300, y:250, dialog:'mystery_trader_greeting', shop:true}
+    ]
+  },
+  mystery_surprise_room: {
+    id:'mystery_surprise_room', name:'🎁 Surprise Chamber', bgColor:'#6a2c9a', groundColor:'#8a4ca2',
+    type:'mystery', safe:true,
+    encounterRate: 0,
+    connections: { west: 'mystery_corridor' },
+    npcs: [
+      {id:'mystery_box', name:'Mystery Box', sprite:'🎁', x:300, y:250, dialog:'mystery_box_greeting'}
+    ]
+  },
+  mystery_depths: {
+    id:'mystery_depths', name:'🕳️ Cave Depths', bgColor:'#0d0d1a', groundColor:'#1a1a2e',
+    type:'mystery', safe:false,
+    enemies: ['dark_spirit', 'banshee'],
+    encounterRate: 0.2,
+    connections: { south: 'mystery_trading_hall' },
+    npcs: []
   }
 };
 
@@ -2094,6 +2182,7 @@ const ADVENTURES = {
     name: 'The Fire Dragon',
     description: 'Face the ancient dragon that terrorizes the kingdom.',
     difficulty: 1,
+    unlockLevel: 1,
     unlocked: true,
     color: '#ff6b35',
     bgGradient: ['#4a1c1c', '#8b2500', '#ff4500'],
@@ -2112,21 +2201,16 @@ const ADVENTURES = {
     name: 'Under the Sea',
     description: 'Dive deep into the ocean to defeat the Jellyfish King.',
     difficulty: 2,
-    unlocked: true,
+    unlockLevel: 5,
+    unlocked: false,
     color: '#00bcd4',
     bgGradient: ['#e0f7fa', '#00acc1', '#004d61'],
-    depthSystem: true,
-    startDepth: -2,
-    lanes: 3,
-    forks: 2,
     enemies: ['jellyfish', 'crab', 'octopus', 'shark', 'sea_urchin'],
     miniBosses: ['giant_turtle', 'electric_eel'],
     finalBoss: 'jellyfish_king',
     mapLevel: 2,
     progression: {
-      areas: ['Shallow Beach', 'Coral Reef', 'Mid Ocean', 'The Abyss', 'Jellyfish Throne'],
-      depths: [-2, -5, -10, -20, -35],
-      lanes: [0, 1, 2],
+      areas: ['Shallow Beach', 'Coral Reef', 'Sea Kelp Forest', 'Sunken Ship', 'Mid Ocean', 'The Abyss', 'Jellyfish Throne'],
       enemyMultiplier: 1.3,
       bossMultiplier: 1.2
     }
@@ -2136,7 +2220,8 @@ const ADVENTURES = {
     name: 'Monster Slime',
     description: 'Defeat the corrupted slimes that plague the lands.',
     difficulty: 3,
-    unlocked: true,
+    unlockLevel: 10,
+    unlocked: false,
     color: '#7c4dff',
     bgGradient: ['#1a1a2e', '#2d2d44', '#5a189a'],
     enemies: ['slime', 'mega_slime', 'king_slime', 'slime_king'],
@@ -2144,7 +2229,7 @@ const ADVENTURES = {
     finalBoss: 'slime_lord',
     mapLevel: 3,
     progression: {
-      areas: ['Slime Swamp', 'Toxic Marsh', 'Mutant Cavern', 'Slime Castle', 'Throne Room'],
+      areas: ['Slime Swamp', 'Toxic Marsh', 'Acid Pools', 'Slime Village Ruins', 'Mutant Cavern', 'Corruption Core', 'Slime Castle Gate', 'Throne Hall', 'Slime Lord Chamber'],
       enemyMultiplier: 1.5,
       bossMultiplier: 1.4
     }
@@ -2154,7 +2239,8 @@ const ADVENTURES = {
     name: 'Abracadabra Witch',
     description: 'Enter the witch\'s domain and break her dark magic.',
     difficulty: 4,
-    unlocked: true,
+    unlockLevel: 18,
+    unlocked: false,
     color: '#9c27b0',
     bgGradient: ['#1a0a2e', '#3c1a5e', '#7b1fa2'],
     enemies: ['wizard', 'warlock', 'banshee', 'ghost', 'dark_spirit'],
@@ -2162,7 +2248,7 @@ const ADVENTURES = {
     finalBoss: 'witch_queen',
     mapLevel: 4,
     progression: {
-      areas: ['Haunted Forest', 'Dark Woods', 'Witch Tower', 'Enchanted Castle', 'Witch Sanctum'],
+      areas: ['Haunted Forest Edge', 'Whispering Woods', 'Dark Woods', 'Cursed Clearing', 'Witch Tower Base', 'Witch Tower Mid', 'Witch Tower Peak', 'Enchanted Castle Gate', 'Enchanted Castle Hall', 'Enchanted Castle Dungeon', 'Witch Sanctum Entrance', 'Witch Sanctum Core'],
       enemyMultiplier: 1.8,
       bossMultiplier: 1.6
     }
@@ -2172,7 +2258,8 @@ const ADVENTURES = {
     name: 'Boundless Hell',
     description: 'Descend into the endless abyss and defeat the Demon Lord.',
     difficulty: 5,
-    unlocked: true,
+    unlockLevel: 25,
+    unlocked: false,
     color: '#ff1744',
     bgGradient: ['#1a0000', '#4a0000', '#8b0000'],
     enemies: ['imp', 'demon', 'hell_hound', 'tortured_soul', 'pit_fiend'],
@@ -2180,7 +2267,7 @@ const ADVENTURES = {
     finalBoss: 'demon_lord',
     mapLevel: 5,
     progression: {
-      areas: ['Inferno Gate', 'Burning Sands', 'Lake of Fire', 'Demon Citadel', 'Abyssal Throne'],
+      areas: ['Inferno Gate', 'Ash Fields', 'Burning Sands', 'Lava River Bank', 'Lake of Fire Shore', 'Lake of Fire Center', 'Demon Citadel Gate', 'Demon Citadel Hall', 'Demon Citadel Dungeon', 'Demon Citadel Tower', 'Abyssal Throne Approach', 'Abyssal Throne Chamber', 'Demon Lord Sanctum', 'Void Edge', 'Eternal Abyss'],
       enemyMultiplier: 2.2,
       bossMultiplier: 2.0
     }
@@ -2408,14 +2495,35 @@ const ADVENTURE_ENEMIES = {
 let currentAdventure = 'fire_dragon';
 let adventureProgress = {
   fire_dragon: { currentArea: 0, completed: false, clearedAreas: [] },
-  under_sea: { currentArea: 0, currentDepth: -2, currentLane: 1, currentFork: 0, completed: false, clearedAreas: [] },
+  under_sea: { currentArea: 0, completed: false, clearedAreas: [] },
   monster_slime: { currentArea: 0, completed: false, clearedAreas: [] },
   witch: { currentArea: 0, completed: false, clearedAreas: [] },
   hell: { currentArea: 0, completed: false, clearedAreas: [] }
 };
-let oceanDepth = -2;
-let currentLane = 1;
-let lanePositions = [150, 300, 450];
+
+// --- MYSTERY PLACE SYSTEM (v0.3.1) ---
+const MYSTERY_PLACE = {
+  unlockLevel: 15,
+  name: 'Mystery Cave',
+  description: 'A purple-lit rock cave hidden underground...',
+  color: '#9C27B0',
+  locations: ['mystery_entrance', 'mystery_corridor', 'mystery_trading_hall', 'mystery_surprise_room', 'mystery_depths']
+};
+
+let mysteryPlaceUnlocked = false;
+let mysteryPlaceVisited = false;
+
+// --- FREE EXPERIENCE SYSTEM (v0.3.1) ---
+const FREE_EXPERIENCE = {
+  unlockLevel: 26,
+  name: 'Free Experience Shrine',
+  description: 'A mystical shrine that grants bonus experience.',
+  dailyBonus: 500,
+  cooldown: 86400000 // 24 hours in ms
+};
+
+let freeExperienceUnlocked = false;
+let lastFreeExperienceTime = 0;
 
 // --- WORLD MONSTER SYSTEM (v0.2.1) ---
 let worldMonsters = [];
@@ -3011,29 +3119,57 @@ function drawMap() {
   mapCtx.fillStyle = '#0a0a15';
   mapCtx.fillRect(0, 0, w, h);
 
-  // Simple world map
-  const mapLocations = {
-    village: { x: 71, y: 120, color: '#38b764', size: 8 },
-    forest_path: { x: 71, y: 95, color: '#2d5a2d', size: 6 },
-    forest_deep: { x: 71, y: 70, color: '#1a3a1a', size: 6 },
-    cave_entrance: { x: 71, y: 45, color: '#3a3a5a', size: 6 },
-    mountain_foot: { x: 100, y: 75, color: '#7a6a5a', size: 6 },
-    mountain_pass: { x: 100, y: 40, color: '#5a6a7a', size: 6 },
-    dragon_lair: { x: 100, y: 15, color: '#b13e53', size: 8 }
-  };
+  // Get current adventure info
+  const adventure = ADVENTURES[currentAdventure];
+  const adventureColor = adventure ? adventure.color : '#38b764';
 
-  // Connections
+  // Build dynamic map based on current adventure
+  const mapLocations = {};
+  const connections = [];
+
+  // Add locations that belong to current adventure
+  let locIndex = 0;
+  const adventureLocs = [];
+
+  for (const [id, loc] of Object.entries(LOCATIONS)) {
+    if (loc.adventureId === currentAdventure || (currentAdventure === 'fire_dragon' && !loc.adventureId && id !== 'mystery_entrance' && id !== 'mystery_corridor' && id !== 'mystery_trading_hall' && id !== 'mystery_surprise_room' && id !== 'mystery_depths')) {
+      adventureLocs.push(id);
+    }
+  }
+
+  // Layout locations in a grid pattern based on adventure complexity
+  const cols = adventure ? Math.min(4, Math.ceil(Math.sqrt(adventureLocs.length))) : 3;
+  const spacingX = w / (cols + 1);
+  const spacingY = h / (Math.ceil(adventureLocs.length / cols) + 1);
+
+  adventureLocs.forEach((id, index) => {
+    const col = index % cols;
+    const row = Math.floor(index / cols);
+    const loc = LOCATIONS[id];
+    const isBoss = loc.type === 'boss';
+    const isCurrent = id === currentLocation;
+
+    mapLocations[id] = {
+      x: spacingX * (col + 1),
+      y: spacingY * (row + 1),
+      color: isBoss ? '#f44336' : (isCurrent ? '#f4b41b' : adventureColor),
+      size: isBoss ? 10 : 7,
+      name: loc.name
+    };
+
+    // Add connections
+    if (loc.connections) {
+      for (const [dir, targetId] of Object.entries(loc.connections)) {
+        if (adventureLocs.includes(targetId) && !connections.some(c => (c[0] === id && c[1] === targetId) || (c[0] === targetId && c[1] === id))) {
+          connections.push([id, targetId]);
+        }
+      }
+    }
+  });
+
+  // Draw connections
   mapCtx.strokeStyle = '#566c86';
   mapCtx.lineWidth = 2;
-  const connections = [
-    ['village','forest_path'],
-    ['forest_path','forest_deep'],
-    ['forest_deep','cave_entrance'],
-    ['forest_path','mountain_foot'],
-    ['mountain_foot','mountain_pass'],
-    ['mountain_pass','dragon_lair']
-  ];
-
   for (const [a, b] of connections) {
     const la = mapLocations[a];
     const lb = mapLocations[b];
@@ -3045,7 +3181,7 @@ function drawMap() {
     }
   }
 
-  // Locations
+  // Draw locations
   for (const [id, loc] of Object.entries(mapLocations)) {
     mapCtx.fillStyle = loc.color;
     mapCtx.fillRect(loc.x - loc.size/2, loc.y - loc.size/2, loc.size, loc.size);
@@ -3055,6 +3191,20 @@ function drawMap() {
       mapCtx.lineWidth = 2;
       mapCtx.strokeRect(loc.x - loc.size/2 - 3, loc.y - loc.size/2 - 3, loc.size + 6, loc.size + 6);
     }
+
+    // Draw location name
+    mapCtx.font = '7px "Press Start 2P"';
+    mapCtx.fillStyle = '#94b0c2';
+    mapCtx.textAlign = 'center';
+    mapCtx.fillText(loc.name.split(' ')[0], loc.x, loc.y + loc.size + 10);
+  }
+
+  // Draw adventure name at top
+  if (adventure) {
+    mapCtx.font = '10px "Press Start 2P"';
+    mapCtx.fillStyle = adventureColor;
+    mapCtx.textAlign = 'center';
+    mapCtx.fillText(adventure.name.toUpperCase(), w / 2, 20);
   }
 }
 
@@ -4583,6 +4733,10 @@ function updateUI() {
   document.getElementById('equip-weapon').textContent = player.equipment.weapon ? ITEMS[player.equipment.weapon].name : 'None';
   document.getElementById('equip-armor').textContent = player.equipment.armor ? ITEMS[player.equipment.armor].name : 'None';
   document.getElementById('equip-accessory').textContent = player.equipment.accessory ? ITEMS[player.equipment.accessory].name : 'None';
+
+  // Check unlocks (v0.3.1)
+  checkMysteryPlaceUnlock();
+  checkFreeExperienceUnlock();
 }
 
 function logMessage(text, type = '') {
@@ -4760,6 +4914,8 @@ function renderAdventureList() {
     const isLocked = !adventure.unlocked;
     const areas = adventure.progression.areas;
     const currentArea = progress.currentArea;
+    const playerLevel = player ? player.level : 1;
+    const canUnlock = playerLevel >= adventure.unlockLevel;
     
     const div = document.createElement('div');
     div.className = `adventure-card ${isSelected ? 'selected' : ''} ${isLocked ? 'locked' : ''}`;
@@ -4772,32 +4928,53 @@ function renderAdventureList() {
       5: 'background:#f44336;color:#fff;'
     };
 
-    let depthInfo = '';
-    if (adventure.depthSystem) {
-      depthInfo = `<div class="adventure-stat">Depth: <span>Level ${progress.currentDepth}</span></div>`;
+    let lockText = '';
+    if (isLocked) {
+      if (canUnlock) {
+        lockText = `<span style="color:#4CAF50;">🔓 Tap to Unlock (Lv.${adventure.unlockLevel})</span>`;
+      } else {
+        lockText = `<span style="color:#f44336;">🔒 Requires Lv.${adventure.unlockLevel}</span>`;
+      }
     }
+
+    const statusText = progress.completed ? '✅ Complete' : (isLocked ? lockText : '⏳ In Progress');
 
     div.innerHTML = `
       <div class="adventure-header">
         <div class="adventure-name">${adventure.name}</div>
         <div class="adventure-difficulty" style="${difficultyColors[adventure.difficulty]}">
-          ${isLocked ? '🔒' : ''} DIFF ${adventure.difficulty}
+          ${isLocked ? '🔒' : '⚔'} DIFF ${adventure.difficulty}
         </div>
       </div>
       <div class="adventure-desc">${adventure.description}</div>
       <div class="adventure-progress">
-        <div class="adventure-stat">Area: <span>${currentArea + 1}/${areas.length}</span></div>
-        ${depthInfo}
-        <div class="adventure-stat">Status: <span>${progress.completed ? '✅ Complete' : '⏳ In Progress'}</span></div>
+        <div class="adventure-stat">Areas: <span>${areas.length}</span></div>
+        <div class="adventure-stat">Unlock: <span>Lv.${adventure.unlockLevel}</span></div>
+        <div class="adventure-stat">Status: <span>${statusText}</span></div>
       </div>
     `;
 
-    if (!isLocked) {
-      div.onclick = () => selectAdventure(id);
+    if (!isLocked || canUnlock) {
+      div.onclick = () => {
+        if (isLocked && canUnlock) {
+          unlockAdventure(id);
+        } else if (!isLocked) {
+          selectAdventure(id);
+        }
+      };
     }
 
     list.appendChild(div);
   }
+}
+
+function unlockAdventure(adventureId) {
+  const adventure = ADVENTURES[adventureId];
+  if (!adventure) return;
+  
+  adventure.unlocked = true;
+  logMessage(`🎉 Adventure "${adventure.name}" unlocked!`, 'gold');
+  renderAdventureList();
 }
 
 function selectAdventure(adventureId) {
@@ -4809,10 +4986,6 @@ function selectAdventure(adventureId) {
   
   // Reset progress for selected adventure
   adventureProgress[adventureId].currentArea = 0;
-  if (adventure.depthSystem) {
-    adventureProgress[adventureId].currentDepth = adventure.startDepth;
-    adventureProgress[adventureId].currentLane = 1;
-  }
   
   // Teleport player to adventure start location
   if (adventureId === 'fire_dragon') {
@@ -4839,12 +5012,6 @@ function advanceAdventureArea() {
   if (progress.currentArea < adventure.progression.areas.length - 1) {
     progress.currentArea++;
     
-    // Update depth for underwater adventure
-    if (adventure.depthSystem && adventure.progression.depths) {
-      progress.currentDepth = adventure.progression.depths[progress.currentArea];
-      logMessage(`Descended to depth level ${progress.currentDepth}!`, 'cyan');
-    }
-    
     const areaName = adventure.progression.areas[progress.currentArea];
     logMessage(`Advanced to: ${areaName}`, 'gold');
     
@@ -4861,6 +5028,159 @@ function advanceAdventureArea() {
     logMessage(`🎉 Adventure "${adventure.name}" COMPLETED!`, 'gold');
   }
   
+  updateUI();
+}
+
+// ============================================================
+// MYSTERY PLACE SYSTEM (v0.3.1)
+// ============================================================
+
+function checkMysteryPlaceUnlock() {
+  if (player.level >= MYSTERY_PLACE.unlockLevel && !mysteryPlaceUnlocked) {
+    mysteryPlaceUnlocked = true;
+    logMessage(`🔮 Mystery Cave unlocked at Level ${MYSTERY_PLACE.unlockLevel}!`, '#9C27B0');
+    logMessage('A hidden cave has appeared somewhere in the world...', '#9C27B0');
+  }
+  
+  // Show/hide mystery button
+  const btn = document.getElementById('mystery-btn');
+  if (btn) {
+    btn.style.display = (player.level >= MYSTERY_PLACE.unlockLevel) ? 'block' : 'none';
+  }
+}
+
+function openMysteryPlace() {
+  if (player.level < MYSTERY_PLACE.unlockLevel) {
+    logMessage(`🔒 Mystery Cave unlocks at Level ${MYSTERY_PLACE.unlockLevel}!`, 'red');
+    return;
+  }
+  document.getElementById('mystery-modal').classList.add('active');
+}
+
+function closeMysteryPlace() {
+  document.getElementById('mystery-modal').classList.remove('active');
+}
+
+function openMysteryBox() {
+  if (player.gold < 100) {
+    logMessage('Not enough gold! Need 100G!', 'red');
+    return;
+  }
+  
+  player.gold -= 100;
+  
+  // Random reward pool
+  const rewards = [
+    { type: 'item', id: 'hp_potion_big', qty: 3, chance: 0.2 },
+    { type: 'item', id: 'mp_potion_big', qty: 3, chance: 0.2 },
+    { type: 'item', id: 'elixir', qty: 1, chance: 0.15 },
+    { type: 'item', id: 'phoenix_feather', qty: 1, chance: 0.1 },
+    { type: 'gold', amount: 200, chance: 0.15 },
+    { type: 'gold', amount: 500, chance: 0.1 },
+    { type: 'exp', amount: 300, chance: 0.1 }
+  ];
+  
+  // Pick random reward based on chance
+  const roll = Math.random();
+  let cumulative = 0;
+  let selectedReward = null;
+  
+  for (const reward of rewards) {
+    cumulative += reward.chance;
+    if (roll <= cumulative) {
+      selectedReward = reward;
+      break;
+    }
+  }
+  
+  if (!selectedReward) selectedReward = rewards[0];
+  
+  // Apply reward
+  if (selectedReward.type === 'item') {
+    addItem(selectedReward.id, selectedReward.qty);
+    logMessage(`🎁 Mystery Box: Got ${selectedReward.qty}x ${ITEMS[selectedReward.id].name}!`, 'gold');
+  } else if (selectedReward.type === 'gold') {
+    player.gold += selectedReward.amount;
+    logMessage(`🎁 Mystery Box: Got ${selectedReward.amount}G!`, 'gold');
+  } else if (selectedReward.type === 'exp') {
+    gainExp(selectedReward.amount);
+    logMessage(`🎁 Mystery Box: Got ${selectedReward.amount} EXP!`, 'gold');
+  }
+  
+  updateUI();
+  closeMysteryPlace();
+}
+
+function openMysteryShop() {
+  closeMysteryPlace();
+  // Teleport to mystery trading hall
+  changeLocation('mystery_trading_hall', 'north');
+}
+
+// ============================================================
+// FREE EXPERIENCE SYSTEM (v0.3.1)
+// ============================================================
+
+function checkFreeExperienceUnlock() {
+  if (player.level >= FREE_EXPERIENCE.unlockLevel && !freeExperienceUnlocked) {
+    freeExperienceUnlocked = true;
+    logMessage(`✨ Free Experience Shrine unlocked at Level ${FREE_EXPERIENCE.unlockLevel}!`, 'gold');
+  }
+  
+  // Show/hide free XP button
+  const btn = document.getElementById('free-xp-btn-action');
+  if (btn) {
+    btn.style.display = (player.level >= FREE_EXPERIENCE.unlockLevel) ? 'block' : 'none';
+  }
+}
+
+function openFreeExperience() {
+  if (player.level < FREE_EXPERIENCE.unlockLevel) {
+    logMessage(`🔒 Free Experience unlocks at Level ${FREE_EXPERIENCE.unlockLevel}!`, 'red');
+    return;
+  }
+  
+  const now = Date.now();
+  const timeSinceLast = now - lastFreeExperienceTime;
+  const canClaim = timeSinceLast >= FREE_EXPERIENCE.cooldown;
+  
+  const statusDiv = document.getElementById('free-xp-status');
+  const btn = document.getElementById('free-xp-btn');
+  
+  if (canClaim) {
+    statusDiv.innerHTML = '<span style="color:#4CAF50;">✅ Ready to claim!</span>';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  } else {
+    const remaining = FREE_EXPERIENCE.cooldown - timeSinceLast;
+    const hours = Math.floor(remaining / 3600000);
+    const mins = Math.floor((remaining % 3600000) / 60000);
+    statusDiv.innerHTML = `<span style="color:#f44336;">⏳ Next claim in: ${hours}h ${mins}m</span>`;
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+  }
+  
+  document.getElementById('free-xp-modal').classList.add('active');
+}
+
+function closeFreeExperience() {
+  document.getElementById('free-xp-modal').classList.remove('active');
+}
+
+function claimFreeExperience() {
+  const now = Date.now();
+  const timeSinceLast = now - lastFreeExperienceTime;
+  
+  if (timeSinceLast < FREE_EXPERIENCE.cooldown) {
+    logMessage('Free Experience is on cooldown!', 'red');
+    return;
+  }
+  
+  lastFreeExperienceTime = now;
+  gainExp(FREE_EXPERIENCE.dailyBonus);
+  logMessage(`✨ Claimed ${FREE_EXPERIENCE.dailyBonus} Free Experience!`, 'gold');
+  
+  closeFreeExperience();
   updateUI();
 }
 
@@ -5492,7 +5812,7 @@ function returnToTitle() {
 }
 
 function showCredits() {
-  alert('PIXEL QUEST RPG v0.2.1\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nNEW in v0.2.1:\n- Visible monsters on the map!\n- Monsters move around randomly\n- Monsters can transfer between areas\n- Touch monsters to start battles\n- Flee from battle (25G)\n- Shop access during battle!\n- Random wandering merchants\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
+  alert('PIXEL QUEST RPG v0.3.1\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nNEW in v0.3.1:\n- Level-based Adventure Unlocking!\n- Adventures get more complex by level\n- Mystery Cave (Lv.15): Surprise Box & Trading\n- Free Experience Shrine (Lv.26)\n- Level cap extended to 30\n\nAdventure Unlock Levels:\n- Fire Dragon: Lv.1 (Default)\n- Under the Sea: Lv.5\n- Monster Slime: Lv.10\n- Abracadabra Witch: Lv.18\n- Boundless Hell: Lv.25\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
 }
 
 // ============================================================

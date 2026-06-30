@@ -1375,7 +1375,7 @@
   <div id="title-screen" class="screen active">
     <div class="title-logo">PIXEL QUEST</div>
     <div class="title-sub">— ADVENTURES —</div>
-    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.3.5</div>
+    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.3.6</div>
     <div class="title-menu">
       <button class="pixel-btn gold" onclick="showScreen('char-screen')">⚔ NEW GAME</button>
       <button class="pixel-btn" onclick="showLoadScreen()">📂 CONTINUE</button>
@@ -1470,12 +1470,12 @@
 
   <!-- BATTLE SCREEN -->
   <div id="battle-screen" class="screen">
-    <div class="battle-menu-btn" onclick="toggleBattleMenu()">⋮</div>
-    <div class="battle-dropdown-menu" id="battle-dropdown-menu" style="display:none;">
-      <button class="battle-dropdown-item" onclick="battleFlee(); toggleBattleMenu();">🏃 FLEE (25G)</button>
-      <button class="battle-dropdown-item" onclick="openBattleShop(); toggleBattleMenu();">🏪 SHOP</button>
-    </div>
     <div class="battle-arena" id="battle-arena">
+      <div class="battle-menu-btn" onclick="toggleBattleMenu()">⋮</div>
+      <div class="battle-dropdown-menu" id="battle-dropdown-menu" style="display:none;">
+        <button class="battle-dropdown-item" onclick="battleFlee(); toggleBattleMenu();">🏃 FLEE (25G)</button>
+        <button class="battle-dropdown-item" onclick="openBattleShop(); toggleBattleMenu();">🏪 SHOP</button>
+      </div>
       <div class="battle-enemy-area" id="enemy-area"></div>
       <div class="battle-player-area" id="player-battle-area"></div>
     </div>

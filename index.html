@@ -485,9 +485,13 @@
   }
 
   #battle-screen.active {
-    display: grid;
-    grid-template-rows: 1fr auto 140px;
+    display: flex;
+    flex-direction: column;
   }
+
+  #battle-screen .battle-arena { flex: 1; min-height: 0; }
+  #battle-screen .battle-log { flex: 0 0 auto; }
+  #battle-screen .battle-actions { flex: 0 0 140px; }
 
   .battle-menu-btn {
     position: absolute;
@@ -1470,12 +1474,12 @@
 
   <!-- BATTLE SCREEN -->
   <div id="battle-screen" class="screen">
+    <div class="battle-menu-btn" onclick="toggleBattleMenu()">⋮</div>
+    <div class="battle-dropdown-menu" id="battle-dropdown-menu" style="display:none;">
+      <button class="battle-dropdown-item" onclick="battleFlee(); toggleBattleMenu();">🏃 FLEE (25G)</button>
+      <button class="battle-dropdown-item" onclick="openBattleShop(); toggleBattleMenu();">🏪 SHOP</button>
+    </div>
     <div class="battle-arena" id="battle-arena">
-      <div class="battle-menu-btn" onclick="toggleBattleMenu()">⋮</div>
-      <div class="battle-dropdown-menu" id="battle-dropdown-menu" style="display:none;">
-        <button class="battle-dropdown-item" onclick="battleFlee(); toggleBattleMenu();">🏃 FLEE (25G)</button>
-        <button class="battle-dropdown-item" onclick="openBattleShop(); toggleBattleMenu();">🏪 SHOP</button>
-      </div>
       <div class="battle-enemy-area" id="enemy-area"></div>
       <div class="battle-player-area" id="player-battle-area"></div>
     </div>

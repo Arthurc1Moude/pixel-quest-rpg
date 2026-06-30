@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PIXEL QUEST RPG v0.3.6</title>
+<title>PIXEL QUEST RPG v0.3.4</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -378,11 +378,6 @@
     color: var(--text-primary);
   }
 
-  .mini-stat.credit-good span:last-child { color: #38b764; }
-  .mini-stat.credit-warn span:last-child { color: #f4b41b; }
-  .mini-stat.credit-bad span:last-child { color: #ef4155; }
-  .mini-stat.credit-critical span:last-child { color: #b13e53; }
-
   .equipped-panel {
     margin-top: 4px;
   }
@@ -485,38 +480,9 @@
   }
 
   #battle-screen.active {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: 1fr auto 140px;
   }
-
-  #battle-screen .battle-arena {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(180deg, #257179 0%, #1a1c2c 60%, #3a2a1a 100%);
-    overflow: hidden;
-    min-height: 200px;
-  }
-
-  #battle-screen .battle-enemy-area {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-  }
-
-  #battle-screen .battle-player-area {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 30px;
-    padding-bottom: 20px;
-  }
-
-  #battle-screen .battle-log { flex: 0 0 60px; }
-  #battle-screen .battle-actions { flex: 0 0 140px; }
 
   .battle-menu-btn {
     position: absolute;
@@ -566,6 +532,22 @@
     color: #fff;
   }
 
+  .battle-arena {
+    position: relative;
+    background: linear-gradient(180deg, #257179 0%, #1a1c2c 60%, #3a2a1a 100%);
+    overflow: hidden;
+  }
+
+  .battle-enemy-area {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+  }
+
   .enemy-sprite {
     display: flex;
     flex-direction: column;
@@ -601,6 +583,15 @@
     height: 100%;
     background: var(--hp-red);
     transition: width 0.3s;
+  }
+
+  .battle-player-area {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 30px;
   }
 
   .player-battle-sprite {
@@ -1379,7 +1370,7 @@
   <div id="title-screen" class="screen active">
     <div class="title-logo">PIXEL QUEST</div>
     <div class="title-sub">— ADVENTURES —</div>
-    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.3.6</div>
+    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.3.2</div>
     <div class="title-menu">
       <button class="pixel-btn gold" onclick="showScreen('char-screen')">⚔ NEW GAME</button>
       <button class="pixel-btn" onclick="showLoadScreen()">📂 CONTINUE</button>
@@ -1434,7 +1425,6 @@
         <div class="mini-stat"><span>AGI</span><span id="stat-agi">10</span></div>
         <div class="mini-stat"><span>LUK</span><span id="stat-luk">5</span></div>
         <div class="mini-stat"><span>💰</span><span id="stat-gold">0</span></div>
-        <div class="mini-stat credit-good" id="stat-credit-row"><span>⭐ CREDIT</span><span id="stat-credit">100</span></div>
         <div class="mini-stat" id="stat-time-row"><span>🕐</span><span id="stat-time">08:00</span></div>
       </div>
 
@@ -3623,138 +3613,6 @@ function restTimedQuest(questId) {
   renderQuests();
 }
 
-// --- CREDIT SCORE SYSTEM (v0.3.5) ---
-const CREDIT_MAX = 100;
-const CREDIT_QUEST_THRESHOLD = 70;
-const CREDIT_FIGHT_THRESHOLD = 30;
-const CREDIT_ANYTHING_THRESHOLD = 10;
-const CREDIT_RECOVERY_10MIN = 5;
-const CREDIT_RECOVERY_20MIN_FULL = true;
-const CREDIT_FINE_GOLD = 20;
-const CREDIT_PENALTIES = [5, 10, 15];
-
-function canAcceptQuests() {
-  return player.creditScore >= CREDIT_QUEST_THRESHOLD;
-}
-
-function canFight() {
-  return player.creditScore >= CREDIT_FIGHT_THRESHOLD;
-}
-
-function canUseShop() {
-  return player.creditScore >= CREDIT_FIGHT_THRESHOLD;
-}
-
-function canDoAnything() {
-  return player.creditScore >= CREDIT_ANYTHING_THRESHOLD;
-}
-
-function canInteractNPCs() {
-  return player.creditScore >= CREDIT_ANYTHING_THRESHOLD;
-}
-
-function canSave() {
-  return player.creditScore >= CREDIT_ANYTHING_THRESHOLD;
-}
-
-function applyQuestFailurePenalty() {
-  if (player.gold >= CREDIT_FINE_GOLD) {
-    player.gold -= CREDIT_FINE_GOLD;
-    logMessage(`💸 Fined ${CREDIT_FINE_GOLD} gold for failing a timed quest!`, 'red');
-  } else {
-    const penaltyIdx = Math.min(player.questFailureCount, CREDIT_PENALTIES.length - 1);
-    const penalty = CREDIT_PENALTIES[penaltyIdx];
-    player.creditScore = Math.max(0, player.creditScore - penalty);
-    player.questFailureCount++;
-    logMessage(`⚠️ Not enough gold! Credit Score -${penalty}! (Consecutive failures: ${player.questFailureCount})`, 'red');
-    logMessage(`Current Credit Score: ${player.creditScore}/${CREDIT_MAX}`, 'red');
-  }
-  player.lastGoodBehaviorTime = Date.now();
-  updateUI();
-}
-
-function updateCreditRecovery(deltaMs) {
-  if (!player || player.creditScore >= CREDIT_MAX) {
-    if (player) player.lastGoodBehaviorTime = Date.now();
-    return;
-  }
-
-  const now = Date.now();
-  const elapsed = now - player.lastGoodBehaviorTime;
-
-  if (elapsed >= 20 * 60 * 1000) {
-    const oldScore = player.creditScore;
-    player.creditScore = CREDIT_MAX;
-    player.questFailureCount = 0;
-    if (oldScore < CREDIT_MAX) {
-      logMessage(`⭐ Credit Score fully restored to ${CREDIT_MAX}!`, 'green');
-    }
-    player.lastGoodBehaviorTime = now;
-    updateUI();
-  } else if (elapsed >= 10 * 60 * 1000) {
-    const tenMinIncrements = Math.floor(elapsed / (10 * 60 * 1000));
-    const expectedScore = Math.min(CREDIT_MAX, 100 - (tenMinIncrements * CREDIT_RECOVERY_10MIN));
-    if (player.creditScore < expectedScore) {
-      const increase = expectedScore - player.creditScore;
-      player.creditScore = Math.min(CREDIT_MAX, player.creditScore + increase);
-      if (player.creditScore >= CREDIT_MAX) {
-        player.questFailureCount = 0;
-      }
-      logMessage(`⭐ Credit Score +${increase}! (Good behavior for ${tenMinIncrements * 10} min)`, 'green');
-      logMessage(`Current Credit Score: ${player.creditScore}/${CREDIT_MAX}`, 'green');
-      player.lastGoodBehaviorTime = now;
-      updateUI();
-    }
-  }
-}
-
-function handleCrossSessionCreditRecovery() {
-  if (!player) return;
-
-  const now = Date.now();
-  const lastTime = player.lastSessionTime || now;
-  const lastDate = new Date(lastTime);
-  const nowDate = new Date(now);
-
-  const isNextDay = nowDate.getDate() !== lastDate.getDate() ||
-    nowDate.getMonth() !== lastDate.getMonth() ||
-    nowDate.getFullYear() !== lastDate.getFullYear();
-
-  if (isNextDay) {
-    if (player.creditScore < CREDIT_MAX) {
-      player.creditScore = CREDIT_MAX;
-      player.questFailureCount = 0;
-      logMessage(`🌅 New day! Credit Score fully restored to ${CREDIT_MAX}!`, 'green');
-    }
-  } else {
-    const elapsed = now - lastTime;
-    if (elapsed > 0 && player.creditScore < CREDIT_MAX) {
-      const tenMinIncrements = Math.floor(elapsed / (10 * 60 * 1000));
-      if (tenMinIncrements > 0) {
-        const increase = Math.min(CREDIT_MAX - player.creditScore, tenMinIncrements * CREDIT_RECOVERY_10MIN);
-        player.creditScore = Math.min(CREDIT_MAX, player.creditScore + increase);
-        if (player.creditScore >= CREDIT_MAX) {
-          player.questFailureCount = 0;
-          logMessage(`⭐ Credit Score fully restored while you were away!`, 'green');
-        } else {
-          logMessage(`⭐ Credit Score +${increase} while you were away! (${tenMinIncrements * 10} min)`, 'green');
-        }
-      }
-    }
-  }
-
-  player.lastGoodBehaviorTime = now;
-  player.lastSessionTime = now;
-  updateUI();
-}
-
-function getCreditScoreColorClass() {
-  if (player.creditScore >= 70) return 'credit-good';
-  if (player.creditScore >= 30) return 'credit-warn';
-  if (player.creditScore >= 10) return 'credit-bad';
-  return 'credit-critical';
-}
-
 // --- ADVENTURE DATABASE ---
 const ADVENTURES = {
   fire_dragon: {
@@ -4319,11 +4177,7 @@ function startGame() {
     gold: 50,
     skills: [...cls.skills],
     statuses: [],
-    buffs: [],
-    creditScore: 100,
-    questFailureCount: 0,
-    lastGoodBehaviorTime: Date.now(),
-    lastSessionTime: Date.now()
+    buffs: []
   };
 
   currentLocation = 'village';
@@ -4371,9 +4225,6 @@ function update() {
     // Update game time (v0.3.3)
     updateGameTime(deltaMs);
     
-    // Update credit score recovery (v0.3.5)
-    updateCreditRecovery(deltaMs);
-    
     // Update time display every 30 frames
     timeDisplayTick++;
     if (timeDisplayTick >= 30) {
@@ -4420,7 +4271,6 @@ function checkTimedQuestFailures() {
         }
         delete activeTimedQuests[questId];
         logMessage(`⏰ Time expired! Quest failed: ${quest.name}`, 'red');
-        applyQuestFailurePenalty();
       }
     }
   }
@@ -4513,11 +4363,6 @@ function changeLocation(newLoc, fromDir) {
 
 function handleInteract() {
   if (currentState !== GameState.EXPLORE) return;
-
-  if (!canInteractNPCs()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to interact with NPCs.`, 'red');
-    return;
-  }
 
   // Check for random merchant first
   if (randomMerchant) {
@@ -5214,10 +5059,6 @@ function handleMerchantInteract() {
 
 function openRandomMerchantShop() {
   if (!randomMerchant) return;
-  if (!canUseShop()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_FIGHT_THRESHOLD}+ to use shops.`, 'red');
-    return;
-  }
   
   const shopUI = document.createElement('div');
   shopUI.className = 'modal-overlay active';
@@ -5304,11 +5145,6 @@ function triggerRandomEncounter() {
   const loc = LOCATIONS[currentLocation];
   if (!loc.enemies || loc.enemies.length === 0) return;
   
-  if (!canFight()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_FIGHT_THRESHOLD}+ to fight.`, 'red');
-    return;
-  }
-  
   // Check if we're in an adventure location
   const adventure = ADVENTURES[currentAdventure];
   
@@ -5335,11 +5171,6 @@ function triggerRandomEncounter() {
 }
 
 function startBossBattle(bossId) {
-  if (!canFight()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_FIGHT_THRESHOLD}+ to fight.`, 'red');
-    return;
-  }
-  
   // Check if this is an adventure boss
   const adventure = ADVENTURES[currentAdventure];
   let boss;
@@ -5716,10 +5547,6 @@ function battleFlee() {
 // Open shop during battle (v0.2.1)
 function openBattleShop() {
   if (battleState.turn !== 'player') return;
-  if (!canUseShop()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_FIGHT_THRESHOLD}+ to use shops.`, 'red');
-    return;
-  }
 
   // Temporarily pause battle
   battleState.fleeing = true;
@@ -6218,10 +6045,6 @@ function getItemCount(itemId) {
 
 function openInventory() {
   if (currentState !== GameState.EXPLORE) return;
-  if (!canDoAnything()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to use inventory.`, 'red');
-    return;
-  }
   document.getElementById('inventory-modal').classList.add('active');
   currentInvTab = 'all';
   renderInventory();
@@ -6448,13 +6271,6 @@ function updateUI() {
   document.getElementById('stat-agi').textContent = getPlayerStat('agi');
   document.getElementById('stat-luk').textContent = getPlayerStat('luk');
   document.getElementById('stat-gold').textContent = player.gold;
-  
-  const creditEl = document.getElementById('stat-credit');
-  const creditRow = document.getElementById('stat-credit-row');
-  if (creditEl && creditRow && player.creditScore !== undefined) {
-    creditEl.textContent = player.creditScore;
-    creditRow.className = `mini-stat ${getCreditScoreColorClass()}`;
-  }
 
   document.getElementById('equip-weapon').textContent = player.equipment.weapon ? ITEMS[player.equipment.weapon].name : 'None';
   document.getElementById('equip-armor').textContent = player.equipment.armor ? ITEMS[player.equipment.armor].name : 'None';
@@ -6487,10 +6303,6 @@ let currentQuestTab = 'active';
 
 function openQuests() {
   if (currentState !== GameState.EXPLORE) return;
-  if (!canDoAnything()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to view quests.`, 'red');
-    return;
-  }
   document.getElementById('quest-modal').classList.add('active');
   currentQuestTab = 'active';
   renderQuests();
@@ -6734,11 +6546,6 @@ function acceptQuest(questId) {
     return;
   }
   
-  if (!canAcceptQuests()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_QUEST_THRESHOLD}+ to accept quests.`, 'red');
-    return;
-  }
-  
   quest.status = 'active';
   logMessage(`Quest accepted: ${quest.name}`, 'gold');
   
@@ -6755,10 +6562,6 @@ function acceptQuest(questId) {
 
 function openAdventures() {
   if (currentState !== GameState.EXPLORE) return;
-  if (!canDoAnything()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to view adventures.`, 'red');
-    return;
-  }
   renderAdventureList();
   document.getElementById('adventure-modal').classList.add('active');
 }
@@ -6914,10 +6717,6 @@ function openMysteryPlace() {
     logMessage(`🔒 Mystery Cave unlocks at Level ${MYSTERY_PLACE.unlockLevel}!`, 'red');
     return;
   }
-  if (!canDoAnything()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to access Mystery Cave.`, 'red');
-    return;
-  }
   document.getElementById('mystery-modal').classList.add('active');
 }
 
@@ -7001,10 +6800,6 @@ function checkFreeExperienceUnlock() {
 function openFreeExperience() {
   if (player.level < FREE_EXPERIENCE.unlockLevel) {
     logMessage(`🔒 Free Experience unlocks at Level ${FREE_EXPERIENCE.unlockLevel}!`, 'red');
-    return;
-  }
-  if (!canDoAnything()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to claim free experience.`, 'red');
     return;
   }
   
@@ -7675,10 +7470,6 @@ function checkQuestTurnIns() {
 
 function openShop() {
   if (currentState !== GameState.EXPLORE) return;
-  if (!canUseShop()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_FIGHT_THRESHOLD}+ to use shops.`, 'red');
-    return;
-  }
   document.getElementById('shop-modal').classList.add('active');
   renderShop();
 }
@@ -7799,10 +7590,6 @@ let currentSaveTab = 'save';
 
 function openSaveMenu() {
   if (currentState !== GameState.EXPLORE) return;
-  if (!canDoAnything()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to save/load.`, 'red');
-    return;
-  }
   document.getElementById('save-modal').classList.add('active');
   currentSaveTab = 'save';
   renderSaveSlots();
@@ -7865,13 +7652,6 @@ function renderSaveSlots() {
 }
 
 function saveToSlot(slot) {
-  if (!canSave()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to save.`, 'red');
-    return;
-  }
-  
-  player.lastSessionTime = Date.now();
-  
   const saveData = {
     version: '1.0',
     timestamp: Date.now(),
@@ -7885,10 +7665,7 @@ function saveToSlot(slot) {
     playerX, playerY,
     gameFlags: JSON.parse(JSON.stringify(gameFlags)),
     encounteredBoss,
-    quests: JSON.parse(JSON.stringify(QUESTS)),
-    activeTimedQuests: JSON.parse(JSON.stringify(activeTimedQuests)),
-    currentAdventure,
-    adventureProgress: JSON.parse(JSON.stringify(adventureProgress))
+    quests: JSON.parse(JSON.stringify(QUESTS))
   };
 
   localStorage.setItem(`pixelquest_save_${slot}`, JSON.stringify(saveData));
@@ -7920,32 +7697,10 @@ function loadFromSlot(slot) {
       }
     }
 
-    if (data.activeTimedQuests) {
-      activeTimedQuests = data.activeTimedQuests;
-    }
-
-    if (data.currentAdventure) {
-      currentAdventure = data.currentAdventure;
-    }
-
-    if (data.adventureProgress) {
-      adventureProgress = data.adventureProgress;
-    }
-
-    if (player.creditScore === undefined) {
-      player.creditScore = 100;
-      player.questFailureCount = 0;
-      player.lastGoodBehaviorTime = Date.now();
-      player.lastSessionTime = Date.now();
-    }
-
     document.getElementById('location-name').textContent = LOCATIONS[currentLocation].name;
     closeSaveMenu();
     showScreen('explore-screen');
     logMessage(`Loaded Slot ${slot}!`, 'gold');
-    
-    handleCrossSessionCreditRecovery();
-    
     drawMap();
   } catch(e) {
     logMessage('Failed to load save!', 'red');
@@ -7993,10 +7748,6 @@ function renderStatus() {
   const hpPct = Math.floor((player.hp / player.hpMax) * 100);
   const mpPct = Math.floor((player.mp / player.mpMax) * 100);
   const xpPct = Math.floor((player.exp / player.expNext) * 100);
-  const creditColor = getCreditScoreColorClass();
-  const creditColorHex = creditColor === 'credit-good' ? '#38b764' :
-    creditColor === 'credit-warn' ? '#f4b41b' :
-    creditColor === 'credit-bad' ? '#ef4155' : '#b13e53';
 
   let skillsHtml = '';
   for (const skillId of player.skills) {
@@ -8049,7 +7800,6 @@ function renderStatus() {
           <div style="display:flex;justify-content:space-between;"><span style="color:#94b0c2;">AGI</span><span>${getPlayerStat('agi')}</span></div>
           <div style="display:flex;justify-content:space-between;"><span style="color:#94b0c2;">LUK</span><span>${getPlayerStat('luk')}</span></div>
           <div style="display:flex;justify-content:space-between;"><span style="color:#f4b41b;">GOLD</span><span>${player.gold}</span></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:#94b0c2;">⭐ CREDIT</span><span style="color:${creditColorHex};">${player.creditScore}/100</span></div>
         </div>
       </div>
     </div>
@@ -8075,10 +7825,6 @@ function toggleMap() {
 }
 
 function restAtInn() {
-  if (!canDoAnything()) {
-    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to rest at inn.`, 'red');
-    return;
-  }
   if (player.gold < 20) {
     logMessage('Not enough gold!', 'red');
     return;
@@ -8297,7 +8043,7 @@ function updateGameTime(deltaMs) {
 }
 
 function showCredits() {
-  alert('PIXEL QUEST RPG v0.3.6\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nNEW in v0.3.6:\n- 🐛 Bug Fix: Battle screen monster/player sprites reappear\n  (3-dots menu button was breaking the grid layout)\n\nNEW in v0.3.5:\n- ⭐ Credit Score System!\n  Default: 100 points\n  <70: Cannot accept quests\n  <30: Cannot fight or use shops\n  <10: Can only move, no interactions\n- 💸 Quest Failure Penalties:\n  20 gold fine if you have it\n  Progressive credit loss if no gold (-5, -10, -15)\n- 🌟 Credit Recovery:\n  +5 after 10 min good behavior\n  Full restore after 20 min\n  Full reset next day\n  Continues recovery if same day\n\nNEW in v0.3.4:\n- 🏆 Quest Difficulty Levels!\n  Light / Easy / Medium / Hard / Devil\n- ⏱️ Quest Urgency Levels!\n  🏃 Rush (<=5min, no rest)\n  ⚡ Express (10-15min)\n  🌿 Relax (>=20min)\n- 10 NEW timed quests (15 total!)\n- Rush quests cannot be rested!\n- Difficulty + Urgency badges in quest UI\n- All NPCs show quest difficulty/urgency\n\nAdventure Unlock Levels:\n- Fire Dragon: Lv.1 (Default)\n- Under the Sea: Lv.5\n- Monster Slime: Lv.10\n- Abracadabra Witch: Lv.18\n- Boundless Hell: Lv.25\n\nMystery Cave: Lv.15\nFree Exp Shrine: Lv.26\nTimed Quests: Lv.7\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
+  alert('PIXEL QUEST RPG v0.3.4\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nNEW in v0.3.4:\n- 🏆 Quest Difficulty Levels!\n  Light / Easy / Medium / Hard / Devil\n- ⏱️ Quest Urgency Levels!\n  🏃 Rush (<=5min, no rest)\n  ⚡ Express (10-15min)\n  🌿 Relax (>=20min)\n- 10 NEW timed quests (15 total!)\n- Rush quests cannot be rested!\n- Difficulty + Urgency badges in quest UI\n- All NPCs show quest difficulty/urgency\n\nAdventure Unlock Levels:\n- Fire Dragon: Lv.1 (Default)\n- Under the Sea: Lv.5\n- Monster Slime: Lv.10\n- Abracadabra Witch: Lv.18\n- Boundless Hell: Lv.25\n\nMystery Cave: Lv.15\nFree Exp Shrine: Lv.26\nTimed Quests: Lv.7\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
 }
 
 // ============================================================

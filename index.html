@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PIXEL QUEST RPG</title>
+<title>PIXEL QUEST RPG v0.3.5</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -1375,7 +1375,7 @@
   <div id="title-screen" class="screen active">
     <div class="title-logo">PIXEL QUEST</div>
     <div class="title-sub">— ADVENTURES —</div>
-    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.3.2</div>
+    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.3.5</div>
     <div class="title-menu">
       <button class="pixel-btn gold" onclick="showScreen('char-screen')">⚔ NEW GAME</button>
       <button class="pixel-btn" onclick="showLoadScreen()">📂 CONTINUE</button>
@@ -1778,7 +1778,6 @@ const GameState = {
 
 let currentState = GameState.TITLE;
 let selectedClass = 'warrior';
-const GAME_VERSION = '0.3.5';
 
 // --- PLAYER DATA ---
 let player = null;
@@ -4189,7 +4188,6 @@ let canvas, ctx, mapCanvas, mapCtx;
 // ============================================================
 
 function init() {
-  document.title = 'PIXEL QUEST RPG v' + GAME_VERSION;
   canvas = document.getElementById('game-canvas');
   ctx = canvas.getContext('2d');
   mapCanvas = document.getElementById('map-canvas');
@@ -8295,7 +8293,7 @@ function updateGameTime(deltaMs) {
 }
 
 function showCredits() {
-  alert('PIXEL QUEST RPG v' + GAME_VERSION + '\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nNEW in v' + GAME_VERSION + ':\n- ⭐ Credit Score System!\n  Default: 100 points\n  <70: Cannot accept quests\n  <30: Cannot fight or use shops\n  <10: Can only move, no interactions\n- 💸 Quest Failure Penalties:\n  20 gold fine if you have it\n  Progressive credit loss if no gold (-5, -10, -15)\n- 🌟 Credit Recovery:\n  +5 after 10 min good behavior\n  Full restore after 20 min\n  Full reset next day\n  Continues recovery if same day\n\nNEW in v0.3.4:\n- 🏆 Quest Difficulty Levels!\n  Light / Easy / Medium / Hard / Devil\n- ⏱️ Quest Urgency Levels!\n  🏃 Rush (<=5min, no rest)\n  ⚡ Express (10-15min)\n  🌿 Relax (>=20min)\n- 10 NEW timed quests (15 total!)\n- Rush quests cannot be rested!\n- Difficulty + Urgency badges in quest UI\n- All NPCs show quest difficulty/urgency\n\nAdventure Unlock Levels:\n- Fire Dragon: Lv.1 (Default)\n- Under the Sea: Lv.5\n- Monster Slime: Lv.10\n- Abracadabra Witch: Lv.18\n- Boundless Hell: Lv.25\n\nMystery Cave: Lv.15\nFree Exp Shrine: Lv.26\nTimed Quests: Lv.7\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
+  alert('PIXEL QUEST RPG v0.3.5\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nNEW in v0.3.5:\n- ⭐ Credit Score System!\n  Default: 100 points\n  <70: Cannot accept quests\n  <30: Cannot fight or use shops\n  <10: Can only move, no interactions\n- 💸 Quest Failure Penalties:\n  20 gold fine if you have it\n  Progressive credit loss if no gold (-5, -10, -15)\n- 🌟 Credit Recovery:\n  +5 after 10 min good behavior\n  Full restore after 20 min\n  Full reset next day\n  Continues recovery if same day\n\nNEW in v0.3.4:\n- 🏆 Quest Difficulty Levels!\n  Light / Easy / Medium / Hard / Devil\n- ⏱️ Quest Urgency Levels!\n  🏃 Rush (<=5min, no rest)\n  ⚡ Express (10-15min)\n  🌿 Relax (>=20min)\n- 10 NEW timed quests (15 total!)\n- Rush quests cannot be rested!\n- Difficulty + Urgency badges in quest UI\n- All NPCs show quest difficulty/urgency\n\nAdventure Unlock Levels:\n- Fire Dragon: Lv.1 (Default)\n- Under the Sea: Lv.5\n- Monster Slime: Lv.10\n- Abracadabra Witch: Lv.18\n- Boundless Hell: Lv.25\n\nMystery Cave: Lv.15\nFree Exp Shrine: Lv.26\nTimed Quests: Lv.7\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
 }
 
 // ============================================================

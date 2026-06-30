@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PIXEL QUEST RPG v0.3.2</title>
+<title>PIXEL QUEST RPG v0.3.5</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -18,6 +18,7 @@
     --text-secondary: #94b0c2;
     --text-gold: #f4b41b;
     --text-gold-light: #ffcd75;
+    --base-font-size: 11px;
     --hp-red: #ef4155;
     --hp-dark: #b13e53;
     --mp-blue: #29adff;
@@ -420,6 +421,18 @@
     z-index: 10;
   }
 
+  .game-time-display {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 9px;
+    color: #fff;
+    background: rgba(0,0,0,0.7);
+    padding: 6px 12px;
+    border: 2px solid var(--border-dark);
+    z-index: 10;
+  }
+
   .action-panel {
     grid-area: action;
     background: var(--bg-panel-2);
@@ -487,6 +500,62 @@
     position: relative;
     background: linear-gradient(180deg, #257179 0%, #1a1c2c 60%, #3a2a1a 100%);
     overflow: hidden;
+  }
+
+  .battle-more-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 100;
+    background: rgba(26, 28, 44, 0.9);
+    color: #fff;
+    border: 2px solid #566c86;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .battle-more-btn:hover {
+    background: rgba(86, 108, 134, 0.9);
+  }
+
+  .battle-dropdown {
+    position: absolute;
+    top: 48px;
+    right: 8px;
+    z-index: 101;
+    background: #1a1c2c;
+    border: 2px solid #566c86;
+    min-width: 150px;
+  }
+
+  .dropdown-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    color: #fff;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #333;
+  }
+
+  .dropdown-item:last-child {
+    border-bottom: none;
+  }
+
+  .dropdown-item:hover {
+    background: #2a3a5a;
   }
 
   .battle-enemy-area {
@@ -623,59 +692,6 @@
     margin-top: 4px;
   }
 
-  .battle-menu-btn {
-    background: var(--bg-dark);
-    color: var(--text-light);
-    border: 2px solid var(--border-light);
-    border-radius: 4px;
-    padding: 8px 12px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .battle-menu-btn:hover {
-    background: var(--bg-medium);
-    transform: scale(1.05);
-  }
-
-  .battle-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 16px;
-    background: var(--bg-dark);
-    border-bottom: 2px solid var(--border-dark);
-  }
-
-  .battle-title {
-    font-size: 14px;
-    font-weight: bold;
-    color: var(--text-light);
-  }
-
-  .battle-menu-dropdown {
-    position: absolute;
-    right: 16px;
-    top: 60px;
-    background: var(--bg-panel-2);
-    border: 2px solid var(--border-light);
-    border-radius: 4px;
-    padding: 12px;
-    z-index: 100;
-    min-width: 150px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-  }
-
-  .battle-menu-dropdown button {
-    background: var(--bg-medium);
-    color: var(--text-light);
-  }
-
-  .battle-menu-dropdown button:hover {
-    background: var(--bg-light);
-  }
-
   .battle-action-btn {
     font-family: 'Press Start 2P', monospace;
     font-size: 10px;
@@ -778,59 +794,6 @@
   .modal-body {
     flex: 1;
     overflow-y: auto;
-  }
-
-  .settings-section {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--border-dark);
-  }
-
-  .settings-section:last-child {
-    border-bottom: none;
-  }
-
-  .settings-title {
-    font-size: 11px;
-    font-weight: bold;
-    margin-bottom: 10px;
-    color: var(--text-light);
-  }
-
-  .settings-toggle {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 10px;
-    cursor: pointer;
-    margin-bottom: 8px;
-  }
-
-  .settings-toggle input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-  }
-
-  .settings-radio {
-    display: flex;
-    gap: 15px;
-    font-size: 10px;
-  }
-
-  .settings-radio label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    cursor: pointer;
-  }
-
-  .settings-radio input[type="radio"] {
-    cursor: pointer;
-  }
-
-  .settings-slider {
-    margin-top: 10px;
   }
 
   .modal-tabs {
@@ -1060,6 +1023,73 @@
     border: 2px solid var(--border-dark);
     text-align: center;
     margin-bottom: 10px;
+  }
+
+  /* SETTINGS */
+  .setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #333;
+    flex-wrap: wrap;
+  }
+
+  .setting-label {
+    font-size: 10px;
+    color: #fff;
+  }
+
+  .setting-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #333;
+    transition: .2s;
+    border: 2px solid #566c86;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 10px;
+    width: 10px;
+    left: 2px;
+    bottom: 2px;
+    background-color: #566c86;
+    transition: .2s;
+  }
+
+  input:checked + .slider {
+    background-color: #4CAF50;
+    border-color: #2E7D32;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(20px);
+    background-color: #fff;
   }
 
   /* DIALOG */
@@ -1356,7 +1386,7 @@
   <div id="title-screen" class="screen active">
     <div class="title-logo">PIXEL QUEST</div>
     <div class="title-sub">— ADVENTURES —</div>
-    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.3.2</div>
+    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.3.5</div>
     <div class="title-menu">
       <button class="pixel-btn gold" onclick="showScreen('char-screen')">⚔ NEW GAME</button>
       <button class="pixel-btn" onclick="showLoadScreen()">📂 CONTINUE</button>
@@ -1403,6 +1433,14 @@
         <div class="bar"><div class="bar-fill xp" id="stat-xp-bar" style="width:0%"></div></div>
       </div>
 
+      <div class="bar-container" title="信誉分 - Credit Score">
+        <div class="bar-label">
+          <span>💳 <span id="stat-credit-rank">TRUSTED</span></span>
+          <span id="stat-credit-text">100/100</span>
+        </div>
+        <div class="bar"><div class="bar-fill credit" id="stat-credit-bar" style="width:100%;background:#4CAF50;"></div></div>
+      </div>
+
       <div class="panel-title">📊 STATS</div>
       <div class="mini-stats">
         <div class="mini-stat"><span>STR</span><span id="stat-str">15</span></div>
@@ -1421,6 +1459,7 @@
 
     <div class="canvas-area">
       <div class="location-name" id="location-name">🌳 Greenleaf Village</div>
+      <div class="game-time-display" id="game-time-display" style="display:none;"></div>
       <canvas id="game-canvas" width="600" height="480"></canvas>
       <div id="map-overlay">
         <canvas id="map-canvas" width="142" height="142"></canvas>
@@ -1449,15 +1488,12 @@
 
   <!-- BATTLE SCREEN -->
   <div id="battle-screen" class="screen">
-    <div class="battle-header">
-      <div class="battle-title">⚔️ COMBAT</div>
-      <div class="battle-menu-dropdown" id="battle-menu-dropdown" style="display:none;">
-        <button class="pixel-btn" onclick="battleFlee()" style="width:100%;margin-bottom:5px;">🏃 FLEE (25G)</button>
-        <button class="pixel-btn" onclick="openBattleShop()" style="width:100%;margin-bottom:5px;">🏪 SHOP</button>
-        <button class="pixel-btn" onclick="openBattleSettings()" style="width:100%;">⚙️ SETTINGS</button>
-      </div>
-    </div>
     <div class="battle-arena" id="battle-arena">
+      <button class="battle-more-btn" onclick="toggleBattleMenu()">⋮</button>
+      <div class="battle-dropdown" id="battle-dropdown" style="display:none;">
+        <button class="dropdown-item" onclick="battleFlee(); closeBattleMenu();">🏃 FLEE (25G)</button>
+        <button class="dropdown-item" onclick="openBattleShop(); closeBattleMenu();">🏪 SHOP</button>
+      </div>
       <div class="battle-enemy-area" id="enemy-area"></div>
       <div class="battle-player-area" id="player-battle-area"></div>
     </div>
@@ -1467,7 +1503,6 @@
       <button class="battle-action-btn" onclick="showSkills()">✨ SKILLS</button>
       <button class="battle-action-btn" onclick="showBattleItems()">🧪 ITEMS</button>
       <button class="battle-action-btn" onclick="battleDefend()">🛡 DEFEND</button>
-      <button class="battle-menu-btn" onclick="toggleBattleMenu()">☰</button>
       <div class="sub-menu" id="battle-submenu" style="display:none;"></div>
     </div>
   </div>
@@ -1558,6 +1593,83 @@
     </div>
   </div>
 
+  <!-- SETTINGS MODAL -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal" style="width:500px;">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ SETTINGS</div>
+        <button class="modal-close" onclick="closeSettings()">✕</button>
+      </div>
+      <div class="modal-body" id="settings-body">
+        <div class="setting-item">
+          <div class="setting-label">🔊 Sound Effects</div>
+          <div class="setting-control">
+            <label class="switch">
+              <input type="checkbox" id="setting-sound" checked onchange="toggleSetting('sound')">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-label">🎵 Background Music</div>
+          <div class="setting-control">
+            <label class="switch">
+              <input type="checkbox" id="setting-music" onchange="toggleSetting('music')">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-label">📝 Text Size</div>
+          <div class="setting-control">
+            <select id="setting-textsize" onchange="changeTextSize(this.value)" style="font-family:'Press Start 2P',monospace;font-size:9px;padding:6px 8px;background:#1a1c2c;color:#fff;border:2px solid #566c86;">
+              <option value="small">Small</option>
+              <option value="normal" selected>Normal</option>
+              <option value="large">Large</option>
+            </select>
+          </div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-label">⏰ In-Game Time</div>
+          <div class="setting-control">
+            <label class="switch">
+              <input type="checkbox" id="setting-gametime" onchange="toggleSetting('gametime')">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="setting-item" id="gametime-ratio-item" style="display:none;">
+          <div class="setting-label">1 Game Hour = ? Minutes</div>
+          <div class="setting-control">
+            <input type="range" id="setting-time-ratio" min="5" max="60" value="20" oninput="updateTimeRatio(this.value)" style="width:150px;">
+            <span id="time-ratio-value" style="font-size:10px;">20 min</span>
+          </div>
+          <div id="time-ratio-warning" style="display:none;font-size:8px;color:#ff9800;margin-top:4px;">
+            ⚠ Warning: If using 1:1 ratio, enable 'Real Time Display' instead.
+          </div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-label">🕐 Real Time Display</div>
+          <div class="setting-control">
+            <label class="switch">
+              <input type="checkbox" id="setting-realtime" onchange="toggleSetting('realtime')">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-label">👤 Real Person Sprites</div>
+          <div class="setting-control">
+            <label class="switch">
+              <input type="checkbox" id="setting-realsprite" onchange="toggleSetting('realsprite')">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- SAVE MODAL -->
   <div class="modal-overlay" id="save-modal">
     <div class="modal" style="width:500px;">
@@ -1571,81 +1683,6 @@
       </div>
       <div class="modal-body">
         <div class="save-slots" id="save-slots"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SETTINGS MODAL -->
-  <div class="modal-overlay" id="settings-modal">
-    <div class="modal" style="width:500px;">
-      <div class="modal-header">
-        <div class="modal-title">⚙️ SETTINGS</div>
-        <button class="modal-close" onclick="closeSettings()">✕</button>
-      </div>
-      <div class="modal-body" id="settings-body">
-        <div class="settings-section">
-          <div class="settings-title">🔊 SOUND</div>
-          <label class="settings-toggle">
-            <input type="checkbox" id="setting-sound" onchange="updateSetting('sound', this.checked)">
-            <span>Sound Effects</span>
-          </label>
-        </div>
-
-        <div class="settings-section">
-          <div class="settings-title">🎵 MUSIC</div>
-          <label class="settings-toggle">
-            <input type="checkbox" id="setting-music" onchange="updateSetting('music', this.checked)">
-            <span>Background Music</span>
-          </label>
-        </div>
-
-        <div class="settings-section">
-          <div class="settings-title">📝 TEXT SIZE</div>
-          <div class="settings-radio">
-            <label><input type="radio" name="textSize" value="small" onchange="updateSetting('textSize', this.value)"> Small</label>
-            <label><input type="radio" name="textSize" value="medium" checked onchange="updateSetting('textSize', this.value)"> Medium</label>
-            <label><input type="radio" name="textSize" value="large" onchange="updateSetting('textSize', this.value)"> Large</label>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <div class="settings-title">⏰ IN-GAME TIME</div>
-          <label class="settings-toggle">
-            <input type="checkbox" id="setting-useGameTime" onchange="updateSetting('useGameTime', this.checked)">
-            <span>Enable In-Game Time</span>
-          </label>
-          <div class="settings-slider" id="gameTimeSlider" style="display:none;">
-            <div style="margin:10px 0;font-size:10px;">1 Game Hour = <span id="gameTimeValue">20</span> minutes</div>
-            <input type="range" id="setting-gameTime" min="5" max="60" value="20" oninput="updateGameTimeDisplay(this.value)" onchange="updateSetting('gameTime', this.value)" style="width:100%;">
-            <div style="display:flex;justify-content:space-between;font-size:8px;color:#94b0c2;margin-top:5px;">
-              <span>5 min</span>
-              <span>60 min</span>
-            </div>
-            <div id="gameTimeWarning" style="display:none;margin-top:10px;padding:8px;background:#4a1a1a;border:1px solid #f44336;border-radius:4px;font-size:9px;color:#f44336;">
-              ⚠️ Warning: If you use 1:1 rates, you should turn on 'Use Real Time' feature.
-            </div>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <div class="settings-title">🕐 REAL TIME</div>
-          <label class="settings-toggle">
-            <input type="checkbox" id="setting-useRealTime" onchange="updateSetting('useRealTime', this.checked)">
-            <span>Use Real Computer Time</span>
-          </label>
-          <div id="realTimeDisplay" style="margin-top:8px;font-size:9px;color:#94b0c2;"></div>
-        </div>
-
-        <div class="settings-section">
-          <div class="settings-title">👤 CHARACTER STYLE</div>
-          <label class="settings-toggle">
-            <input type="checkbox" id="setting-realCharacters" onchange="updateSetting('realCharacters', this.checked)">
-            <span>Real Person Characters (Pixel Display)</span>
-          </label>
-          <div style="font-size:9px;color:#94b0c2;margin-top:5px;">
-            When ON: Characters appear as stylized pixel people
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -2603,12 +2640,14 @@ const DIALOGUES = {
       ]}
   ],
   quest_goblin: [
-    { speaker:'Townsman', text:'Adventurer! We have several problems around here...' },
-    { speaker:'Townsman', text:'Goblins have been raiding our supplies, and wolves are attacking from the forest!' },
-    { speaker:'Townsman', text:'The wolves... they\'re heading straight for the village! We need you NOW!' },
+    { speaker:'Townsman', text:'Adventurer! Thank goodness you\'re here!' },
+    { speaker:'Townsman', text:'Goblins have been raiding our supplies from the west forest!' },
+    { speaker:'Townsman', text:'And worse - a wolf pack is approaching the village from the east!' },
+    { speaker:'Townsman', text:'Old Lady Martha\'s grandson is playing near the east gate! He\'s only 7!' },
+    { speaker:'Townsman', text:'If you can cull those wolves in 3 minutes, you might save him!' },
     { choices: [
         { text:'I\'ll handle the goblins! (Kill 5 Goblins)', action:'accept_goblin_quest' },
-        { text:'I\'ll stop the wolves! The village needs me quick! (3 minutes)', action:'accept_urgent_wolf' },
+        { text:'I\'ll save the boy! [Easy] [Rush - NO REST]', action:'accept_urgent_wolf' },
         { text:'Not now.', action:'close' }
       ]}
   ],
@@ -2670,10 +2709,12 @@ const DIALOGUES = {
   sailor_greeting: [
     { speaker:'Sailor Bob', text:'Arrr! Me ship got wrecked by a giant crab!' },
     { speaker:'Sailor Bob', text:'These waters ain\'t safe for ordinary folks anymore!' },
-    { speaker:'Sailor Bob', text:'They\'re swarming the docks! Quick, before they destroy everything! (4 min)', action:'accept_crab_invasion' },
+    { speaker:'Sailor Bob', text:'And look! A whole crab armada is swimmin\' this way!' },
+    { speaker:'Sailor Bob', text:'Me grandmother\'s pearl shop is on the shore - she can\'t run!' },
+    { speaker:'Sailor Bob', text:'If ye can defeat 6 giant crabs in 2 minutes, ye might save her shop!' },
     { choices: [
         { text:'What happened? (Collect 3 Pearls)', action:'accept_lost_treasure' },
-        { text:'On it! I\'ll clear the crabs NOW!', action:'accept_crab_invasion' },
+        { text:'I\'ll save her shop! [Light] [Rush - NO REST]', action:'accept_crab_invasion' },
         { text:'See ya!', action:'close' }
       ]}
   ],
@@ -2713,11 +2754,13 @@ const DIALOGUES = {
   ],
   slime_guard_greeting: [
     { speaker:'Slime Guard', text:'Halt! State your business in Slime Village!' },
-    { speaker:'Slime Guard', text:'...Oh, a hero! Please, you must help us.' },
-    { speaker:'Slime Guard', text:'The acid pools... they\'re overflowing! We have 5 minutes before the village drowns!' },
+    { speaker:'Slime Guard', text:'...Oh, a hero! Please, you must help us!' },
+    { speaker:'Slime Guard', text:'The acid pools are rising FAST - the village is flooding!' },
+    { speaker:'Slime Guard', text:'Mega slimes are pouring out - 12 of \'em already!' },
+    { speaker:'Slime Guard', text:'If you can kill \'em all in 10 minutes, we can seal the breach! REST is allowed.' },
     { choices: [
         { text:'Hunt the Slime Queen! (Side Quest)', action:'accept_slime_queen_hunt' },
-        { text:'EMERGENCY! Seal the acid pools NOW! (5 min)', action:'accept_acid_race' },
+        { text:'Seal the breach! [Medium] [Express - REST OK]', action:'accept_acid_race' },
         { text:'What\'s the situation?', action:'slime_guard_more' },
         { text:'I\'ll be going now.', action:'close' }
       ]}
@@ -2774,11 +2817,12 @@ const DIALOGUES = {
   ],
   cursed_villager_greeting: [
     { speaker:'Cursed Villager', text:'Ugh... the curse... it burns...' },
-    { speaker:'Cursed Villager', text:'The dark spirits... they\'re everywhere... spreading the curse...' },
-    { speaker:'Cursed Villager', text:'You must stop them quickly! If the darkness spreads to the whole village... (6 min)', action:'accept_darkness_falls' },
+    { speaker:'Cursed Villager', text:'The dark spirits... they\'re coming for the children...' },
+    { speaker:'Cursed Villager', text:'15 spirits are heading for the orphanage... they\'ll devour their souls...' },
+    { speaker:'Cursed Villager', text:'Please... you have 15 minutes... save them... REST is allowed!' },
     { choices: [
-        { text:'I\'ll destroy the dark spirits NOW! (6 min)', action:'accept_darkness_falls' },
-        { text:'Hang in there! I\'ll find a cure!', action:'cursed_villager_more' },
+        { text:'I\'ll save the children! [Hard] [Express - REST OK]', action:'accept_darkness_falls' },
+        { text:'Hang in there!', action:'cursed_villager_more' },
         { text:'I\'m sorry...', action:'close' }
       ]}
   ],
@@ -2861,10 +2905,11 @@ const DIALOGUES = {
   ],
   soul_guide_greeting: [
     { speaker:'Soul Guide', text:'Greetings, living soul... you are far from home.' },
-    { speaker:'Soul Guide', text:'I guide lost souls through the underworld... but you are still alive.' },
-    { speaker:'Soul Guide', text:'URGENT! The hellhounds are attacking! Souls are being torn apart! HURRY! (3 min)', action:'accept_hell_rush' },
+    { speaker:'Soul Guide', text:'A pack of 20 hellhounds is hunting the lost souls...' },
+    { speaker:'Soul Guide', text:'They\'re heading for the Well of Souls - if they reach it, hundreds will be devoured!' },
+    { speaker:'Soul Guide', text:'You have 20 minutes to stop them. REST is allowed.' },
     { choices: [
-        { text:'I\'ll slay the hellhounds NOW! (3 min)', action:'accept_hell_rush' },
+        { text:'I\'ll stop the hounds! [Devil] [Relax - REST OK]', action:'accept_hell_rush' },
         { text:'Why am I here?', action:'soul_guide_more' },
         { text:'Farewell.', action:'close' }
       ]}
@@ -3093,8 +3138,9 @@ const QUESTS = {
     questGiver:'innkeeper', turnInDialog:'quest_heirloom_done'
   },
   urgent_wolf_cull: {
-    id:'urgent_wolf_cull', name:'Urgent: Wolf Cull', description:'The village is under attack! Defeat 8 wolves quickly!',
+    id:'urgent_wolf_cull', name:'Wolf Emergency!', description:'A wolf pack approaches the village! A young boy is in danger at the east gate! Defeat 8 wolves in 3 minutes to save him!',
     type:'side', adventure:'fire_dragon', timed:true, timeLimit: 180000,
+    difficulty:'Easy', urgency:'Rush',
     objectives: [
       { type:'kill', target:'wolf', count:8, current:0, desc:'Defeat 8 Wolves' }
     ],
@@ -3135,8 +3181,9 @@ const QUESTS = {
     questGiver:'sailor', turnInDialog:'quest_treasure_done'
   },
   crab_invasion: {
-    id:'crab_invasion', name:'Crab Invasion!', description:'Giant crabs are attacking! Defeat 6 before they reach the village!',
+    id:'crab_invasion', name:'Crab Invasion!', description:'A crab armada approaches the shore! Grandma\'s pearl shop will be destroyed! Defeat 6 giant crabs in 2 minutes!',
     type:'side', adventure:'under_sea', timed:true, timeLimit: 120000,
+    difficulty:'Light', urgency:'Rush',
     objectives: [
       { type:'kill', target:'crab', count:6, current:0, desc:'Defeat 6 Giant Crabs' }
     ],
@@ -3177,8 +3224,9 @@ const QUESTS = {
     questGiver:'slime_guard', turnInDialog:'quest_slime_queen_done'
   },
   acid_race: {
-    id:'acid_race', name:'Acid Race!', description:'The acid pools are rising! Defeat 12 mega slimes quickly!',
-    type:'side', adventure:'monster_slime', timed:true, timeLimit: 150000,
+    id:'acid_race', name:'Acid Emergency!', description:'The acid pools are rising! The village is flooding! Defeat 12 mega slimes in 10 minutes to seal the breach!',
+    type:'side', adventure:'monster_slime', timed:true, timeLimit: 600000,
+    difficulty:'Medium', urgency:'Express',
     objectives: [
       { type:'kill', target:'mega_slime', count:12, current:0, desc:'Defeat 12 Mega Slimes' }
     ],
@@ -3219,8 +3267,9 @@ const QUESTS = {
     questGiver:'wise_woman', turnInDialog:'quest_puppet_done'
   },
   darkness_falls: {
-    id:'darkness_falls', name:'Darkness Falls!', description:'The curse is spreading! Defeat 15 dark spirits before they consume everything!',
-    type:'side', adventure:'witch', timed:true, timeLimit: 180000,
+    id:'darkness_falls', name:'Darkness Falls!', description:'Dark spirits are heading for the orphanage! 15 spirits will devour the children\'s souls! Defeat them all in 15 minutes!',
+    type:'side', adventure:'witch', timed:true, timeLimit: 900000,
+    difficulty:'Hard', urgency:'Express',
     objectives: [
       { type:'kill', target:'dark_spirit', count:15, current:0, desc:'Defeat 15 Dark Spirits' }
     ],
@@ -3261,8 +3310,9 @@ const QUESTS = {
     questGiver:'soul_guide', turnInDialog:'quest_balrog_done'
   },
   hell_rush: {
-    id:'hell_rush', name:'HELL RUSH!', description:'Demons are storming the outpost! Defeat 20 hell hounds FAST!',
-    type:'side', adventure:'hell', timed:true, timeLimit: 200000,
+    id:'hell_rush', name:'HELL RUSH!', description:'20 hellhounds are heading for the Well of Souls! Hundreds of lost souls will be devoured! Stop them in 20 minutes!',
+    type:'side', adventure:'hell', timed:true, timeLimit: 1200000,
+    difficulty:'Devil', urgency:'Relax',
     objectives: [
       { type:'kill', target:'hell_hound', count:20, current:0, desc:'Defeat 20 Hell Hounds' }
     ],
@@ -3298,9 +3348,7 @@ function startTimedQuest(questId) {
   const now = Date.now();
   activeTimedQuests[questId] = {
     startTime: now,
-    endTime: now + quest.timeLimit,
-    paused: false,
-    pausedTime: 0
+    endTime: now + quest.timeLimit
   };
 
   logMessage(`⏰ Timed quest started: ${quest.name}!`, 'gold');
@@ -3308,38 +3356,16 @@ function startTimedQuest(questId) {
 
 function getTimeRemaining(questId) {
   const timer = activeTimedQuests[questId];
-  const quest = QUESTS[questId];
-  if (!timer || !quest) return 0;
-  
-  // If paused, calculate remaining time excluding paused duration
-  if (timer.paused) {
-    const totalPausedDuration = timer.pausedTime + (Date.now() - timer.pausedAt);
-    const activeTime = Date.now() - timer.startTime - totalPausedDuration;
-    return Math.max(0, quest.timeLimit - activeTime);
-  }
-  
-  // Active timer
-  const totalPausedDuration = timer.pausedTime || 0;
-  const activeTime = Date.now() - timer.startTime - totalPausedDuration;
-  return Math.max(0, quest.timeLimit - activeTime);
+  if (!timer) return 0;
+  if (timer.paused) return Math.max(0, timer.remainingAtPause);
+  return Math.max(0, timer.endTime - Date.now());
 }
 
 function isTimedQuestFailed(questId) {
   const timer = activeTimedQuests[questId];
-  const quest = QUESTS[questId];
-  if (!timer || !quest) return false;
-  
-  // If paused, check if it would have failed when paused
-  if (timer.paused) {
-    const totalPausedDuration = timer.pausedTime + (Date.now() - timer.pausedAt);
-    const activeTime = timer.pausedAt - timer.startTime - timer.pausedTime;
-    return activeTime >= quest.timeLimit;
-  }
-  
-  // Active timer - check actual elapsed active time
-  const totalPausedDuration = timer.pausedTime || 0;
-  const activeTime = Date.now() - timer.startTime - totalPausedDuration;
-  return activeTime >= quest.timeLimit;
+  if (!timer) return false;
+  if (timer.paused) return false;
+  return Date.now() > timer.endTime;
 }
 
 function cancelTimedQuest(questId) {
@@ -3365,24 +3391,209 @@ function restTimedQuest(questId) {
   if (!quest || !quest.timed) return;
   if (!activeTimedQuests[questId]) return;
 
-  const timer = activeTimedQuests[questId];
-  
-  // Rest: pause the timer
-  if (timer.paused) {
-    logMessage('Quest is already resting!', 'yellow');
+  const REST_COST = 15;
+  if (player.gold < REST_COST) {
+    logMessage(`Not enough gold to rest! Need ${REST_COST}G!`, 'red');
+    renderQuests();
     return;
   }
-  
+
+  const timer = activeTimedQuests[questId];
+  if (timer.paused) {
+    logMessage('Quest timer is already paused!', 'yellow');
+    renderQuests();
+    return;
+  }
+
+  player.gold -= REST_COST;
+
+  const remaining = timer.endTime - Date.now();
+  timer.remainingAtPause = remaining;
   timer.paused = true;
-  timer.pausedAt = Date.now();
-  
-  logMessage(`⏸️ Quest timer PAUSED!`, 'cyan');
-  logMessage('The timer will not count down while resting.', 'yellow');
-  
-  // Mark as rested
+  timer.pauseStartTime = Date.now();
+
+  logMessage(`⏸ Quest timer paused! -${REST_COST}G`, 'cyan');
+  logMessage('Come back anytime to resume the quest.', 'cyan');
+
   quest.rested = true;
-  
+
+  updateUI();
   renderQuests();
+}
+
+function resumeTimedQuest(questId) {
+  const quest = QUESTS[questId];
+  if (!quest || !quest.timed) return;
+  if (!activeTimedQuests[questId]) return;
+
+  const timer = activeTimedQuests[questId];
+  if (!timer.paused) return;
+
+  timer.endTime = Date.now() + timer.remainingAtPause;
+  timer.paused = false;
+  timer.remainingAtPause = null;
+  timer.pauseStartTime = null;
+
+  logMessage('▶ Quest timer resumed!', 'cyan');
+  renderQuests();
+}
+
+// --- SETTINGS SYSTEM (v0.3.3) ---
+let gameSettings = {
+  sound: true,
+  music: false,
+  textSize: 'normal',
+  useGameTime: false,
+  gameTimeRatio: 20,
+  useRealTime: false,
+  realPersonSprites: false
+};
+
+let gameTime = { hours: 8, minutes: 0 };
+let gameTimeAccumulator = 0;
+
+function openSettings() {
+  document.getElementById('settings-modal').classList.add('active');
+  loadSettingsUI();
+}
+
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('active');
+}
+
+function loadSettingsUI() {
+  document.getElementById('setting-sound').checked = gameSettings.sound;
+  document.getElementById('setting-music').checked = gameSettings.music;
+  document.getElementById('setting-textsize').value = gameSettings.textSize;
+  document.getElementById('setting-gametime').checked = gameSettings.useGameTime;
+  document.getElementById('setting-time-ratio').value = gameSettings.gameTimeRatio;
+  document.getElementById('time-ratio-value').textContent = gameSettings.gameTimeRatio + ' min';
+  document.getElementById('setting-realtime').checked = gameSettings.useRealTime;
+  document.getElementById('setting-realsprite').checked = gameSettings.realPersonSprites;
+
+  const ratioItem = document.getElementById('gametime-ratio-item');
+  ratioItem.style.display = gameSettings.useGameTime ? 'flex' : 'none';
+
+  updateTimeRatioWarning();
+}
+
+function toggleSetting(setting) {
+  const checkbox = document.getElementById('setting-' + setting);
+  const val = checkbox.checked;
+
+  switch(setting) {
+    case 'sound':
+      gameSettings.sound = val;
+      break;
+    case 'music':
+      gameSettings.music = val;
+      break;
+    case 'gametime':
+      gameSettings.useGameTime = val;
+      const ratioItem = document.getElementById('gametime-ratio-item');
+      ratioItem.style.display = val ? 'flex' : 'none';
+      if (val && gameSettings.useRealTime) {
+        gameSettings.useRealTime = false;
+        document.getElementById('setting-realtime').checked = false;
+        logMessage('Real Time Display disabled (In-Game Time takes priority).', 'yellow');
+      }
+      break;
+    case 'realtime':
+      gameSettings.useRealTime = val;
+      if (val && gameSettings.useGameTime) {
+        gameSettings.useGameTime = false;
+        document.getElementById('setting-gametime').checked = false;
+        document.getElementById('gametime-ratio-item').style.display = 'none';
+        logMessage('In-Game Time disabled (Real Time Display takes priority).', 'yellow');
+      }
+      break;
+    case 'realsprite':
+      gameSettings.realPersonSprites = val;
+      break;
+  }
+
+  saveSettings();
+}
+
+function changeTextSize(size) {
+  gameSettings.textSize = size;
+  applyTextSize();
+  saveSettings();
+}
+
+function applyTextSize() {
+  const sizes = {
+    small: '10px',
+    normal: '11px',
+    large: '13px'
+  };
+  const size = sizes[gameSettings.textSize] || sizes.normal;
+  document.documentElement.style.setProperty('--base-font-size', size);
+  document.body.style.fontSize = size;
+}
+
+function updateTimeRatio(val) {
+  val = parseInt(val);
+  gameSettings.gameTimeRatio = val;
+  document.getElementById('time-ratio-value').textContent = val + ' min';
+  updateTimeRatioWarning();
+  saveSettings();
+}
+
+function updateTimeRatioWarning() {
+  const warning = document.getElementById('time-ratio-warning');
+  if (gameSettings.gameTimeRatio >= 60) {
+    warning.style.display = 'block';
+  } else {
+    warning.style.display = 'none';
+  }
+}
+
+function updateGameTime(deltaMs) {
+  if (!gameSettings.useGameTime) return;
+
+  gameTimeAccumulator += deltaMs;
+  const msPerGameHour = gameSettings.gameTimeRatio * 60 * 1000;
+
+  while (gameTimeAccumulator >= msPerGameHour) {
+    gameTimeAccumulator -= msPerGameHour;
+    gameTime.hours = (gameTime.hours + 1) % 24;
+  }
+
+  const msPerGameMinute = msPerGameHour / 60;
+  gameTime.minutes = Math.floor(gameTimeAccumulator / msPerGameMinute);
+}
+
+function getDisplayTime() {
+  if (gameSettings.useRealTime) {
+    const now = new Date();
+    const h = now.getHours().toString().padStart(2, '0');
+    const m = now.getMinutes().toString().padStart(2, '0');
+    return `🕐 ${h}:${m}`;
+  }
+  if (gameSettings.useGameTime) {
+    const h = gameTime.hours.toString().padStart(2, '0');
+    const m = gameTime.minutes.toString().padStart(2, '0');
+    return `⏰ ${h}:${m}`;
+  }
+  return null;
+}
+
+function saveSettings() {
+  try {
+    localStorage.setItem('pixelQuest_settings', JSON.stringify(gameSettings));
+  } catch(e) {}
+}
+
+function loadSettings() {
+  try {
+    const saved = localStorage.getItem('pixelQuest_settings');
+    if (saved) {
+      const s = JSON.parse(saved);
+      gameSettings = { ...gameSettings, ...s };
+      applyTextSize();
+    }
+  } catch(e) {}
 }
 
 // --- ADVENTURE DATABASE ---
@@ -3711,17 +3922,6 @@ let adventureProgress = {
   hell: { currentArea: 0, lastLocation: 'hell_outpost', completed: false, clearedAreas: [] }
 };
 
-// --- GAME SETTINGS (v0.3.3) ---
-let gameSettings = {
-  sound: true,
-  music: true,
-  textSize: 'medium',
-  useGameTime: false,
-  gameTime: 20, // 1 game hour = 20 minutes
-  useRealTime: false,
-  realCharacters: false
-};
-
 // --- MYSTERY PLACE SYSTEM (v0.3.1) ---
 const MYSTERY_PLACE = {
   unlockLevel: 15,
@@ -3765,37 +3965,37 @@ const MERCHANT_STAY_TIME = 600;
 const SHOPS = {
   village: {
     name:'Village Shop',
-    buy: ['hp_potion', 'mp_potion', 'hp_potion_big', 'mp_potion_big', 'antidote', 'iron_sword', 'leather_armor', 'power_ring'],
+    buy: ['hp_potion', 'mp_potion', 'antidote', 'iron_sword', 'leather_armor', 'power_ring', 'hp_potion_big', 'mp_potion_big'],
     prices: {}
   },
   sea_merchant: {
     name:'Sea Merchant',
-    buy: ['hp_potion', 'mp_potion', 'hp_potion_big', 'mp_potion_big', 'antidote', 'elixir', 'chain_mail', 'wise_amulet', 'pearl', 'diving_gear'],
+    buy: ['hp_potion', 'mp_potion', 'antidote', 'hp_potion_big', 'mp_potion_big', 'elixir', 'chain_mail', 'wise_amulet', 'pearl'],
     prices: {}
   },
   slime_merchant: {
     name:'Slime Trader',
-    buy: ['hp_potion', 'mp_potion', 'hp_potion_big', 'mp_potion_big', 'antidote', 'slime_jelly', 'slime_essence', 'steel_blade', 'chain_mail', 'plate_armor'],
+    buy: ['hp_potion', 'mp_potion', 'antidote', 'hp_potion_big', 'mp_potion_big', 'slime_jelly', 'slime_essence', 'steel_blade', 'chain_mail', 'plate_armor'],
     prices: {}
   },
   potion_merchant: {
     name:'Potion Seller',
-    buy: ['hp_potion', 'mp_potion', 'hp_potion_big', 'mp_potion_big', 'antidote', 'elixir', 'magic_scroll', 'phoenix_feather', 'mage_robes', 'crystal_staff'],
+    buy: ['hp_potion', 'mp_potion', 'antidote', 'hp_potion_big', 'mp_potion_big', 'elixir', 'magic_scroll', 'phoenix_feather', 'mage_robes', 'crystal_staff'],
     prices: {}
   },
   demon_merchant: {
     name:'Demon Merchant',
-    buy: ['hp_potion', 'mp_potion', 'hp_potion_big', 'mp_potion_big', 'antidote', 'elixir', 'phoenix_feather', 'fire_sword', 'plate_armor', 'power_ring', 'flame_amulet'],
+    buy: ['hp_potion_big', 'mp_potion_big', 'elixir', 'phoenix_feather', 'fire_sword', 'plate_armor', 'power_ring', 'flame_amulet'],
     prices: {}
   },
   smith_of_doom: {
     name:'Smith of Doom',
-    buy: ['hp_potion', 'mp_potion', 'hp_potion_big', 'mp_potion_big', 'steel_blade', 'fire_sword', 'fallen_sword', 'plate_armor', 'dragon_armor', 'power_ring', 'flame_amulet'],
+    buy: ['steel_blade', 'fire_sword', 'fallen_sword', 'plate_armor', 'dragon_armor', 'power_ring', 'flame_amulet'],
     prices: {}
   },
   mystery_trader: {
     name:'Mystery Trader',
-    buy: ['hp_potion', 'mp_potion', 'hp_potion_big', 'mp_potion_big', 'elixir', 'phoenix_feather', 'soul_stone', 'hero_sword', 'dragon_armor', 'cat_blessing', 'void_blessing', 'mystery_box'],
+    buy: ['elixir', 'phoenix_feather', 'soul_stone', 'hero_sword', 'dragon_armor', 'cat_blessing', 'void_blessing'],
     prices: {}
   }
 };
@@ -3838,6 +4038,7 @@ function init() {
   mapCanvas = document.getElementById('map-canvas');
   mapCtx = mapCanvas.getContext('2d');
 
+  loadSettings();
   setupInput();
   setupClassSelect();
   gameLoop();
@@ -3958,7 +4159,13 @@ function startGame() {
     gold: 50,
     skills: [...cls.skills],
     statuses: [],
-    buffs: []
+    buffs: [],
+    // Credit Score System (v0.3.5)
+    credit: 100,
+    creditOffenseCount: 0,  // Counts overtime failures for escalating penalty
+    lastBadActionTime: 0,   // Last time a bad action happened
+    lastGoodActionTime: Date.now(),  // Last time the player was doing good things
+    creditLastLoginDate: new Date().toDateString()  // For daily restore
   };
 
   currentLocation = 'village';
@@ -3979,24 +4186,174 @@ function startGame() {
 }
 
 // ============================================================
+// CREDIT SCORE SYSTEM (v0.3.5)
+// ============================================================
+
+const CREDIT_MAX = 100;
+const CREDIT_BLOCK_QUESTS = 70;   // < 70: cannot accept quests
+const CREDIT_BLOCK_COMBAT = 30;   // < 30: cannot fight or shop
+const CREDIT_BLOCK_ALL = 10;      // < 10: cannot do anything (only move)
+
+// Fine structure for timed quest failures
+const TIMED_QUEST_FINE = 20;
+const CREDIT_PENALTY = [5, 10, 15];  // 1st time, 2nd time, 3rd+ time
+
+function getCreditColor(credit) {
+  if (credit >= 80) return '#4CAF50';      // Green - Good
+  if (credit >= 50) return '#FFC107';      // Yellow - Caution
+  if (credit >= 30) return '#FF9800';      // Orange - Bad
+  return '#F44336';                         // Red - Severe
+}
+
+function getCreditRank(credit) {
+  if (credit >= 95) return 'TRUSTED';
+  if (credit >= 80) return 'HONORED';
+  if (credit >= 70) return 'GOOD';
+  if (credit >= 50) return 'NORMAL';
+  if (credit >= 30) return 'POOR';
+  if (credit >= 10) return 'DISHONORED';
+  return 'OUTLAW';
+}
+
+function canAcceptQuest() {
+  if (player.credit === undefined) player.credit = 100;
+  return player.credit >= CREDIT_BLOCK_QUESTS;
+}
+
+function canFight() {
+  if (player.credit === undefined) player.credit = 100;
+  return player.credit >= CREDIT_BLOCK_COMBAT;
+}
+
+function canShop() {
+  if (player.credit === undefined) player.credit = 100;
+  return player.credit >= CREDIT_BLOCK_COMBAT;
+}
+
+function canInteract() {
+  if (player.credit === undefined) player.credit = 100;
+  return player.credit >= CREDIT_BLOCK_ALL;
+}
+
+function canSave() {
+  if (player.credit === undefined) player.credit = 100;
+  return player.credit >= CREDIT_BLOCK_ALL;
+}
+
+function deductCreditForTimedFailure() {
+  // Try to fine 20G first
+  if (player.gold >= TIMED_QUEST_FINE) {
+    player.gold -= TIMED_QUEST_FINE;
+    logMessage(`💰 Fined ${TIMED_QUEST_FINE}G for failing the timed quest!`, 'red');
+    player.lastBadActionTime = Date.now();
+    return;
+  }
+
+  // Not enough gold - deduct credit
+  const offenseIdx = Math.min(player.creditOffenseCount, CREDIT_PENALTY.length - 1);
+  const penalty = CREDIT_PENALTY[offenseIdx];
+  player.credit = Math.max(0, player.credit - penalty);
+  player.creditOffenseCount++;
+  player.lastBadActionTime = Date.now();
+
+  logMessage(`❌ No gold for fine! Credit -${penalty}! (${player.credit}/${CREDIT_MAX})`, 'red');
+
+  if (player.credit < CREDIT_BLOCK_ALL) {
+    logMessage(`⚠️ CREDIT TOO LOW! You can only move!`, 'red');
+  } else if (player.credit < CREDIT_BLOCK_COMBAT) {
+    logMessage(`⚠️ Credit too low! Cannot fight or shop!`, 'red');
+  } else if (player.credit < CREDIT_BLOCK_QUESTS) {
+    logMessage(`⚠️ Credit too low! Cannot accept quests!`, 'red');
+  }
+}
+
+function markGoodAction() {
+  player.lastGoodActionTime = Date.now();
+}
+
+function updateCreditRecovery(delta) {
+  if (!player) return;
+  if (player.credit >= CREDIT_MAX) {
+    player.creditOffenseCount = 0;  // Reset offense count when credit is full
+    return;
+  }
+
+  const now = Date.now();
+  const timeSinceLastBad = now - (player.lastBadActionTime || now);
+  const timeSinceLastGood = now - (player.lastGoodActionTime || now);
+
+  // Only recover if the player has been "good" for 10+ minutes
+  if (timeSinceLastGood < 600000) return;  // 10 minutes in ms
+  if (timeSinceLastBad < 600000) return;   // Wait 10 min after a bad action
+
+  // Recovery: +5 every 10 minutes of good behavior, full at 20 minutes of play
+  // Check every second to avoid missing
+  if (!player.creditRecoveryAccum) player.creditRecoveryAccum = 0;
+  player.creditRecoveryAccum += delta;
+
+  // +5 credit every 10 minutes (600000 ms)
+  const tenMin = 600000;
+  if (player.creditRecoveryAccum >= tenMin) {
+    player.creditRecoveryAccum -= tenMin;
+    if (player.credit < CREDIT_MAX) {
+      player.credit = Math.min(CREDIT_MAX, player.credit + 5);
+      if (player.credit === CREDIT_MAX) {
+        player.creditOffenseCount = 0;
+        logMessage(`✨ Credit Score fully restored! ${getCreditRank(player.credit)}`, 'green');
+      } else {
+        logMessage(`📈 Credit +5! (${player.credit}/${CREDIT_MAX})`, 'green');
+      }
+    }
+  }
+}
+
+function checkCreditDailyRestore() {
+  // If the player quit and came back the next day, restore credit to full
+  if (!player) return;
+  const lastSaveTime = parseInt(localStorage.getItem('pixelQuest_lastSaveTime') || '0');
+  if (!lastSaveTime) return;
+
+  const now = Date.now();
+  const hoursSinceLastSave = (now - lastSaveTime) / (1000 * 60 * 60);
+
+  // If it's been more than 12 hours (next day), fully restore
+  if (hoursSinceLastSave >= 12 && player.credit < CREDIT_MAX) {
+    const oldCredit = player.credit;
+    player.credit = CREDIT_MAX;
+    player.creditOffenseCount = 0;
+    player.lastGoodActionTime = now;
+    logMessage(`🌅 Welcome back! Credit restored to ${CREDIT_MAX}! (${oldCredit} → ${CREDIT_MAX})`, 'green');
+  }
+}
+
+// ============================================================
 // GAME LOOP
 // ============================================================
 
+let questTimerTick = 0;
+let lastFrameTime = Date.now();
+
 function gameLoop() {
-  update();
+  const now = Date.now();
+  const delta = now - lastFrameTime;
+  lastFrameTime = now;
+
+  update(delta);
   render();
   requestAnimationFrame(gameLoop);
 }
 
-let questTimerTick = 0;
-
-function update() {
+function update(delta) {
   if (currentState === GameState.EXPLORE) {
     if (moveCooldown > 0) moveCooldown--;
     handleMovement();
     // Update world monsters (v0.2.1)
     updateWorldMonsters();
-    
+    // Update game time (v0.3.3)
+    updateGameTime(delta);
+    // Update credit score recovery (v0.3.5)
+    updateCreditRecovery(delta);
+
     // Update timed quest UI every 30 frames (~0.5s)
     questTimerTick++;
     if (questTimerTick >= 30) {
@@ -4006,6 +4363,8 @@ function update() {
       if (questModal && questModal.classList.contains('active')) {
         renderQuests();
       }
+      // Update time display
+      updateUI();
     }
   }
 }
@@ -4021,6 +4380,8 @@ function checkTimedQuestFailures() {
         }
         delete activeTimedQuests[questId];
         logMessage(`⏰ Time expired! Quest failed: ${quest.name}`, 'red');
+        // v0.3.5 Credit Score penalty for timed quest failure
+        deductCreditForTimedFailure();
       }
     }
   }
@@ -4113,6 +4474,10 @@ function changeLocation(newLoc, fromDir) {
 
 function handleInteract() {
   if (currentState !== GameState.EXPLORE) return;
+  if (!canInteract()) {
+    logMessage(`❌ Credit too low (${player.credit}/${CREDIT_BLOCK_ALL})! Cannot interact!`, 'red');
+    return;
+  }
 
   // Check for random merchant first
   if (randomMerchant) {
@@ -4960,6 +5325,12 @@ function createEnemy(id) {
 }
 
 function startBattle(enemies) {
+  // Credit Score check (v0.3.5)
+  if (!canFight()) {
+    logMessage(`❌ Credit too low (${player.credit}/${CREDIT_BLOCK_COMBAT})! Cannot fight!`, 'red');
+    return;
+  }
+
   battleState = {
     active: true,
     enemies: enemies,
@@ -5285,28 +5656,28 @@ function battleFlee() {
   showScreen('explore-screen');
 }
 
-// Toggle battle menu dropdown
+// Open shop during battle (v0.2.1)
 function toggleBattleMenu() {
-  const dropdown = document.getElementById('battle-menu-dropdown');
-  if (dropdown.style.display === 'none') {
-    dropdown.style.display = 'block';
+  const menu = document.getElementById('battle-dropdown');
+  if (menu.style.display === 'none' || !menu.style.display) {
+    menu.style.display = 'block';
   } else {
-    dropdown.style.display = 'none';
+    menu.style.display = 'none';
   }
 }
 
-// Open settings from battle
-function openBattleSettings() {
-  toggleBattleMenu();
-  openSettings();
+function closeBattleMenu() {
+  const menu = document.getElementById('battle-dropdown');
+  if (menu) menu.style.display = 'none';
 }
 
-// Open shop during battle (v0.2.1)
 function openBattleShop() {
   if (battleState.turn !== 'player') return;
 
   // Temporarily pause battle
   battleState.fleeing = true;
+
+  const shop = getBattleShop();
 
   // Open shop modal
   const shopUI = document.createElement('div');
@@ -5315,7 +5686,7 @@ function openBattleShop() {
   shopUI.innerHTML = `
     <div class="modal" style="width:650px;">
       <div class="modal-header">
-        <div class="modal-title">🏪 BATTLE SHOP</div>
+        <div class="modal-title">🏪 ${shop.name}</div>
         <button class="modal-close" onclick="closeBattleShop()">✕</button>
       </div>
       <div class="gold-display" id="shop-gold">💰 YOUR GOLD: ${player.gold}</div>
@@ -5349,8 +5720,20 @@ function closeBattleShop() {
   }
 }
 
+function getBattleShop() {
+  const shopMap = {
+    fire_dragon: 'village',
+    under_sea: 'sea_merchant',
+    monster_slime: 'slime_merchant',
+    witch: 'potion_merchant',
+    hell: 'demon_merchant'
+  };
+  const shopId = shopMap[currentAdventure] || 'village';
+  return SHOPS[shopId] || SHOPS.village;
+}
+
 function renderBattleShop() {
-  const shop = SHOPS.village;
+  const shop = getBattleShop();
   const container = document.getElementById('shop-buy');
   if (!container) return;
 
@@ -5612,6 +5995,9 @@ function endBattle(victory) {
 
     checkLevelUp();
     checkQuestCompletions();
+
+    // v0.3.5: Winning battles counts as good behavior
+    markGoodAction();
 
     // Boss victory
     const loc = LOCATIONS[currentLocation];
@@ -6013,6 +6399,18 @@ function updateUI() {
   const mpPct = (player.mp / player.mpMax) * 100;
   const xpPct = (player.exp / player.expNext) * 100;
 
+  // Update time display (v0.3.3)
+  const timeDisplay = document.getElementById('game-time-display');
+  const timeStr = getDisplayTime();
+  if (timeDisplay) {
+    if (timeStr) {
+      timeDisplay.style.display = 'block';
+      timeDisplay.textContent = timeStr;
+    } else {
+      timeDisplay.style.display = 'none';
+    }
+  }
+
   document.getElementById('stat-name').textContent = player.name;
   document.getElementById('stat-class-level').textContent = `Lv.${player.level} ${player.className}`;
   document.getElementById('stat-hp-text').textContent = `${player.hp}/${player.hpMax}`;
@@ -6021,6 +6419,20 @@ function updateUI() {
   document.getElementById('stat-mp-bar').style.width = mpPct + '%';
   document.getElementById('stat-xp-text').textContent = `${player.exp}/${player.expNext}`;
   document.getElementById('stat-xp-bar').style.width = xpPct + '%';
+
+  // Credit Score display (v0.3.5)
+  if (player.credit !== undefined) {
+    const creditPct = (player.credit / CREDIT_MAX) * 100;
+    const creditBar = document.getElementById('stat-credit-bar');
+    const creditText = document.getElementById('stat-credit-text');
+    const creditRank = document.getElementById('stat-credit-rank');
+    if (creditBar) {
+      creditBar.style.width = creditPct + '%';
+      creditBar.style.background = getCreditColor(player.credit);
+    }
+    if (creditText) creditText.textContent = `${player.credit}/${CREDIT_MAX}`;
+    if (creditRank) creditRank.textContent = getCreditRank(player.credit);
+  }
 
   document.getElementById('stat-str').textContent = getPlayerStat('str');
   document.getElementById('stat-def').textContent = getPlayerStat('def');
@@ -6117,34 +6529,77 @@ function renderQuests() {
       rewardsHtml = `<div class="quest-rewards">Reward: ${parts.join(' | ')}</div>`;
     }
 
-    // Timed quest info (v0.3.2)
+    // Timed quest info (v0.3.2, v0.3.4)
     let timedHtml = '';
     if (quest.timed && quest.status === 'active') {
-      const timer = activeTimedQuests[quest.id];
       const remaining = getTimeRemaining(quest.id);
       const failed = isTimedQuestFailed(quest.id);
+      const timer = activeTimedQuests[quest.id];
       const isPaused = timer && timer.paused;
       const secs = Math.ceil(remaining / 1000);
       const mins = Math.floor(secs / 60);
       const secsRem = secs % 60;
       
-      let timerText = '';
-      if (failed) {
-        timerText = '⏰ FAILED - Time expired!';
-      } else if (isPaused) {
-        timerText = `⏸️ PAUSED - ${mins}:${secsRem.toString().padStart(2, '0')}`;
-      } else {
-        timerText = `⏰ Time: ${mins}:${secsRem.toString().padStart(2, '0')}`;
-      }
+      const timerBg = failed ? '#4a1a1a' : isPaused ? '#3a3a1a' : '#1a3a4a';
+      const timerBorder = failed ? '#f44336' : isPaused ? '#ffeb3b' : '#00bcd4';
+      const timeDisplay = mins > 0 ? `${mins}:${secsRem.toString().padStart(2, '0')}` : `0:${secsRem.toString().padStart(2, '0')}`;
+      const timerText = failed ? 'FAILED - Time expired!' : isPaused ? `⏸ PAUSED - ${timeDisplay}` : `⏰ Time: ${timeDisplay}`;
+      
+      // Show difficulty/urgency in active timer too (v0.3.4)
+      const diffColors = {
+        'Light': '#4CAF50', 'Easy': '#8BC34A', 'Medium': '#FFC107',
+        'Hard': '#FF9800', 'Devil': '#F44336'
+      };
+      const urgColors = {
+        'Relax': '#2196F3', 'Express': '#FF9800', 'Rush': '#F44336'
+      };
+      const diffColor = diffColors[quest.difficulty] || '#9e9e9e';
+      const urgColor = urgColors[quest.urgency] || '#9e9e9e';
+      const diffBadge = quest.difficulty ? `<span style="font-size:7px;background:${diffColor};color:#fff;padding:2px 4px;margin-right:4px;">${quest.difficulty}</span>` : '';
+      const urgBadge = quest.urgency ? `<span style="font-size:7px;background:${urgColor};color:#fff;padding:2px 4px;margin-right:4px;">${quest.urgency}</span>` : '';
       
       timedHtml = `
-        <div class="quest-timer ${failed ? 'expired' : ''}" style="margin:5px 0;padding:5px;background:${failed ? '#4a1a1a' : (isPaused ? '#3a2a1a' : '#1a3a4a')};border-left:3px solid ${failed ? '#f44336' : (isPaused ? '#ff9800' : '#00bcd4')};">
-          <span style="font-size:9px;">${timerText}</span>
+        <div class="quest-timer ${failed ? 'expired' : ''}" style="margin:5px 0;padding:5px;background:${timerBg};border-left:3px solid ${timerBorder};">
+          <span style="font-size:9px;">${diffBadge}${urgBadge}${timerText}</span>
         </div>
       `;
     }
 
-    // Action buttons for active quests (v0.3.2)
+    // Timed quest badge for available quests (v0.3.4)
+    let timedBadge = '';
+    if (quest.timed && quest.status === 'available') {
+      const canSee = isTimedQuestAvailable();
+      if (canSee) {
+        const mins = Math.floor(quest.timeLimit / 60000);
+        const secs = Math.floor((quest.timeLimit % 60000) / 1000);
+        const timeStr = mins > 0 ? `${mins}m` : `${secs}s`;
+        
+        // Get difficulty badge (v0.3.4)
+        const diffColors = {
+          'Light': '#4CAF50',
+          'Easy': '#8BC34A',
+          'Medium': '#FFC107',
+          'Hard': '#FF9800',
+          'Devil': '#F44336'
+        };
+        const diffColor = diffColors[quest.difficulty] || '#9e9e9e';
+        
+        // Get urgency badge (v0.3.4)
+        const urgColors = {
+          'Relax': '#2196F3',
+          'Express': '#FF9800',
+          'Rush': '#F44336'
+        };
+        const urgColor = urgColors[quest.urgency] || '#9e9e9e';
+        
+        const diffBadge = quest.difficulty ? `<span style="font-size:7px;background:${diffColor};color:#fff;padding:2px 4px;margin-left:4px;">${quest.difficulty}</span>` : '';
+        const urgBadge = quest.urgency ? `<span style="font-size:7px;background:${urgColor};color:#fff;padding:2px 4px;margin-left:2px;">⏰${quest.urgency}</span>` : '';
+        
+        timedBadge = `<span style="float:right;font-size:8px;margin-left:6px;">${diffBadge}${urgBadge}</span>`;
+      }
+    }
+
+    // Action buttons for active quests (v0.3.2, v0.3.4)
     let actionButtons = '';
     if (quest.status === 'active') {
       const cancelBtn = `<button class="pixel-btn" style="padding:4px 8px;font-size:8px;margin-right:5px;background:#4a1a1a;border-color:#6a2a2a;" onclick="cancelQuest('${quest.id}')">✕ CANCEL</button>`;
@@ -6152,24 +6607,21 @@ function renderQuests() {
       let restBtn = '';
       if (quest.timed) {
         const timer = activeTimedQuests[quest.id];
-        if (timer && timer.paused) {
-          restBtn = `<button class="pixel-btn" style="padding:4px 8px;font-size:8px;margin-right:5px;background:#1a4a2a;border-color:#2a6a3a;" onclick="resumeQuest('${quest.id}')">▶ RESUME (15g)</button>`;
-        } else if (!quest.rested) {
-          restBtn = `<button class="pixel-btn" style="padding:4px 8px;font-size:8px;margin-right:5px;background:#1a3a4a;border-color:#2a5a6a;" onclick="restQuest('${quest.id}')">⏸ REST (15g)</button>`;
+        const isPaused = timer && timer.paused;
+        
+        // Rest NOT available for Rush quests (<=5 minutes)
+        const isRush = quest.urgency === 'Rush';
+        
+        if (isPaused) {
+          restBtn = `<button class="pixel-btn" style="padding:4px 8px;font-size:8px;background:#2a5a2a;border-color:#3a7a3a;" onclick="resumeQuest('${quest.id}')">▶ RESUME</button>`;
+        } else if (!quest.rested && !isRush) {
+          restBtn = `<button class="pixel-btn" style="padding:4px 8px;font-size:8px;background:#1a3a4a;border-color:#2a5a6a;" onclick="restQuest('${quest.id}')">⏸ REST (15G)</button>`;
+        } else if (isRush && !quest.rested) {
+          restBtn = `<span style="font-size:7px;color:#f44336;padding:4px 6px;">⚠ NO REST for RUSH!</span>`;
         }
       }
       
       actionButtons = `<div style="margin-top:8px;">${cancelBtn}${restBtn}</div>`;
-    }
-
-    // Timed quest badge for available quests
-    let timedBadge = '';
-    if (quest.timed && quest.status === 'available') {
-      const mins = Math.floor(quest.timeLimit / 60000);
-      const canSee = isTimedQuestAvailable();
-      if (canSee) {
-        timedBadge = `<span style="float:right;font-size:8px;background:#00bcd4;color:#fff;padding:2px 6px;">⏰ ${mins}min</span>`;
-      }
     }
 
     div.innerHTML = `
@@ -6202,45 +6654,13 @@ function cancelQuest(questId) {
 }
 
 function restQuest(questId) {
-  const quest = QUESTS[questId];
-  if (!quest || !quest.timed) return;
-  
-  if (player.gold < 15) {
-    logMessage('Not enough gold! Rest costs 15 gold.', 'red');
-    return;
-  }
-  
-  player.gold -= 15;
-  logMessage('Paid 15 gold to rest the quest.', 'yellow');
-  
   restTimedQuest(questId);
   renderQuests();
-  updateUI();
 }
 
 function resumeQuest(questId) {
-  const quest = QUESTS[questId];
-  if (!quest || !quest.timed) return;
-  
-  if (player.gold < 15) {
-    logMessage('Not enough gold! Resume costs 15 gold.', 'red');
-    return;
-  }
-  
-  player.gold -= 15;
-  logMessage('Paid 15 gold to resume the quest.', 'yellow');
-  
-  const timer = activeTimedQuests[questId];
-  if (timer && timer.paused) {
-    const pausedDuration = Date.now() - timer.pausedAt;
-    timer.pausedTime = (timer.pausedTime || 0) + pausedDuration;
-    timer.paused = false;
-    timer.pausedAt = null;
-    logMessage('▶️ Quest resumed! Timer is running again.', 'cyan');
-  }
-  
+  resumeTimedQuest(questId);
   renderQuests();
-  updateUI();
 }
 
 function updateQuestKills(enemyId) {
@@ -6319,25 +6739,35 @@ function completeQuest(questId) {
     checkLevelUp();
   }
 
+  // v0.3.5: Completing quests counts as good behavior
+  markGoodAction();
+
   updateUI();
 }
 
 function acceptQuest(questId) {
   const quest = QUESTS[questId];
   if (!quest || quest.status !== 'available') return;
-  
+
+  // Credit Score check (v0.3.5)
+  if (!canAcceptQuest()) {
+    logMessage(`❌ Credit too low (${player.credit}/${CREDIT_BLOCK_QUESTS})! Cannot accept quests!`, 'red');
+    return;
+  }
+
   if (quest.timed && !isTimedQuestAvailable()) {
     logMessage('You need to be level 7+ to accept timed quests!', 'red');
     return;
   }
-  
+
   quest.status = 'active';
   logMessage(`Quest accepted: ${quest.name}`, 'gold');
-  
+  markGoodAction();
+
   if (quest.timed) {
     startTimedQuest(questId);
   }
-  
+
   renderQuests();
 }
 
@@ -7186,6 +7616,10 @@ function checkQuestTurnIns() {
 
 function openShop() {
   if (currentState !== GameState.EXPLORE) return;
+  if (!canShop()) {
+    logMessage(`❌ Credit too low (${player.credit}/${CREDIT_BLOCK_COMBAT})! Cannot enter the shop!`, 'red');
+    return;
+  }
   document.getElementById('shop-modal').classList.add('active');
   renderShop();
 }
@@ -7272,6 +7706,7 @@ function buyItem(itemId) {
   player.gold -= item.value;
   addItem(itemId, 1);
   logMessage(`Bought ${item.name}!`, 'green');
+  markGoodAction();
   renderShop();
   updateUI();
 }
@@ -7299,116 +7734,6 @@ function sellFromShop(itemId) {
 }
 
 // ============================================================
-// SETTINGS SYSTEM (v0.3.3)
-// ============================================================
-
-function openSettings() {
-  document.getElementById('settings-modal').classList.add('active');
-  loadSettingsUI();
-}
-
-function closeSettings() {
-  document.getElementById('settings-modal').classList.remove('active');
-}
-
-function loadSettingsUI() {
-  // Load sound
-  document.getElementById('setting-sound').checked = gameSettings.sound;
-  
-  // Load music
-  document.getElementById('setting-music').checked = gameSettings.music;
-  
-  // Load text size
-  const textRadios = document.querySelectorAll('input[name="textSize"]');
-  textRadios.forEach(radio => {
-    radio.checked = radio.value === gameSettings.textSize;
-  });
-  
-  // Load in-game time
-  document.getElementById('setting-useGameTime').checked = gameSettings.useGameTime;
-  document.getElementById('gameTimeSlider').style.display = gameSettings.useGameTime ? 'block' : 'none';
-  document.getElementById('setting-gameTime').value = gameSettings.gameTime;
-  updateGameTimeDisplay(gameSettings.gameTime);
-  
-  // Load real time
-  document.getElementById('setting-useRealTime').checked = gameSettings.useRealTime;
-  updateRealTimeDisplay();
-  
-  // Load character style
-  document.getElementById('setting-realCharacters').checked = gameSettings.realCharacters;
-}
-
-function updateSetting(key, value) {
-  gameSettings[key] = value;
-  
-  // Special handling for game time slider
-  if (key === 'gameTime') {
-    updateGameTimeDisplay(value);
-  }
-  
-  // Special handling for useGameTime toggle
-  if (key === 'useGameTime') {
-    document.getElementById('gameTimeSlider').style.display = value ? 'block' : 'none';
-  }
-  
-  // Special handling for useRealTime toggle
-  if (key === 'useRealTime') {
-    updateRealTimeDisplay();
-  }
-  
-  // Auto-enable real time if 1:1 rate
-  if (key === 'gameTime' && value == 60 && gameSettings.useGameTime) {
-    document.getElementById('setting-useRealTime').checked = true;
-    gameSettings.useRealTime = true;
-    updateRealTimeDisplay();
-  }
-  
-  // Apply settings immediately
-  applySettings();
-  
-  logMessage('Settings updated!', 'cyan');
-}
-
-function updateGameTimeDisplay(value) {
-  document.getElementById('gameTimeValue').textContent = value;
-  
-  // Show warning for 1:1 rate
-  const warning = document.getElementById('gameTimeWarning');
-  if (value == 60) {
-    warning.style.display = 'block';
-  } else {
-    warning.style.display = 'none';
-  }
-}
-
-function updateRealTimeDisplay() {
-  const display = document.getElementById('realTimeDisplay');
-  if (gameSettings.useRealTime) {
-    const now = new Date();
-    display.textContent = `Current Time: ${now.toLocaleTimeString()}`;
-    display.style.display = 'block';
-  } else {
-    display.style.display = 'none';
-  }
-}
-
-function applySettings() {
-  // Apply text size
-  let fontSize = '12px';
-  if (gameSettings.textSize === 'small') fontSize = '10px';
-  if (gameSettings.textSize === 'large') fontSize = '14px';
-  
-  document.querySelectorAll('.dialog-text, .log-message, .battle-log p').forEach(el => {
-    el.style.fontSize = fontSize;
-  });
-  
-  // Apply character style
-  // This would be applied when rendering characters
-  
-  // Apply game time settings
-  // This would affect game time calculations
-}
-
 // SAVE / LOAD SYSTEM
 // ============================================================
 
@@ -7478,6 +7803,10 @@ function renderSaveSlots() {
 }
 
 function saveToSlot(slot) {
+  if (!canSave()) {
+    logMessage(`❌ Credit too low (${player.credit}/${CREDIT_BLOCK_ALL})! Cannot save progress!`, 'red');
+    return;
+  }
   const saveData = {
     version: '1.0',
     timestamp: Date.now(),
@@ -7495,8 +7824,10 @@ function saveToSlot(slot) {
   };
 
   localStorage.setItem(`pixelquest_save_${slot}`, JSON.stringify(saveData));
+  localStorage.setItem('pixelQuest_lastSaveTime', Date.now().toString());
   lastSaveSlot = slot;
   logMessage(`Game saved to Slot ${slot}!`, 'gold');
+  markGoodAction();
   renderSaveSlots();
 }
 
@@ -7507,6 +7838,11 @@ function loadFromSlot(slot) {
   try {
     const data = JSON.parse(saveData);
     player = data.player;
+    // v0.3.5: Backfill credit properties for older saves
+    if (player.credit === undefined) player.credit = 100;
+    if (player.creditOffenseCount === undefined) player.creditOffenseCount = 0;
+    if (player.lastBadActionTime === undefined) player.lastBadActionTime = 0;
+    if (player.lastGoodActionTime === undefined) player.lastGoodActionTime = Date.now();
     currentLocation = data.currentLocation;
     playerX = data.playerX;
     playerY = data.playerY;
@@ -7526,6 +7862,8 @@ function loadFromSlot(slot) {
     document.getElementById('location-name').textContent = LOCATIONS[currentLocation].name;
     closeSaveMenu();
     showScreen('explore-screen');
+    // v0.3.5: Check for daily credit restore on load
+    checkCreditDailyRestore();
     logMessage(`Loaded Slot ${slot}!`, 'gold');
     drawMap();
   } catch(e) {
@@ -7671,7 +8009,7 @@ function returnToTitle() {
 }
 
 function showCredits() {
-  alert('PIXEL QUEST RPG v0.3.3\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nNEW in v0.3.3:\n- Rest now costs 15 gold & pauses quest timer!\n- Natural timed quest dialogue from NPCs\n- Fixed battle menu with ☰ dropdown\n- Adventure-specific shops (HP/MP potions always available)\n- NEW Settings menu:\n  * Sound & Music toggles\n  * Text size adjustment\n  * In-Game Time with slider\n  * Real Time display option\n  * Real Person Character style\n\nAdventure Unlock Levels:\n- Fire Dragon: Lv.1 (Default)\n- Under the Sea: Lv.5\n- Monster Slime: Lv.10\n- Abracadabra Witch: Lv.18\n- Boundless Hell: Lv.25\n\nMystery Cave: Lv.15\nFree Exp Shrine: Lv.26\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
+  alert('PIXEL QUEST RPG v0.3.5\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nNEW in v0.3.5: CREDIT SCORE (信誉分) SYSTEM!\n- Default credit: 100\n- < 70: Cannot accept quests\n- < 30: Cannot fight or enter shops\n- < 10: Cannot do anything except move\n- Over-timed quest: 20G fine (or -5/-10/-15 credit)\n- +5 credit every 10 min of good behavior\n- Full restore after 20 min of normal play\n- Quit + return next day = full restore!\n- Credit bar shown in stats panel\n\nNEW in v0.3.4:\n- Timed quests have DIFFICULTY & URGENCY levels!\n- 5 Difficulty: Light, Easy, Medium, Hard, Devil\n- 3 Urgency: Relax, Express, Rush\n- Rush quests (<=5min): NO REST allowed!\n- Express (10-15min) & Relax (>=20min): REST OK\n- Visual badges show difficulty/urgency in quest UI\n\nTimed Quests:\n- Wolf Emergency: Easy/Rush (3min)\n- Crab Invasion: Light/Rush (2min)\n- Acid Emergency: Medium/Express (10min)\n- Darkness Falls: Hard/Express (15min)\n- HELL RUSH: Devil/Relax (20min)\n\nNEW in v0.3.3:\n- Settings panel! (sound, music, text size, time)\n- In-Game Time system with configurable ratio!\n- Real Time Display option!\n- 3-dots menu in battles (Flee + Shop)\n- Battle shops now match current adventure!\n- Rest quest costs 15G and pauses timer!\n- Real Person sprites toggle!\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
 }
 
 // ============================================================

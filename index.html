@@ -4767,45 +4767,78 @@ function drawMap() {
   mapCtx.fillStyle = '#0a0a15';
   mapCtx.fillRect(0, 0, w, h);
 
-  // Get current adventure info
   const adventure = ADVENTURES[currentAdventure];
   const adventureColor = adventure ? adventure.color : '#38b764';
 
-  // Build dynamic map based on current adventure
-  const mapLocations = {};
-  const connections = [];
-
-  // Add locations that belong to current adventure
-  let locIndex = 0;
   const adventureLocs = [];
-
   for (const [id, loc] of Object.entries(LOCATIONS)) {
     if (loc.adventureId === currentAdventure || (currentAdventure === 'fire_dragon' && !loc.adventureId && id !== 'mystery_entrance' && id !== 'mystery_corridor' && id !== 'mystery_trading_hall' && id !== 'mystery_surprise_room' && id !== 'mystery_depths')) {
       adventureLocs.push(id);
     }
   }
 
-  // Layout locations in a grid pattern based on adventure complexity
-  const cols = adventure ? Math.min(4, Math.ceil(Math.sqrt(adventureLocs.length))) : 3;
-  const spacingX = w / (cols + 1);
-  const spacingY = h / (Math.ceil(adventureLocs.length / cols) + 1);
+  const progress = adventureProgress[currentAdventure];
+  const startLoc = progress ? progress.lastLocation : adventureLocs[0];
 
-  adventureLocs.forEach((id, index) => {
-    const col = index % cols;
-    const row = Math.floor(index / cols);
+  const visited = new Set();
+  const orderedLocs = [];
+  const xOffsets = {};
+  const queue = [{ id: startLoc, xOff: 0, depth: 0 }];
+  visited.add(startLoc);
+
+  while (queue.length > 0) {
+    const { id, xOff, depth } = queue.shift();
+    orderedLocs.push(id);
+    xOffsets[id] = xOff;
+
+    const loc = LOCATIONS[id];
+    if (!loc || !loc.connections) continue;
+
+    const dirs = ['north', 'south', 'east', 'west'];
+    for (const dir of dirs) {
+      const targetId = loc.connections[dir];
+      if (!targetId || visited.has(targetId)) continue;
+      if (!adventureLocs.includes(targetId)) continue;
+      visited.add(targetId);
+      let newXOff = xOff;
+      if (dir === 'east') newXOff = xOff + 1;
+      else if (dir === 'west') newXOff = xOff - 1;
+      queue.push({ id: targetId, xOff: newXOff, depth: depth + 1 });
+    }
+  }
+
+  for (const id of adventureLocs) {
+    if (!visited.has(id)) {
+      orderedLocs.push(id);
+      xOffsets[id] = 0;
+    }
+  }
+
+  const mapLocations = {};
+  const connections = [];
+  const total = orderedLocs.length;
+  const startY = 18;
+  const endY = h - 18;
+  const centerX = w / 2;
+  const xStep = 18;
+
+  orderedLocs.forEach((id, index) => {
     const loc = LOCATIONS[id];
     const isBoss = loc.type === 'boss';
     const isCurrent = id === currentLocation;
+    const isSafe = loc.safe;
+
+    const t = total > 1 ? index / (total - 1) : 0.5;
+    const y = startY + t * (endY - startY);
+    const x = centerX + (xOffsets[id] || 0) * xStep;
 
     mapLocations[id] = {
-      x: spacingX * (col + 1),
-      y: spacingY * (row + 1),
-      color: isBoss ? '#f44336' : (isCurrent ? '#f4b41b' : adventureColor),
-      size: isBoss ? 10 : 7,
-      name: loc.name
+      x: x,
+      y: y,
+      color: isBoss ? '#b13e53' : (isSafe ? '#38b764' : adventureColor),
+      size: isBoss ? 9 : 6
     };
 
-    // Add connections
     if (loc.connections) {
       for (const [dir, targetId] of Object.entries(loc.connections)) {
         if (adventureLocs.includes(targetId) && !connections.some(c => (c[0] === id && c[1] === targetId) || (c[0] === targetId && c[1] === id))) {
@@ -4815,7 +4848,6 @@ function drawMap() {
     }
   });
 
-  // Draw connections
   mapCtx.strokeStyle = '#566c86';
   mapCtx.lineWidth = 2;
   for (const [a, b] of connections) {
@@ -4829,7 +4861,6 @@ function drawMap() {
     }
   }
 
-  // Draw locations
   for (const [id, loc] of Object.entries(mapLocations)) {
     mapCtx.fillStyle = loc.color;
     mapCtx.fillRect(loc.x - loc.size/2, loc.y - loc.size/2, loc.size, loc.size);
@@ -4839,20 +4870,6 @@ function drawMap() {
       mapCtx.lineWidth = 2;
       mapCtx.strokeRect(loc.x - loc.size/2 - 3, loc.y - loc.size/2 - 3, loc.size + 6, loc.size + 6);
     }
-
-    // Draw location name
-    mapCtx.font = '7px "Press Start 2P"';
-    mapCtx.fillStyle = '#94b0c2';
-    mapCtx.textAlign = 'center';
-    mapCtx.fillText(loc.name.split(' ')[0], loc.x, loc.y + loc.size + 10);
-  }
-
-  // Draw adventure name at top
-  if (adventure) {
-    mapCtx.font = '10px "Press Start 2P"';
-    mapCtx.fillStyle = adventureColor;
-    mapCtx.textAlign = 'center';
-    mapCtx.fillText(adventure.name.toUpperCase(), w / 2, 20);
   }
 }
 

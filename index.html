@@ -4767,52 +4767,27 @@ function drawMap() {
   mapCtx.fillStyle = '#0a0a15';
   mapCtx.fillRect(0, 0, w, h);
 
-  const adventure = ADVENTURES[currentAdventure];
-  const adventureColor = adventure ? adventure.color : '#38b764';
-
-  const adventureLocs = [];
-  for (const [id, loc] of Object.entries(LOCATIONS)) {
-    if (loc.adventureId === currentAdventure || (currentAdventure === 'fire_dragon' && !loc.adventureId && id !== 'mystery_entrance' && id !== 'mystery_corridor' && id !== 'mystery_trading_hall' && id !== 'mystery_surprise_room' && id !== 'mystery_depths')) {
-      adventureLocs.push(id);
-    }
-  }
-
-  const progress = adventureProgress[currentAdventure];
-  const startLoc = progress ? progress.lastLocation : adventureLocs[0];
-
-  const tree = buildLocationTree(startLoc, adventureLocs);
-  const positions = calculateTreePositions(tree, w, h);
-
-  const mapLocations = {};
-  const connections = [];
-
-  function traverse(node) {
-    const loc = LOCATIONS[node.id];
-    if (!loc) return;
-
-    const isBoss = loc.type === 'boss';
-    const isSafe = loc.safe;
-
-    mapLocations[node.id] = {
-      x: node.x,
-      y: node.y,
-      color: isBoss ? '#b13e53' : (isSafe ? '#38b764' : adventureColor),
-      size: isBoss ? 9 : 6
-    };
-
-    if (node.parent) {
-      connections.push([node.id, node.parent]);
-    }
-
-    for (const child of node.children) {
-      traverse(child);
-    }
-  }
-
-  traverse(tree);
+  const mapLocations = {
+    village: { x: 71, y: 120, color: '#38b764', size: 8 },
+    forest_path: { x: 71, y: 95, color: '#2d5a2d', size: 6 },
+    forest_deep: { x: 71, y: 70, color: '#1a3a1a', size: 6 },
+    cave_entrance: { x: 71, y: 45, color: '#3a3a5a', size: 6 },
+    mountain_foot: { x: 100, y: 75, color: '#7a6a5a', size: 6 },
+    mountain_pass: { x: 100, y: 40, color: '#5a6a7a', size: 6 },
+    dragon_lair: { x: 100, y: 15, color: '#b13e53', size: 8 }
+  };
 
   mapCtx.strokeStyle = '#566c86';
   mapCtx.lineWidth = 2;
+  const connections = [
+    ['village','forest_path'],
+    ['forest_path','forest_deep'],
+    ['forest_deep','cave_entrance'],
+    ['forest_path','mountain_foot'],
+    ['mountain_foot','mountain_pass'],
+    ['mountain_pass','dragon_lair']
+  ];
+
   for (const [a, b] of connections) {
     const la = mapLocations[a];
     const lb = mapLocations[b];
@@ -4834,99 +4809,6 @@ function drawMap() {
       mapCtx.strokeRect(loc.x - loc.size/2 - 3, loc.y - loc.size/2 - 3, loc.size + 6, loc.size + 6);
     }
   }
-}
-
-function buildLocationTree(startId, validLocs) {
-  const visited = new Set();
-  const tree = { id: startId, children: [], parent: null };
-  const queue = [{ node: tree, visited: new Set([startId]) }];
-
-  visited.add(startId);
-
-  while (queue.length > 0) {
-    const { node, visited: pathVisited } = queue.shift();
-    const loc = LOCATIONS[node.id];
-    if (!loc || !loc.connections) continue;
-
-    const dirs = ['north', 'south', 'east', 'west'];
-    for (const dir of dirs) {
-      const targetId = loc.connections[dir];
-      if (!targetId || visited.has(targetId)) continue;
-      if (!validLocs.includes(targetId)) continue;
-
-      visited.add(targetId);
-      const child = { id: targetId, children: [], parent: node.id };
-      node.children.push(child);
-
-      const newVisited = new Set(pathVisited);
-      newVisited.add(targetId);
-      queue.push({ node: child, visited: newVisited });
-    }
-  }
-
-  return tree;
-}
-
-function calculateTreePositions(tree, w, h) {
-  const depths = {};
-  const widthAtDepth = {};
-
-  function calcSize(node, depth) {
-    if (!depths[depth]) depths[depth] = 0;
-    depths[depth]++;
-
-    let maxWidth = 1;
-    for (const child of node.children) {
-      const childWidth = calcSize(child, depth + 1);
-      maxWidth += childWidth;
-    }
-
-    if (!widthAtDepth[depth]) widthAtDepth[depth] = 0;
-    if (maxWidth > widthAtDepth[depth]) widthAtDepth[depth] = maxWidth;
-
-    node.width = maxWidth;
-    node.depth = depth;
-
-    return maxWidth;
-  }
-
-  calcSize(tree, 0);
-
-  const totalDepth = Object.keys(depths).length;
-  const maxDepth = Math.max(...Object.keys(depths).map(Number));
-
-  const verticalSpacing = (h - 40) / maxDepth;
-  const startY = h - 20;
-
-  function assignPos(node, x, depth) {
-    node.y = startY - depth * verticalSpacing;
-
-    if (node.children.length === 0) {
-      node.x = x;
-      return { x: x + 20, nodeX: x };
-    }
-
-    let currentX = x;
-    let childPositions = [];
-
-    for (let i = 0; i < node.children.length; i++) {
-      const child = node.children[i];
-      const result = assignPos(child, currentX, depth + 1);
-      childPositions.push(result.nodeX);
-      currentX = result.x;
-    }
-
-    const minX = Math.min(...childPositions);
-    const maxX = Math.max(...childPositions);
-    node.x = minX + (maxX - minX) / 2;
-
-    return { x: currentX, nodeX: node.x };
-  }
-
-  const centerX = w / 2;
-  assignPos(tree, centerX - (tree.width * 10), 0);
-
-  return tree;
 }
 
 // ============================================================

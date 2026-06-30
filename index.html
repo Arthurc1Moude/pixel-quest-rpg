@@ -489,8 +489,33 @@
     flex-direction: column;
   }
 
-  #battle-screen .battle-arena { flex: 1; min-height: 0; }
-  #battle-screen .battle-log { flex: 0 0 auto; }
+  #battle-screen .battle-arena {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #257179 0%, #1a1c2c 60%, #3a2a1a 100%);
+    overflow: hidden;
+    min-height: 200px;
+  }
+
+  #battle-screen .battle-enemy-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  #battle-screen .battle-player-area {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    padding-bottom: 20px;
+  }
+
+  #battle-screen .battle-log { flex: 0 0 60px; }
   #battle-screen .battle-actions { flex: 0 0 140px; }
 
   .battle-menu-btn {
@@ -541,22 +566,6 @@
     color: #fff;
   }
 
-  .battle-arena {
-    position: relative;
-    background: linear-gradient(180deg, #257179 0%, #1a1c2c 60%, #3a2a1a 100%);
-    overflow: hidden;
-  }
-
-  .battle-enemy-area {
-    position: absolute;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-  }
-
   .enemy-sprite {
     display: flex;
     flex-direction: column;
@@ -592,15 +601,6 @@
     height: 100%;
     background: var(--hp-red);
     transition: width 0.3s;
-  }
-
-  .battle-player-area {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 30px;
   }
 
   .player-battle-sprite {

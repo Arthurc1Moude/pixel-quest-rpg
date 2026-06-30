@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PIXEL QUEST RPG v0.2.0</title>
+<title>PIXEL QUEST RPG v0.2.1</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -1250,7 +1250,7 @@
   <div id="title-screen" class="screen active">
     <div class="title-logo">PIXEL QUEST</div>
     <div class="title-sub">— ADVENTURES —</div>
-    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.2.0</div>
+    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.2.1</div>
     <div class="title-menu">
       <button class="pixel-btn gold" onclick="showScreen('char-screen')">⚔ NEW GAME</button>
       <button class="pixel-btn" onclick="showLoadScreen()">📂 CONTINUE</button>
@@ -1350,6 +1350,8 @@
       <button class="battle-action-btn" onclick="showSkills()">✨ SKILLS</button>
       <button class="battle-action-btn" onclick="showBattleItems()">🧪 ITEMS</button>
       <button class="battle-action-btn" onclick="battleDefend()">🛡 DEFEND</button>
+      <button class="battle-action-btn" onclick="battleFlee()">🏃 FLEE (25G)</button>
+      <button class="battle-action-btn" onclick="openBattleShop()">🏪 SHOP</button>
       <div class="sub-menu" id="battle-submenu" style="display:none;"></div>
     </div>
   </div>
@@ -2415,6 +2417,21 @@ let oceanDepth = -2;
 let currentLane = 1;
 let lanePositions = [150, 300, 450];
 
+// --- WORLD MONSTER SYSTEM (v0.2.1) ---
+let worldMonsters = [];
+let monsterMoveTimer = 0;
+let monsterSpawnTimer = 0;
+const MAX_MONSTERS_PER_AREA = 6;
+const MONSTER_MOVE_INTERVAL = 30;
+const MONSTER_SPAWN_INTERVAL = 200;
+const MONSTER_DETECTION_RANGE = 40;
+
+// --- RANDOM MERCHANT SYSTEM (v0.2.1) ---
+let randomMerchant = null;
+let merchantSpawnTimer = 0;
+const MERCHANT_SPAWN_CHANCE = 0.002;
+const MERCHANT_STAY_TIME = 600;
+
 // --- SHOP INVENTORIES ---
 const SHOPS = {
   village: {
@@ -2616,6 +2633,8 @@ function update() {
   if (currentState === GameState.EXPLORE) {
     if (moveCooldown > 0) moveCooldown--;
     handleMovement();
+    // Update world monsters (v0.2.1)
+    updateWorldMonsters();
   }
 }
 
@@ -2694,11 +2713,22 @@ function changeLocation(newLoc, fromDir) {
   if (loc.safe) {
     logMessage('This is a safe area.', 'green');
   }
+
+  // Initialize monsters for new area (v0.2.1)
+  initWorldMonsters();
+
   drawMap();
 }
 
 function handleInteract() {
   if (currentState !== GameState.EXPLORE) return;
+
+  // Check for random merchant first
+  if (randomMerchant) {
+    handleMerchantInteract();
+    return;
+  }
+
   const loc = LOCATIONS[currentLocation];
   if (!loc.npcs) return;
 
@@ -2775,6 +2805,12 @@ function renderExplore() {
 
   // Direction arrows for exits
   drawExitMarkers(loc);
+
+  // Draw world monsters (v0.2.1)
+  drawWorldMonsters();
+
+  // Draw random merchant (v0.2.1)
+  drawRandomMerchant();
 
   // Player
   drawPlayer();
@@ -3020,6 +3056,402 @@ function drawMap() {
       mapCtx.strokeRect(loc.x - loc.size/2 - 3, loc.y - loc.size/2 - 3, loc.size + 6, loc.size + 6);
     }
   }
+}
+
+// ============================================================
+// WORLD MONSTER SYSTEM (v0.2.1)
+// ============================================================
+
+function initWorldMonsters() {
+  const loc = LOCATIONS[currentLocation];
+  worldMonsters = [];
+  
+  if (loc.safe || !loc.enemies || loc.enemies.length === 0) return;
+  
+  // Spawn initial monsters for the area
+  const numMonsters = Math.min(MAX_MONSTERS_PER_AREA, 2 + Math.floor(Math.random() * 3));
+  for (let i = 0; i < numMonsters; i++) {
+    spawnMonsterInArea();
+  }
+}
+
+function spawnMonsterInArea() {
+  const loc = LOCATIONS[currentLocation];
+  if (!loc.enemies || loc.enemies.length === 0) return;
+  if (worldMonsters.length >= MAX_MONSTERS_PER_AREA) return;
+  
+  const enemyId = loc.enemies[Math.floor(Math.random() * loc.enemies.length)];
+  const enemy = ADVENTURE_ENEMIES[enemyId] || ENEMIES[enemyId];
+  if (!enemy) return;
+  
+  // Random spawn position (avoiding player and NPCs)
+  let x, y;
+  let attempts = 0;
+  do {
+    x = 50 + Math.random() * 500;
+    y = 100 + Math.random() * 300;
+    attempts++;
+  } while (attempts < 10 && (
+    (Math.abs(x - playerX) < 80 && Math.abs(y - playerY) < 80) ||
+    isNearNPC(x, y)
+  ));
+  
+  const monster = {
+    id: enemyId,
+    name: enemy.name,
+    sprite: enemy.sprite,
+    x: x,
+    y: y,
+    hp: enemy.hp,
+    hpMax: enemy.hp,
+    atk: enemy.atk,
+    def: enemy.def,
+    direction: Math.floor(Math.random() * 4),
+    moveTimer: Math.random() * MONSTER_MOVE_INTERVAL,
+    state: 'idle',
+    currentArea: currentLocation
+  };
+  
+  worldMonsters.push(monster);
+}
+
+function isNearNPC(x, y) {
+  const loc = LOCATIONS[currentLocation];
+  if (!loc.npcs) return false;
+  
+  for (const npc of loc.npcs) {
+    if (Math.abs(x - npc.x) < 40 && Math.abs(y - npc.y) < 40) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function updateWorldMonsters() {
+  if (currentState !== GameState.EXPLORE) return;
+  
+  const loc = LOCATIONS[currentLocation];
+  if (loc.safe || !loc.enemies) return;
+  
+  monsterMoveTimer++;
+  monsterSpawnTimer++;
+  
+  // Update existing monsters
+  for (const monster of worldMonsters) {
+    updateMonsterBehavior(monster);
+  }
+  
+  // Remove monsters that changed area
+  worldMonsters = worldMonsters.filter(m => m.currentArea === currentLocation);
+  
+  // Spawn new monsters periodically
+  if (monsterSpawnTimer >= MONSTER_SPAWN_INTERVAL) {
+    monsterSpawnTimer = 0;
+    if (worldMonsters.length < MAX_MONSTERS_PER_AREA) {
+      spawnMonsterInArea();
+    }
+  }
+  
+  // Random area transfer (5% chance per monster per interval)
+  if (Math.random() < 0.05) {
+    transferMonsterToRandomArea();
+  }
+  
+  // Check for random merchant spawn
+  checkRandomMerchantSpawn();
+  
+  // Update random merchant
+  updateRandomMerchant();
+}
+
+function updateMonsterBehavior(monster) {
+  monster.moveTimer++;
+  
+  // Change direction randomly
+  if (monster.moveTimer >= MONSTER_MOVE_INTERVAL) {
+    monster.moveTimer = 0;
+    
+    // 30% chance to change direction
+    if (Math.random() < 0.3) {
+      monster.direction = Math.floor(Math.random() * 4);
+    }
+    
+    // Move the monster
+    const speed = 1 + Math.random() * 2;
+    switch (monster.direction) {
+      case 0: monster.y -= speed; break; // up
+      case 1: monster.y += speed; break; // down
+      case 2: monster.x -= speed; break; // left
+      case 3: monster.x += speed; break; // right
+    }
+    
+    // Keep within bounds
+    monster.x = Math.max(30, Math.min(570, monster.x));
+    monster.y = Math.max(80, Math.min(420, monster.y));
+  }
+  
+  // Check proximity to player
+  const dist = Math.abs(monster.x - playerX) + Math.abs(monster.y - playerY);
+  if (dist < MONSTER_DETECTION_RANGE) {
+    // Trigger battle!
+    triggerMonsterBattle(monster);
+  }
+}
+
+function triggerMonsterBattle(monster) {
+  const monsterIndex = worldMonsters.indexOf(monster);
+  if (monsterIndex > -1) {
+    worldMonsters.splice(monsterIndex, 1);
+  }
+  
+  // Create enemy from monster
+  const enemy = getScaledEnemy ? getScaledEnemy(monster.id) : (ADVENTURE_ENEMIES[monster.id] || ENEMIES[monster.id]);
+  if (enemy) {
+    startBattle([{...enemy, hp: enemy.hp, hpMax: enemy.hp}]);
+  }
+}
+
+function transferMonsterToRandomArea() {
+  const loc = LOCATIONS[currentLocation];
+  if (!loc.connections || Object.keys(loc.connections).length === 0) return;
+  
+  // Pick a random monster to transfer
+  if (worldMonsters.length === 0) return;
+  
+  const monster = worldMonsters[Math.floor(Math.random() * worldMonsters.length)];
+  const connectedAreas = Object.keys(loc.connections);
+  const newArea = connectedAreas[Math.floor(Math.random() * connectedAreas.length)];
+  
+  // Remove from current area
+  const index = worldMonsters.indexOf(monster);
+  if (index > -1) {
+    worldMonsters.splice(index, 1);
+  }
+  
+  // Spawn in new area (will appear when player moves there)
+  // For now, just log the transfer
+  console.log(`${monster.name} moved to ${newArea}`);
+}
+
+function drawWorldMonsters() {
+  for (const monster of worldMonsters) {
+    if (monster.currentArea !== currentLocation) continue;
+    
+    ctx.save();
+    ctx.font = '32px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Draw shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(monster.x, monster.y + 20, 15, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Draw monster
+    ctx.fillText(monster.sprite, monster.x, monster.y);
+    
+    // Draw name above monster
+    ctx.font = '8px "Press Start 2P"';
+    ctx.fillStyle = '#ff6b6b';
+    ctx.fillText(monster.name, monster.x, monster.y - 25);
+    
+    // Draw HP bar
+    const hpPct = monster.hp / monster.hpMax;
+    ctx.fillStyle = '#333';
+    ctx.fillRect(monster.x - 20, monster.y - 35, 40, 4);
+    ctx.fillStyle = hpPct > 0.5 ? '#4CAF50' : hpPct > 0.25 ? '#FF9800' : '#f44336';
+    ctx.fillRect(monster.x - 20, monster.y - 35, 40 * hpPct, 4);
+    
+    ctx.restore();
+  }
+}
+
+// ============================================================
+// RANDOM MERCHANT SYSTEM (v0.2.1)
+// ============================================================
+
+function checkRandomMerchantSpawn() {
+  if (randomMerchant !== null) return;
+  
+  const loc = LOCATIONS[currentLocation];
+  if (loc.safe || loc.type === 'boss') return;
+  
+  if (Math.random() < MERCHANT_SPAWN_CHANCE) {
+    spawnRandomMerchant();
+  }
+}
+
+function spawnRandomMerchant() {
+  let x, y;
+  let attempts = 0;
+  do {
+    x = 100 + Math.random() * 400;
+    y = 150 + Math.random() * 200;
+    attempts++;
+  } while (attempts < 20 && (
+    (Math.abs(x - playerX) < 100 && Math.abs(y - playerY) < 100) ||
+    isNearNPC(x, y)
+  ));
+  
+  randomMerchant = {
+    x: x,
+    y: y,
+    spawnTime: Date.now(),
+    items: generateRandomMerchantItems()
+  };
+  
+  logMessage('A wandering merchant appeared!', 'gold');
+}
+
+function generateRandomMerchantItems() {
+  const allItems = Object.keys(ITEMS).filter(id => ITEMS[id].type !== 'key');
+  const numItems = 3 + Math.floor(Math.random() * 4);
+  const items = [];
+  
+  for (let i = 0; i < numItems && allItems.length > 0; i++) {
+    const index = Math.floor(Math.random() * allItems.length);
+    const itemId = allItems.splice(index, 1)[0];
+    items.push({
+      id: itemId,
+      quantity: ITEMS[itemId].stackable ? (1 + Math.floor(Math.random() * 3)) : 1,
+      price: Math.floor(ITEMS[itemId].value * (1.2 + Math.random() * 0.3))
+    });
+  }
+  
+  return items;
+}
+
+function updateRandomMerchant() {
+  if (!randomMerchant) return;
+  
+  const elapsed = Date.now() - randomMerchant.spawnTime;
+  if (elapsed > MERCHANT_STAY_TIME) {
+    logMessage('The merchant left...', 'gray');
+    randomMerchant = null;
+  }
+}
+
+function drawRandomMerchant() {
+  if (!randomMerchant) return;
+  
+  ctx.save();
+  
+  // Draw merchant sprite
+  ctx.font = '32px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🧔', randomMerchant.x, randomMerchant.y);
+  
+  // Draw label
+  ctx.font = '8px "Press Start 2P"';
+  ctx.fillStyle = '#f4b41b';
+  ctx.fillText('MERCHANT', randomMerchant.x, randomMerchant.y - 25);
+  
+  // Draw interaction hint
+  ctx.fillStyle = '#94b0c2';
+  ctx.font = '7px "Press Start 2P"';
+  ctx.fillText('Press E to trade', randomMerchant.x, randomMerchant.y + 30);
+  
+  // Time remaining indicator
+  const elapsed = Date.now() - randomMerchant.spawnTime;
+  const remaining = Math.max(0, MERCHANT_STAY_TIME - elapsed);
+  const timePct = remaining / MERCHANT_STAY_TIME;
+  
+  ctx.fillStyle = '#333';
+  ctx.fillRect(randomMerchant.x - 25, randomMerchant.y + 40, 50, 4);
+  ctx.fillStyle = '#4CAF50';
+  ctx.fillRect(randomMerchant.x - 25, randomMerchant.y + 40, 50 * timePct, 4);
+  
+  ctx.restore();
+}
+
+function handleMerchantInteract() {
+  if (!randomMerchant) return;
+  
+  const dist = Math.abs(playerX - randomMerchant.x) + Math.abs(playerY - randomMerchant.y);
+  if (dist > 50) return;
+  
+  openRandomMerchantShop();
+}
+
+function openRandomMerchantShop() {
+  if (!randomMerchant) return;
+  
+  const shopUI = document.createElement('div');
+  shopUI.className = 'modal-overlay active';
+  shopUI.id = 'merchant-modal';
+  shopUI.innerHTML = `
+    <div class="modal" style="width:500px;">
+      <div class="modal-header">
+        <div class="modal-title">🧔 Wandering Merchant</div>
+        <button class="modal-close" onclick="closeMerchantShop()">✕</button>
+      </div>
+      <div class="gold-display">💰 YOUR GOLD: ${player.gold}</div>
+      <div class="modal-body">
+        <div class="shop-items" id="merchant-items"></div>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('game-container').appendChild(shopUI);
+  renderMerchantItems();
+}
+
+function closeMerchantShop() {
+  const modal = document.getElementById('merchant-modal');
+  if (modal) modal.remove();
+}
+
+function renderMerchantItems() {
+  if (!randomMerchant) return;
+  
+  const container = document.getElementById('merchant-items');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  for (const item of randomMerchant.items) {
+    const itemData = ITEMS[item.id];
+    if (!itemData) continue;
+    
+    const div = document.createElement('div');
+    div.className = 'shop-item';
+    div.innerHTML = `
+      <div class="shop-item-icon">${itemData.icon || '📦'}</div>
+      <div class="shop-item-info">
+        <div class="shop-item-name">${itemData.name}</div>
+        <div class="shop-item-price">💰 ${item.price}</div>
+        ${itemData.desc ? `<div class="shop-item-desc">${itemData.desc}</div>` : ''}
+      </div>
+      <button class="pixel-btn" onclick="buyMerchantItem('${item.id}', ${item.price})">BUY</button>
+    `;
+    container.appendChild(div);
+  }
+}
+
+function buyMerchantItem(itemId, price) {
+  if (player.gold < price) {
+    logMessage('Not enough gold!', 'red');
+    return;
+  }
+  
+  player.gold -= price;
+  addItem(itemId, 1);
+  logMessage(`Bought ${ITEMS[itemId].name}!`, 'gold');
+  
+  // Remove item from merchant
+  const itemIndex = randomMerchant.items.findIndex(i => i.id === itemId);
+  if (itemIndex > -1) {
+    randomMerchant.items.splice(itemIndex, 1);
+    if (randomMerchant.items.length === 0) {
+      logMessage('Merchant has no more items!', 'gray');
+      setTimeout(() => closeMerchantShop(), 1000);
+    } else {
+      renderMerchantItems();
+    }
+  }
+  
+  updateUI();
 }
 
 // ============================================================
@@ -3397,6 +3829,183 @@ function battleDefend() {
   battleState.defending = true;
   battleLog(`${player.name} takes a defensive stance!`, 'cyan');
   afterPlayerAction();
+}
+
+// Flee from battle (v0.2.1) - costs 25 gold
+function battleFlee() {
+  if (battleState.turn !== 'player') return;
+
+  if (player.gold < 25) {
+    battleLog('Not enough gold to flee! Need 25G!', 'red');
+    return;
+  }
+
+  player.gold -= 25;
+  battleLog(`${player.name} fled from battle! (-25G)`, 'yellow');
+
+  // Reset battle state
+  battleState.active = false;
+  currentState = GameState.EXPLORE;
+
+  // Update UI and return to exploration
+  updateUI();
+  showScreen('explore-screen');
+}
+
+// Open shop during battle (v0.2.1)
+function openBattleShop() {
+  if (battleState.turn !== 'player') return;
+
+  // Temporarily pause battle
+  battleState.fleeing = true;
+
+  // Open shop modal
+  const shopUI = document.createElement('div');
+  shopUI.className = 'modal-overlay active';
+  shopUI.id = 'battle-shop-modal';
+  shopUI.innerHTML = `
+    <div class="modal" style="width:650px;">
+      <div class="modal-header">
+        <div class="modal-title">🏪 BATTLE SHOP</div>
+        <button class="modal-close" onclick="closeBattleShop()">✕</button>
+      </div>
+      <div class="gold-display" id="shop-gold">💰 YOUR GOLD: ${player.gold}</div>
+      <div class="modal-body">
+        <div class="shop-layout">
+          <div class="shop-section">
+            <h3>🛒 BUY</h3>
+            <div class="shop-items" id="shop-buy"></div>
+          </div>
+          <div class="shop-section">
+            <h3>💰 SELL</h3>
+            <div class="shop-items" id="shop-sell"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('game-container').appendChild(shopUI);
+  renderBattleShop();
+  renderBattleSellItems();
+}
+
+function closeBattleShop() {
+  const modal = document.getElementById('battle-shop-modal');
+  if (modal) modal.remove();
+
+  // Resume battle
+  if (battleState.active && battleState.fleeing) {
+    battleState.fleeing = false;
+  }
+}
+
+function renderBattleShop() {
+  const shop = SHOPS.village;
+  const container = document.getElementById('shop-buy');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  for (const itemId of shop.buy) {
+    const item = ITEMS[itemId];
+    if (!item) continue;
+
+    const div = document.createElement('div');
+    div.className = 'shop-item';
+    div.innerHTML = `
+      <div class="shop-item-icon">${item.icon || '📦'}</div>
+      <div class="shop-item-info">
+        <div class="shop-item-name">${item.name}</div>
+        <div class="shop-item-price">💰 ${item.value}</div>
+        ${item.desc ? `<div class="shop-item-desc">${item.desc}</div>` : ''}
+      </div>
+      <button class="pixel-btn" onclick="buyShopItem('${itemId}')">BUY</button>
+    `;
+    container.appendChild(div);
+  }
+}
+
+function renderBattleSellItems() {
+  const container = document.getElementById('shop-sell');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  const sellableItems = player.inventory.filter(item => {
+    return item && item.type !== 'key' && !item.equipped;
+  });
+
+  if (sellableItems.length === 0) {
+    container.innerHTML = '<div style="color:#566c86;font-size:9px;padding:10px;">No items to sell.</div>';
+    return;
+  }
+
+  for (const item of sellableItems) {
+    const itemData = ITEMS[item.id];
+    if (!itemData) continue;
+
+    const sellPrice = Math.floor(itemData.value * 0.5);
+    const div = document.createElement('div');
+    div.className = 'shop-item';
+    div.innerHTML = `
+      <div class="shop-item-icon">${itemData.icon || '📦'}</div>
+      <div class="shop-item-info">
+        <div class="shop-item-name">${itemData.name}</div>
+        <div class="shop-item-price" style="color:#ff6b6b;">💰 +${sellPrice}</div>
+      </div>
+      <button class="pixel-btn" onclick="sellBattleItem('${itemId}')">SELL</button>
+    `;
+    container.appendChild(div);
+  }
+}
+
+function buyShopItem(itemId) {
+  const item = ITEMS[itemId];
+  if (!item) return;
+
+  if (player.gold < item.value) {
+    battleLog('Not enough gold!', 'red');
+    return;
+  }
+
+  player.gold -= item.value;
+
+  if (item.stackable) {
+    addItem(itemId, 1);
+  } else {
+    // Check if slot is available
+    const equipped = player.equipment[item.slot];
+    if (equipped) {
+      battleLog('Equipment slot full! Sell old item first.', 'red');
+      player.gold += item.value;
+      return;
+    }
+    addItem(itemId, 1);
+  }
+
+  battleLog(`Bought ${item.name}!`, 'gold');
+  document.getElementById('shop-gold').textContent = `💰 YOUR GOLD: ${player.gold}`;
+  updateUI();
+}
+
+function sellBattleItem(itemId) {
+  const item = ITEMS[itemId];
+  if (!item) return;
+
+  const sellPrice = Math.floor(item.value * 0.5);
+  player.gold += sellPrice;
+
+  // Find and remove from inventory
+  const idx = player.inventory.findIndex(i => i.id === itemId);
+  if (idx > -1) {
+    player.inventory.splice(idx, 1);
+  }
+
+  battleLog(`Sold ${item.name} for ${sellPrice}G!`, 'yellow');
+  document.getElementById('shop-gold').textContent = `💰 YOUR GOLD: ${player.gold}`;
+  renderBattleSellItems();
+  updateUI();
 }
 
 function afterPlayerAction() {
@@ -4883,7 +5492,7 @@ function returnToTitle() {
 }
 
 function showCredits() {
-  alert('PIXEL QUEST RPG v0.2.0\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nNEW in v0.2.0:\n- 5 Unique Adventures!\n- Adventure Selection Menu\n- Progressive Difficulty Scaling\n- New Monsters & Bosses\n- Under the Sea Depths\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
+  alert('PIXEL QUEST RPG v0.2.1\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nNEW in v0.2.1:\n- Visible monsters on the map!\n- Monsters move around randomly\n- Monsters can transfer between areas\n- Touch monsters to start battles\n- Flee from battle (25G)\n- Shop access during battle!\n- Random wandering merchants\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
 }
 
 // ============================================================

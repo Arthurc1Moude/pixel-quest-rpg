@@ -4768,13 +4768,15 @@ function drawMap() {
   mapCtx.fillRect(0, 0, w, h);
 
   const mapLocations = {
-    village: { x: 71, y: 120, color: '#38b764', size: 8 },
-    forest_path: { x: 71, y: 95, color: '#2d5a2d', size: 6 },
-    forest_deep: { x: 71, y: 70, color: '#1a3a1a', size: 6 },
-    cave_entrance: { x: 71, y: 45, color: '#3a3a5a', size: 6 },
-    mountain_foot: { x: 100, y: 75, color: '#7a6a5a', size: 6 },
-    mountain_pass: { x: 100, y: 40, color: '#5a6a7a', size: 6 },
-    dragon_lair: { x: 100, y: 15, color: '#b13e53', size: 8 }
+    village: { x: 71, y: 120, color: '#38b764', size: 6 },
+    forest_path: { x: 71, y: 95, color: '#38b764', size: 6 },
+    forest_deep: { x: 71, y: 70, color: '#38b764', size: 6 },
+    cave_entrance: { x: 71, y: 45, color: '#6a4c93', size: 6 },
+    cave_deep: { x: 71, y: 20, color: '#6a4c93', size: 6 },
+    dragon_lair: { x: 71, y: 5, color: '#b13e53', size: 6 },
+    mountain_foot: { x: 98, y: 45, color: '#8b6914', size: 6 },
+    mountain_pass: { x: 98, y: 20, color: '#6b7b8c', size: 6 },
+    mountain_peak: { x: 98, y: 5, color: '#b13e53', size: 6 }
   };
 
   mapCtx.strokeStyle = '#566c86';
@@ -4783,9 +4785,11 @@ function drawMap() {
     ['village','forest_path'],
     ['forest_path','forest_deep'],
     ['forest_deep','cave_entrance'],
-    ['forest_path','mountain_foot'],
+    ['cave_entrance','cave_deep'],
+    ['cave_deep','dragon_lair'],
+    ['forest_deep','mountain_foot'],
     ['mountain_foot','mountain_pass'],
-    ['mountain_pass','dragon_lair']
+    ['mountain_pass','mountain_peak']
   ];
 
   for (const [a, b] of connections) {

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PIXEL QUEST RPG v0.3.1</title>
+<title>PIXEL QUEST RPG v0.3.5</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -378,6 +378,11 @@
     color: var(--text-primary);
   }
 
+  .mini-stat.credit-good span:last-child { color: #38b764; }
+  .mini-stat.credit-warn span:last-child { color: #f4b41b; }
+  .mini-stat.credit-bad span:last-child { color: #ef4155; }
+  .mini-stat.credit-critical span:last-child { color: #b13e53; }
+
   .equipped-panel {
     margin-top: 4px;
   }
@@ -476,11 +481,60 @@
   /* BATTLE SCREEN */
   #battle-screen {
     display: none;
+    position: relative;
   }
 
   #battle-screen.active {
     display: grid;
     grid-template-rows: 1fr auto 140px;
+  }
+
+  .battle-menu-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    background: #1a1c2c;
+    border: 2px solid #41a6f6;
+    color: #41a6f6;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    line-height: 1;
+  }
+  .battle-menu-btn:hover {
+    background: #41a6f6;
+    color: #fff;
+  }
+  .battle-dropdown-menu {
+    position: absolute;
+    top: 50px;
+    right: 15px;
+    background: #1a1c2c;
+    border: 2px solid #41a6f6;
+    z-index: 101;
+    min-width: 140px;
+  }
+  .battle-dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    background: #1a1c2c;
+    border: none;
+    color: #94b0c2;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 10px;
+  }
+  .battle-dropdown-item:hover {
+    background: #41a6f6;
+    color: #fff;
   }
 
   .battle-arena {
@@ -747,6 +801,77 @@
     background: var(--bg-panel);
     color: var(--text-gold-light);
     border-color: var(--text-gold);
+  }
+
+  /* SETTINGS (v0.3.3) */
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 5px;
+    border-bottom: 1px solid #2a2a3a;
+  }
+  .setting-label {
+    font-size: 10px;
+    color: #94b0c2;
+  }
+  .setting-control {
+    display: flex;
+    align-items: center;
+  }
+  .setting-section-title {
+    font-size: 9px;
+    color: #f4b41b;
+    margin: 15px 0 5px 0;
+    padding: 4px 8px;
+    background: rgba(244, 180, 27, 0.1);
+    border-left: 3px solid #f4b41b;
+  }
+  .setting-row input[type="range"] {
+    width: 120px;
+    cursor: pointer;
+  }
+
+  /* Toggle Switch */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+  }
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #333;
+    transition: .2s;
+    border: 2px solid #555;
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 12px;
+    width: 12px;
+    left: 2px;
+    bottom: 2px;
+    background-color: #888;
+    transition: .2s;
+  }
+  input:checked + .slider {
+    background-color: #41a6f6;
+    border-color: #41a6f6;
+  }
+  input:checked + .slider:before {
+    transform: translateX(20px);
+    background-color: #fff;
   }
 
   .item-grid {
@@ -1250,7 +1375,7 @@
   <div id="title-screen" class="screen active">
     <div class="title-logo">PIXEL QUEST</div>
     <div class="title-sub">— ADVENTURES —</div>
-    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.3.1</div>
+    <div style="margin-top:5px;font-size:10px;color:#f4b41b;">Version 0.3.2</div>
     <div class="title-menu">
       <button class="pixel-btn gold" onclick="showScreen('char-screen')">⚔ NEW GAME</button>
       <button class="pixel-btn" onclick="showLoadScreen()">📂 CONTINUE</button>
@@ -1305,6 +1430,8 @@
         <div class="mini-stat"><span>AGI</span><span id="stat-agi">10</span></div>
         <div class="mini-stat"><span>LUK</span><span id="stat-luk">5</span></div>
         <div class="mini-stat"><span>💰</span><span id="stat-gold">0</span></div>
+        <div class="mini-stat credit-good" id="stat-credit-row"><span>⭐ CREDIT</span><span id="stat-credit">100</span></div>
+        <div class="mini-stat" id="stat-time-row"><span>🕐</span><span id="stat-time">08:00</span></div>
       </div>
 
       <div class="panel-title equipped-panel">🛡 EQUIPPED</div>
@@ -1333,6 +1460,7 @@
       <button class="action-btn" id="mystery-btn" onclick="openMysteryPlace()" style="display:none;background:#9C27B0;border-color:#7B1FA2;">🔮 MYSTERY CAVE</button>
       <button class="action-btn" id="free-xp-btn-action" onclick="openFreeExperience()" style="display:none;background:#f4b41b;border-color:#d4a017;color:#1a1c2c;">✨ FREE EXP</button>
       <div style="flex:1"></div>
+      <button class="action-btn" onclick="openSettings()">⚙️ SETTINGS</button>
       <button class="action-btn" onclick="restAtInn()" id="inn-btn">🏨 REST (20G)</button>
       <button class="action-btn" onclick="returnToTitle()">🚪 QUIT</button>
     </div>
@@ -1342,6 +1470,11 @@
 
   <!-- BATTLE SCREEN -->
   <div id="battle-screen" class="screen">
+    <div class="battle-menu-btn" onclick="toggleBattleMenu()">⋮</div>
+    <div class="battle-dropdown-menu" id="battle-dropdown-menu" style="display:none;">
+      <button class="battle-dropdown-item" onclick="battleFlee(); toggleBattleMenu();">🏃 FLEE (25G)</button>
+      <button class="battle-dropdown-item" onclick="openBattleShop(); toggleBattleMenu();">🏪 SHOP</button>
+    </div>
     <div class="battle-arena" id="battle-arena">
       <div class="battle-enemy-area" id="enemy-area"></div>
       <div class="battle-player-area" id="player-battle-area"></div>
@@ -1352,8 +1485,6 @@
       <button class="battle-action-btn" onclick="showSkills()">✨ SKILLS</button>
       <button class="battle-action-btn" onclick="showBattleItems()">🧪 ITEMS</button>
       <button class="battle-action-btn" onclick="battleDefend()">🛡 DEFEND</button>
-      <button class="battle-action-btn" onclick="battleFlee()">🏃 FLEE (25G)</button>
-      <button class="battle-action-btn" onclick="openBattleShop()">🏪 SHOP</button>
       <div class="sub-menu" id="battle-submenu" style="display:none;"></div>
     </div>
   </div>
@@ -1425,7 +1556,7 @@
   <div class="modal-overlay" id="shop-modal">
     <div class="modal" style="width:650px;">
       <div class="modal-header">
-        <div class="modal-title">🏪 SHOP</div>
+        <div class="modal-title" id="shop-title">🏪 SHOP</div>
         <button class="modal-close" onclick="closeShop()">✕</button>
       </div>
       <div class="gold-display" id="shop-gold">💰 GOLD: 0</div>
@@ -1514,6 +1645,92 @@
         <div style="font-size:9px;color:#94b0c2;margin-bottom:15px;">A mystical shrine that grants bonus experience.<br>Available once per day.</div>
         <div id="free-xp-status" style="font-size:10px;margin-bottom:15px;"></div>
         <button class="pixel-btn gold" onclick="claimFreeExperience()" id="free-xp-btn">✨ CLAIM +500 EXP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL (v0.3.3) -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal" style="width:520px;">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ SETTINGS</div>
+        <button class="modal-close" onclick="closeSettings()">✕</button>
+      </div>
+      <div class="modal-body" style="padding:15px;">
+        
+        <div class="setting-row">
+          <div class="setting-label">🔊 Sound Effects</div>
+          <div class="setting-toggle">
+            <label class="switch">
+              <input type="checkbox" id="setting-sound" checked onchange="toggleSound()">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="setting-row">
+          <div class="setting-label">🎵 Background Music</div>
+          <div class="setting-toggle">
+            <label class="switch">
+              <input type="checkbox" id="setting-music" onchange="toggleMusic()">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="setting-row">
+          <div class="setting-label">📏 Text Size</div>
+          <div class="setting-control">
+            <input type="range" id="setting-textsize" min="8" max="16" value="10" step="1" oninput="changeTextSize(this.value)">
+            <span id="textsize-value" style="font-size:9px;margin-left:8px;">10px</span>
+          </div>
+        </div>
+        
+        <div class="setting-section-title">⏰ TIME SETTINGS</div>
+        
+        <div class="setting-row">
+          <div class="setting-label">🕐 In-Game Time</div>
+          <div class="setting-toggle">
+            <label class="switch">
+              <input type="checkbox" id="setting-gametime" checked onchange="toggleGameTime()">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="setting-row" id="gametime-speed-row">
+          <div class="setting-label">1 Game Hour =</div>
+          <div class="setting-control">
+            <input type="range" id="setting-timespeed" min="5" max="60" value="20" step="5" oninput="changeTimeSpeed(this.value)">
+            <span id="timespeed-value" style="font-size:9px;margin-left:8px;">20 min</span>
+          </div>
+        </div>
+        <div id="timespeed-warning" style="font-size:8px;color:#ff9800;margin-left:10px;margin-bottom:10px;display:none;">
+          ⚠ Warning: 1:1 rate recommended with "Use Real Time" enabled
+        </div>
+        
+        <div class="setting-row">
+          <div class="setting-label">⏱️ Use Real Time</div>
+          <div class="setting-toggle">
+            <label class="switch">
+              <input type="checkbox" id="setting-realtime" onchange="toggleRealTime()">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="setting-section-title">👤 DISPLAY</div>
+        
+        <div class="setting-row">
+          <div class="setting-label">🧍 Real Person Sprites</div>
+          <div class="setting-toggle">
+            <label class="switch">
+              <input type="checkbox" id="setting-realsprites" onchange="toggleRealSprites()">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        
       </div>
     </div>
   </div>
@@ -1641,7 +1858,23 @@ const ITEMS = {
   ancient_key:   { id:'ancient_key', name:'Ancient Key', type:'key', value:0, desc:'A mysterious ancient key.', icon:'🗝️', stackable:false },
   dragon_scale:  { id:'dragon_scale', name:'Dragon Scale', type:'key', value:0, desc:'A scale from the great dragon.', icon:'🐲', stackable:false },
   magic_crystal: { id:'magic_crystal', name:'Magic Crystal', type:'key', value:0, desc:'A crystal pulsing with magic.', icon:'💠', stackable:false },
-  hero_medal:    { id:'hero_medal', name:'Hero\'s Medal', type:'key', value:0, desc:'Proof of your heroism.', icon:'🏅', stackable:false }
+  hero_medal:    { id:'hero_medal', name:'Hero\'s Medal', type:'key', value:0, desc:'Proof of your heroism.', icon:'🏅', stackable:false },
+  diving_gear:   { id:'diving_gear', name:'Diving Gear', type:'key', value:0, desc:'Equipment for deep sea exploration.', icon:'🤿', stackable:false },
+  slime_jelly:   { id:'slime_jelly', name:'Slime Jelly', type:'consumable', hp:30, mp:20, value:25, desc:'Restores 30 HP and 20 MP.', icon:'🟢', stackable:true },
+  protection_charm: { id:'protection_charm', name:'Protection Charm', type:'armor', slot:'accessory', def:8, value:300, desc:'Provides magical protection.', icon:'🔮', stackable:false },
+  cat_blessing:  { id:'cat_blessing', name:'Cat\'s Blessing', type:'armor', slot:'accessory', agi:10, luk:10, value:400, desc:'Blessing of a familiar - boosts luck and agility.', icon:'🐾', stackable:false },
+  fallen_sword:  { id:'fallen_sword', name:'Fallen Knight\'s Sword', type:'weapon', slot:'weapon', atk:25, def:5, value:600, desc:'Sword of a fallen hero.', icon:'⚔️', stackable:false },
+  soul_stone:    { id:'soul_stone', name:'Soul Stone', type:'consumable', value:500, desc:'Protects from one deadly blow (auto-revive).', icon:'💎', stackable:true, autoRevive:true },
+  void_blessing: { id:'void_blessing', name:'Void Blessing', type:'armor', slot:'accessory', allStats:5, value:800, desc:'Blessing from the void - boosts all stats.', icon:'🌑', stackable:false },
+  trident:       { id:'trident', name:'Ocean Trident', type:'weapon', slot:'weapon', atk:22, int:10, value:700, desc:'Trident of the deep sea.', icon:'🔱', stackable:false },
+  slime_crown:   { id:'slime_crown', name:'Slime Crown', type:'armor', slot:'accessory', def:10, hpMax:50, value:600, desc:'Crown of the Slime Lord.', icon:'👑', stackable:false },
+  witch_hat:     { id:'witch_hat', name:'Witch Hat', type:'armor', slot:'armor', int:20, mpMax:50, def:5, value:800, desc:'Hat of the Witch Queen.', icon:'🎩', stackable:false },
+  demon_blade:   { id:'demon_blade', name:'Demon Blade', type:'weapon', slot:'weapon', atk:40, int:10, value:2000, desc:'Blade forged in Hell.', icon:'🗡️', stackable:false },
+  phoenix_feather: { id:'phoenix_feather', name:'Phoenix Feather', type:'consumable', value:300, desc:'Revives with full HP/MP.', icon:'🪶', stackable:true, revive:true },
+  magic_scroll:  { id:'magic_scroll', name:'Magic Scroll', type:'consumable', mp:200, value:150, desc:'Restores 200 MP.', icon:'📜', stackable:true },
+  flame_amulet:  { id:'flame_amulet', name:'Flame Amulet', type:'armor', slot:'accessory', atk:10, fireResist:true, value:400, desc:'Amulet of fire resistance.', icon:'🔥', stackable:false },
+  slime_essence: { id:'slime_essence', name:'Slime Essence', type:'consumable', hp:100, value:80, desc:'Concentrated slime essence.', icon:'💧', stackable:true },
+  pearl:         { id:'pearl', name:'Pearl', type:'key', value:50, desc:'A beautiful ocean pearl.', icon:'🔘', stackable:true }
 };
 
 // --- SKILL DATABASE ---
@@ -1797,8 +2030,20 @@ const LOCATIONS = {
     type:'adventure_under_sea', safe:true,
     adventureId: 'under_sea',
     encounterRate: 0,
-    connections: { south: 'under_sea_1' },
+    connections: { north: 'coastal_village', south: 'under_sea_1' },
     npcs: []
+  },
+  coastal_village: {
+    id:'coastal_village', name:'🏘️ Coastal Village', bgColor:'#b2ebf2', groundColor:'#80deea',
+    type:'adventure_under_sea', safe:true,
+    adventureId: 'under_sea',
+    encounterRate: 0,
+    connections: { south: 'beach' },
+    npcs: [
+      {id:'fisherman', name:'Fisherman Tom', sprite:'🎣', x:150, y:200, dialog:'fisherman_greeting'},
+      {id:'sea_merchant', name:'Sea Merchant', sprite:'🧑‍🌾', x:450, y:250, dialog:'sea_merchant_greeting', shop:true},
+      {id:'sailor', name:'Sailor Bob', sprite:'⚓', x:300, y:150, dialog:'sailor_greeting'}
+    ]
   },
   under_sea_1: {
     id:'under_sea_1', name:'🌊 Coral Reef (Depth -2)', bgColor:'#00bcd4', groundColor:'#4dd0e1',
@@ -1885,13 +2130,35 @@ const LOCATIONS = {
   },
   
   // MONSTER SLIME ADVENTURE LOCATIONS
+  slime_village: {
+    id:'slime_village', name:'🏘️ Slime Village', bgColor:'#1a1a2e', groundColor:'#2d2d44',
+    type:'adventure_slime', safe:true,
+    adventureId: 'monster_slime',
+    encounterRate: 0,
+    connections: { south: 'slime_swamp' },
+    npcs: [
+      {id:'slime_elder', name:'Slime Elder', sprite:'🧙', x:300, y:200, dialog:'slime_elder_greeting'},
+      {id:'slime_merchant', name:'Slime Trader', sprite:'🧪', x:150, y:250, dialog:'slime_merchant_greeting', shop:true},
+      {id:'slime_guard', name:'Slime Guard', sprite:'🛡️', x:450, y:220, dialog:'slime_guard_greeting'},
+      {id:'slime_farmer', name:'Slime Farmer', sprite:'🌾', x:200, y:300, dialog:'slime_farmer_greeting'}
+    ]
+  },
   slime_swamp: {
     id:'slime_swamp', name:'🟢 Slime Swamp', bgColor:'#1a1a2e', groundColor:'#2d2d44',
     type:'adventure_slime', safe:false,
     adventureId: 'monster_slime',
     enemies: ['slime', 'mega_slime'],
     encounterRate: 0.15,
-    connections: { south: 'slime_marsh', north: 'slime_castle' },
+    connections: { north: 'slime_village', south: 'slime_marsh', east: 'acid_pools' },
+    npcs: []
+  },
+  acid_pools: {
+    id:'acid_pools', name:'☣️ Acid Pools', bgColor:'#2d1a2e', groundColor:'#4a1b3a',
+    type:'adventure_slime', safe:false,
+    adventureId: 'monster_slime',
+    enemies: ['mega_slime', 'king_slime'],
+    encounterRate: 0.18,
+    connections: { west: 'slime_swamp' },
     npcs: []
   },
   slime_marsh: {
@@ -1900,7 +2167,16 @@ const LOCATIONS = {
     adventureId: 'monster_slime',
     enemies: ['mega_slime', 'king_slime'],
     encounterRate: 0.18,
-    connections: { north: 'slime_swamp', south: 'slime_cavern' },
+    connections: { north: 'slime_swamp', south: 'slime_cavern', east: 'slime_village_ruins' },
+    npcs: []
+  },
+  slime_village_ruins: {
+    id:'slime_village_ruins', name:'🏚️ Village Ruins', bgColor:'#3d2d4c', groundColor:'#4d3d5c',
+    type:'adventure_slime', safe:false,
+    adventureId: 'monster_slime',
+    enemies: ['king_slime', 'slime_queen'],
+    encounterRate: 0.2,
+    connections: { west: 'slime_marsh' },
     npcs: []
   },
   slime_cavern: {
@@ -1910,28 +2186,96 @@ const LOCATIONS = {
     enemies: ['king_slime', 'slime_queen'],
     encounterRate: 0.2,
     miniBoss: 'slime_queen',
-    connections: { north: 'slime_marsh', south: 'slime_castle' },
+    connections: { north: 'slime_marsh', south: 'corruption_core' },
     npcs: []
   },
-  slime_castle: {
-    id:'slime_castle', name:'🏰 Slime Castle', bgColor:'#5a189a', groundColor:'#7b1fa2',
-    type:'boss', safe:false,
+  corruption_core: {
+    id:'corruption_core', name:'💀 Corruption Core', bgColor:'#4a1a5a', groundColor:'#6a2a7a',
+    type:'adventure_slime', safe:false,
+    adventureId: 'monster_slime',
+    enemies: ['slime_queen', 'mega_slime'],
+    encounterRate: 0.22,
+    connections: { north: 'slime_cavern', south: 'slime_castle_gate' },
+    npcs: []
+  },
+  slime_castle_gate: {
+    id:'slime_castle_gate', name:'🏰 Castle Gate', bgColor:'#5a189a', groundColor:'#7b1fa2',
+    type:'adventure_slime', safe:false,
+    adventureId: 'monster_slime',
+    enemies: ['king_slime', 'slime_queen'],
+    encounterRate: 0.2,
+    connections: { north: 'corruption_core', south: 'throne_hall' },
+    npcs: []
+  },
+  throne_hall: {
+    id:'throne_hall', name:'👑 Throne Hall', bgColor:'#6a289a', groundColor:'#8b2fb2',
+    type:'adventure_slime', safe:false,
     adventureId: 'monster_slime',
     enemies: ['slime_lord'],
     encounterRate: 0,
     boss: 'slime_lord',
-    connections: { south: 'slime_cavern' },
+    connections: { north: 'slime_castle_gate' },
     npcs: []
   },
   
   // WITCH ADVENTURE LOCATIONS
+  witch_hut: {
+    id:'witch_hut', name:'🏚️ Witch Hut Village', bgColor:'#1a0a2e', groundColor:'#2d1b4e',
+    type:'adventure_witch', safe:true,
+    adventureId: 'witch',
+    encounterRate: 0,
+    connections: { south: 'haunted_forest_edge' },
+    npcs: [
+      {id:'witch_apprentice', name:'Apprentice Zoe', sprite:'🧙‍♀️', x:300, y:200, dialog:'witch_apprentice_greeting'},
+      {id:'potion_merchant', name:'Potion Seller', sprite:'🧪', x:150, y:250, dialog:'potion_merchant_greeting', shop:true},
+      {id:'cursed_villager', name:'Cursed Villager', sprite:'😵', x:450, y:220, dialog:'cursed_villager_greeting'},
+      {id:'wise_woman', name:'Wise Woman', sprite:'👵', x:200, y:300, dialog:'wise_woman_greeting'},
+      {id:'cat_familiar', name:'Cat Familiar', sprite:'🐈‍⬛', x:400, y:300, dialog:'cat_familiar_greeting'}
+    ]
+  },
+  haunted_forest_edge: {
+    id:'haunted_forest_edge', name:'🌲 Forest Edge', bgColor:'#1a0a2e', groundColor:'#2d1b4e',
+    type:'adventure_witch', safe:false,
+    adventureId: 'witch',
+    enemies: ['ghost', 'banshee'],
+    encounterRate: 0.12,
+    connections: { north: 'witch_hut', south: 'whispering_woods' },
+    npcs: []
+  },
+  whispering_woods: {
+    id:'whispering_woods', name:'🌫️ Whispering Woods', bgColor:'#2d1b4e', groundColor:'#3d2b5e',
+    type:'adventure_witch', safe:false,
+    adventureId: 'witch',
+    enemies: ['banshee', 'ghost'],
+    encounterRate: 0.15,
+    connections: { north: 'haunted_forest_edge', south: 'haunted_forest', east: 'cursed_clearing' },
+    npcs: []
+  },
+  cursed_clearing: {
+    id:'cursed_clearing', name:'☠️ Cursed Clearing', bgColor:'#3d1b4e', groundColor:'#4d2b6e',
+    type:'adventure_witch', safe:false,
+    adventureId: 'witch',
+    enemies: ['dark_spirit', 'banshee'],
+    encounterRate: 0.18,
+    connections: { west: 'whispering_woods' },
+    npcs: []
+  },
   haunted_forest: {
     id:'haunted_forest', name:'🌲 Haunted Forest', bgColor:'#1a0a2e', groundColor:'#2d1b4e',
     type:'adventure_witch', safe:false,
     adventureId: 'witch',
-    enemies: ['ghost', 'banshee'],
-    encounterRate: 0.15,
-    connections: { south: 'dark_woods', north: 'witch_tower' },
+    enemies: ['ghost', 'banshee', 'wizard'],
+    encounterRate: 0.16,
+    connections: { north: 'whispering_woods', south: 'dark_woods', east: 'witch_tower_base' },
+    npcs: []
+  },
+  witch_tower_base: {
+    id:'witch_tower_base', name:'🗼 Tower Base', bgColor:'#3a1b6a', groundColor:'#4a2b7a',
+    type:'adventure_witch', safe:false,
+    adventureId: 'witch',
+    enemies: ['wizard', 'warlock'],
+    encounterRate: 0.2,
+    connections: { west: 'haunted_forest', north: 'witch_tower_mid' },
     npcs: []
   },
   dark_woods: {
@@ -1940,87 +2284,265 @@ const LOCATIONS = {
     adventureId: 'witch',
     enemies: ['banshee', 'wizard', 'dark_spirit'],
     encounterRate: 0.18,
-    connections: { north: 'haunted_forest', south: 'enchanted_castle' },
+    connections: { north: 'haunted_forest', south: 'enchanted_castle_gate' },
     npcs: []
   },
-  witch_tower: {
-    id:'witch_tower', name:'🧹 Witch Tower', bgColor:'#4a1b7a', groundColor:'#6a2c9a',
+  witch_tower_mid: {
+    id:'witch_tower_mid', name:'🪟 Tower Mid Floor', bgColor:'#4a1b7a', groundColor:'#6a2c9a',
     type:'adventure_witch', safe:false,
     adventureId: 'witch',
-    enemies: ['wizard', 'warlock', 'evil_witch'],
-    encounterRate: 0.2,
+    enemies: ['warlock', 'evil_witch'],
+    encounterRate: 0.22,
     miniBoss: 'evil_witch',
-    connections: { south: 'haunted_forest', east: 'enchanted_castle' },
+    connections: { south: 'witch_tower_base', north: 'witch_tower_peak' },
     npcs: []
   },
-  enchanted_castle: {
-    id:'enchanted_castle', name:'🏰 Enchanted Castle', bgColor:'#6a2c9a', groundColor:'#8a4ca2',
+  witch_tower_peak: {
+    id:'witch_tower_peak', name:'⭐ Tower Peak', bgColor:'#5a2b8a', groundColor:'#7a3caa',
     type:'adventure_witch', safe:false,
     adventureId: 'witch',
-    enemies: ['dark_spirit', 'cursed_puppet', 'warlock'],
+    enemies: ['evil_witch', 'dark_spirit'],
+    encounterRate: 0.2,
+    connections: { south: 'witch_tower_mid', east: 'enchanted_castle_west' },
+    npcs: []
+  },
+  enchanted_castle_gate: {
+    id:'enchanted_castle_gate', name:'🏰 Castle Gate', bgColor:'#5a2c8a', groundColor:'#7a3daa',
+    type:'adventure_witch', safe:false,
+    adventureId: 'witch',
+    enemies: ['cursed_puppet', 'warlock'],
+    encounterRate: 0.2,
+    connections: { north: 'dark_woods', south: 'enchanted_castle_hall' },
+    npcs: []
+  },
+  enchanted_castle_west: {
+    id:'enchanted_castle_west', name:'🏰 West Wing', bgColor:'#6a2c9a', groundColor:'#8a4ca2',
+    type:'adventure_witch', safe:false,
+    adventureId: 'witch',
+    enemies: ['dark_spirit', 'cursed_puppet'],
     encounterRate: 0.22,
     miniBoss: 'cursed_puppet',
-    connections: { west: 'witch_tower', north: 'witch_sanctum' },
+    connections: { west: 'witch_tower_peak', east: 'enchanted_castle_hall' },
     npcs: []
   },
-  witch_sanctum: {
-    id:'witch_sanctum', name:'👸 Witch Sanctum', bgColor:'#8a4ca2', groundColor:'#aa5caa',
+  enchanted_castle_hall: {
+    id:'enchanted_castle_hall', name:'🏰 Grand Hall', bgColor:'#6a2c9a', groundColor:'#8a4ca2',
+    type:'adventure_witch', safe:false,
+    adventureId: 'witch',
+    enemies: ['warlock', 'dark_spirit', 'cursed_puppet'],
+    encounterRate: 0.24,
+    connections: { north: 'enchanted_castle_gate', west: 'enchanted_castle_west', south: 'enchanted_castle_dungeon' },
+    npcs: []
+  },
+  enchanted_castle_dungeon: {
+    id:'enchanted_castle_dungeon', name:'⛓️ Castle Dungeon', bgColor:'#4a1c7a', groundColor:'#6a2c9a',
+    type:'adventure_witch', safe:false,
+    adventureId: 'witch',
+    enemies: ['tortured_soul', 'banshee'],
+    encounterRate: 0.22,
+    connections: { north: 'enchanted_castle_hall', south: 'witch_sanctum_entrance' },
+    npcs: []
+  },
+  witch_sanctum_entrance: {
+    id:'witch_sanctum_entrance', name:'🔮 Sanctum Entrance', bgColor:'#7a3cba', groundColor:'#9a5cda',
+    type:'adventure_witch', safe:false,
+    adventureId: 'witch',
+    enemies: ['witch_queen', 'dark_spirit'],
+    encounterRate: 0,
+    boss: 'witch_queen',
+    connections: { north: 'enchanted_castle_dungeon', south: 'witch_sanctum_core' },
+    npcs: []
+  },
+  witch_sanctum_core: {
+    id:'witch_sanctum_core', name:'👸 Witch Sanctum', bgColor:'#8a4ca2', groundColor:'#aa5caa',
     type:'boss', safe:false,
     adventureId: 'witch',
     enemies: ['witch_queen'],
     encounterRate: 0,
     boss: 'witch_queen',
-    connections: { south: 'enchanted_castle' },
+    connections: { north: 'witch_sanctum_entrance' },
     npcs: []
   },
   
   // HELL ADVENTURE LOCATIONS
+  hell_outpost: {
+    id:'hell_outpost', name:'🏕️ Hell Outpost', bgColor:'#1a0000', groundColor:'#4a0000',
+    type:'adventure_hell', safe:true,
+    adventureId: 'hell',
+    encounterRate: 0,
+    connections: { south: 'inferno_gate' },
+    npcs: [
+      {id:'demon_merchant', name:'Demon Merchant', sprite:'😈', x:300, y:200, dialog:'demon_merchant_greeting', shop:true},
+      {id:'fallen_knight', name:'Fallen Knight', sprite:'⚔️', x:150, y:250, dialog:'fallen_knight_greeting'},
+      {id:'soul_guide', name:'Soul Guide', sprite:'👻', x:450, y:220, dialog:'soul_guide_greeting'},
+      {id:'smith_of_doom', name:'Smith of Doom', sprite:'🔨', x:200, y:300, dialog:'smith_greeting'},
+      {id:'imp_butler', name:'Imp Butler', sprite:'👿', x:400, y:300, dialog:'imp_butler_greeting'}
+    ]
+  },
   inferno_gate: {
     id:'inferno_gate', name:'🔥 Inferno Gate', bgColor:'#1a0000', groundColor:'#4a0000',
     type:'adventure_hell', safe:false,
     adventureId: 'hell',
     enemies: ['imp', 'hell_hound'],
     encounterRate: 0.15,
-    connections: { south: 'burning_sands', north: 'demon_citadel' },
+    connections: { north: 'hell_outpost', south: 'ash_fields', east: 'bone_grounds' },
+    npcs: []
+  },
+  bone_grounds: {
+    id:'bone_grounds', name:'💀 Bone Grounds', bgColor:'#2a0000', groundColor:'#5a1010',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['tortured_soul', 'imp'],
+    encounterRate: 0.17,
+    connections: { west: 'inferno_gate' },
+    npcs: []
+  },
+  ash_fields: {
+    id:'ash_fields', name:'🏜️ Ash Fields', bgColor:'#2a0505', groundColor:'#5a1515',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['hell_hound', 'demon'],
+    encounterRate: 0.16,
+    connections: { north: 'inferno_gate', south: 'burning_sands', east: 'lava_river_bank' },
+    npcs: []
+  },
+  lava_river_bank: {
+    id:'lava_river_bank', name:'🌋 Lava Bank', bgColor:'#3a0000', groundColor:'#6a1a1a',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['demon', 'imp'],
+    encounterRate: 0.19,
+    connections: { west: 'ash_fields' },
     npcs: []
   },
   burning_sands: {
-    id:'burning_sands', name:'🏜️ Burning Sands', bgColor:'#4a0000', groundColor:'#6a1a1a',
+    id:'burning_sands', name:'🔥 Burning Sands', bgColor:'#4a0000', groundColor:'#6a1a1a',
     type:'adventure_hell', safe:false,
     adventureId: 'hell',
     enemies: ['hell_hound', 'demon', 'tortured_soul'],
     encounterRate: 0.18,
-    connections: { north: 'inferno_gate', south: 'lake_of_fire' },
+    connections: { north: 'ash_fields', south: 'lake_of_fire_shore', east: 'demon_forge' },
     npcs: []
   },
-  lake_of_fire: {
-    id:'lake_of_fire', name:'🌋 Lake of Fire', bgColor:'#6a1a1a', groundColor:'#8b2500',
+  demon_forge: {
+    id:'demon_forge', name:'🔨 Demon Forge', bgColor:'#5a1010', groundColor:'#7a2020',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['demon', 'pit_fiend'],
+    encounterRate: 0.21,
+    connections: { west: 'burning_sands' },
+    npcs: []
+  },
+  lake_of_fire_shore: {
+    id:'lake_of_fire_shore', name:'🌊 Fire Shore', bgColor:'#5a1515', groundColor:'#8b2500',
     type:'adventure_hell', safe:false,
     adventureId: 'hell',
     enemies: ['demon', 'pit_fiend', 'balrog'],
-    encounterRate: 0.22,
+    encounterRate: 0.2,
     miniBoss: 'balrog',
-    connections: { north: 'burning_sands', east: 'demon_citadel' },
+    connections: { north: 'burning_sands', south: 'lake_of_fire_center', west: 'charred_cliffs' },
     npcs: []
   },
-  demon_citadel: {
-    id:'demon_citadel', name:'🏰 Demon Citadel', bgColor:'#8b2500', groundColor:'#aa2a00',
+  charred_cliffs: {
+    id:'charred_cliffs', name:'🪨 Charred Cliffs', bgColor:'#4a1010', groundColor:'#6a2020',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['pit_fiend', 'demon'],
+    encounterRate: 0.2,
+    connections: { east: 'lake_of_fire_shore' },
+    npcs: []
+  },
+  lake_of_fire_center: {
+    id:'lake_of_fire_center', name:'🌋 Fire Lake Center', bgColor:'#6a1a1a', groundColor:'#8b2500',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['balrog', 'demon'],
+    encounterRate: 0.22,
+    connections: { north: 'lake_of_fire_shore', south: 'demon_citadel_gate' },
+    npcs: []
+  },
+  demon_citadel_gate: {
+    id:'demon_citadel_gate', name:'🏰 Citadel Gate', bgColor:'#7a2020', groundColor:'#9a3030',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['pit_fiend', 'demon_lord_minion'],
+    encounterRate: 0.22,
+    miniBoss: 'demon_lord_minion',
+    connections: { north: 'lake_of_fire_center', south: 'demon_citadel_hall', west: 'blood_river' },
+    npcs: []
+  },
+  blood_river: {
+    id:'blood_river', name:'🩸 Blood River', bgColor:'#6a0000', groundColor:'#8a1010',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['demon', 'tortured_soul'],
+    encounterRate: 0.24,
+    connections: { east: 'demon_citadel_gate' },
+    npcs: []
+  },
+  demon_citadel_hall: {
+    id:'demon_citadel_hall', name:'🏰 Citadel Hall', bgColor:'#8b2500', groundColor:'#aa2a00',
     type:'adventure_hell', safe:false,
     adventureId: 'hell',
     enemies: ['pit_fiend', 'demon_lord_minion', 'demon'],
     encounterRate: 0.25,
-    miniBoss: 'demon_lord_minion',
-    connections: { west: 'lake_of_fire', north: 'abyssal_throne' },
+    connections: { north: 'demon_citadel_gate', south: 'demon_citadel_dungeon', east: 'demon_citadel_tower' },
     npcs: []
   },
-  abyssal_throne: {
-    id:'abyssal_throne', name:'😈 Abyssal Throne', bgColor:'#aa2a00', groundColor:'#cc3300',
+  demon_citadel_tower: {
+    id:'demon_citadel_tower', name:'🗼 Dark Tower', bgColor:'#9a3030', groundColor:'#ba4040',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['demon_lord_minion', 'pit_fiend'],
+    encounterRate: 0.26,
+    connections: { west: 'demon_citadel_hall' },
+    npcs: []
+  },
+  demon_citadel_dungeon: {
+    id:'demon_citadel_dungeon', name:'⛓️ Citadel Dungeon', bgColor:'#6a1010', groundColor:'#8a2020',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['tortured_soul', 'pit_fiend'],
+    encounterRate: 0.23,
+    connections: { north: 'demon_citadel_hall', south: 'abyssal_throne_approach' },
+    npcs: []
+  },
+  abyssal_throne_approach: {
+    id:'abyssal_throne_approach', name:'😈 Throne Approach', bgColor:'#7a1515', groundColor:'#9a2525',
+    type:'adventure_hell', safe:false,
+    adventureId: 'hell',
+    enemies: ['demon_lord', 'demon_lord_minion'],
+    encounterRate: 0,
+    boss: 'demon_lord',
+    connections: { north: 'demon_citadel_dungeon', south: 'abyssal_throne_chamber' },
+    npcs: []
+  },
+  abyssal_throne_chamber: {
+    id:'abyssal_throne_chamber', name:'😈 Throne Chamber', bgColor:'#aa2a00', groundColor:'#cc3300',
     type:'boss', safe:false,
     adventureId: 'hell',
     enemies: ['demon_lord'],
     encounterRate: 0,
     boss: 'demon_lord',
-    connections: { south: 'demon_citadel' },
+    connections: { north: 'abyssal_throne_approach', south: 'void_edge' },
+    npcs: []
+  },
+  void_edge: {
+    id:'void_edge', name:'🕳️ Void Edge', bgColor:'#0a0a0a', groundColor:'#1a1a1a',
+    type:'adventure_hell', safe:true,
+    adventureId: 'hell',
+    encounterRate: 0,
+    connections: { north: 'abyssal_throne_chamber', south: 'eternal_abyss' },
+    npcs: [
+      {id:'void_whisperer', name:'Void Whisperer', sprite:'🌑', x:300, y:250, dialog:'void_whisperer_greeting'}
+    ]
+  },
+  eternal_abyss: {
+    id:'eternal_abyss', name:'🌌 Eternal Abyss', bgColor:'#000000', groundColor:'#0a0a0a',
+    type:'adventure_hell', safe:true,
+    adventureId: 'hell',
+    encounterRate: 0,
+    connections: { north: 'void_edge' },
     npcs: []
   },
 
@@ -2100,17 +2622,26 @@ const DIALOGUES = {
       ]}
   ],
   innkeeper_greeting: [
-    { speaker:'Innkeeper', text:'Stay at our inn! Rest fully for only 20 gold!' },
+    { speaker:'Innkeeper', text:'Welcome to our inn! You can rest here, or...' },
+    { speaker:'Innkeeper', text:'I lost my family heirloom - an Ancient Key - somewhere in the Deep Forest!' },
+    { speaker:'Innkeeper', text:'Also, we\'re looking for someone to patrol the village perimeter. No rush, just get it done when you can!' },
     { choices: [
         { text:'Rest (20 Gold)', action:'rest_inn' },
+        { text:'Find your key! (Find Ancient Key)', action:'accept_lost_heirloom' },
+        { text:'Patrol perimeter! 🌿 RELAX - 20 min (Light)', action:'accept_village_patrol' },
         { text:'Maybe later.', action:'close' }
       ]}
   ],
   quest_goblin: [
-    { speaker:'Townsman', text:'Oh no! Goblins have been raiding our supplies from the forest!' },
-    { speaker:'Townsman', text:'If someone could clear out a few goblins, I\'d reward them handsomely.' },
+    { speaker:'Townsman', text:'Adventurer! We have several problems around here...' },
+    { speaker:'Townsman', text:'Goblins have been raiding our supplies, and wolves are attacking from the forest!' },
+    { speaker:'Townsman', text:'The wolves are especially bad right now - my grandma is sick and needs medicine from the forest, but the wolves are blocking the path!' },
+    { speaker:'Townsman', text:'She needs it within 3 minutes or... I don\'t know what will happen! Please, you have to hurry!' },
+    { speaker:'Townsman', text:'There\'s also a merchant needing an escort through the forest, and a village patrol to do... want to help?' },
     { choices: [
-        { text:'I\'ll handle it! (Kill 5 Goblins)', action:'accept_goblin_quest' },
+        { text:'I\'ll handle the goblins! (Kill 5 Goblins)', action:'accept_goblin_quest' },
+        { text:'Get medicine! 🏃 RUSH - 3 min (Medium)', action:'accept_urgent_wolf' },
+        { text:'Escort merchant! ⚡ EXPRESS - 12 min (Easy)', action:'accept_merchant_escort' },
         { text:'Not now.', action:'close' }
       ]}
   ],
@@ -2139,41 +2670,1086 @@ const DIALOGUES = {
     { speaker:'Village Elder', text:'The dragon is defeated! You are a true hero!' },
     { speaker:'Village Elder', text:'The kingdom will remember your name for all time!' },
     { action:'game_victory' }
+  ],
+
+  // UNDER THE SEA NPCS
+  fisherman_greeting: [
+    { speaker:'Fisherman Tom', text:'Ahoy, adventurer! Welcome to Coastal Village!' },
+    { speaker:'Fisherman Tom', text:'The seas have been dangerous lately... jellyfish and crabs everywhere!' },
+    { speaker:'Fisherman Tom', text:'I could use some help clearing these waters. Interested?' },
+    { speaker:'Fisherman Tom', text:'I\'ve got a quick reef cleanup, or a more relaxed deep sea survey if you\'re up for it!' },
+    { choices: [
+        { text:'Clear jellyfish (Kill 10)', action:'accept_fisherman_quest' },
+        { text:'Reef cleanup! ⚡ EXPRESS - 12 min (Medium)', action:'accept_reef_cleanup' },
+        { text:'Deep sea survey! 🌿 RELAX - 20 min (Easy)', action:'accept_deep_sea_survey' },
+        { text:'Tell me more about the sea.', action:'fisherman_more' },
+        { text:'Farewell!', action:'close' }
+      ]}
+  ],
+  fisherman_more: [
+    { speaker:'Fisherman Tom', text:'Just south of the beach lies the coral reef.' },
+    { speaker:'Fisherman Tom', text:'Deeper down lies the Jellyfish King\'s domain...' },
+    { speaker:'Fisherman Tom', text:'If you can defeat the Jellyfish King, you\'ll be a legend!' },
+    { choices: [
+        { text:'I\'ll defeat the Jellyfish King! (Main Quest)', action:'accept_main_jellyfish' },
+        { text:'Good luck!', action:'close' }
+      ]}
+  ],
+  sea_merchant_greeting: [
+    { speaker:'Sea Merchant', text:'Welcome! I sell all kinds of maritime supplies!' },
+    { speaker:'Sea Merchant', text:'Potions, weapons, armor... I\'ve got it all!' },
+    { choices: [
+        { text:'Show me your wares.', action:'open_shop' },
+        { text:'Goodbye.', action:'close' }
+      ]}
+  ],
+  sailor_greeting: [
+    { speaker:'Sailor Bob', text:'Arrr! Me ship got wrecked by a giant crab!' },
+    { speaker:'Sailor Bob', text:'These waters ain\'t safe for ordinary folks anymore!' },
+    { speaker:'Sailor Bob', text:'And speaking of crabs - there\'s a whole swarm heading for the village shore!' },
+    { speaker:'Sailor Bob', text:'Me daughter is playin\' on the beach! We gotta stop \'em in 2 minutes flat!' },
+    { choices: [
+        { text:'Find your treasure (Collect 3 Pearls)', action:'accept_lost_treasure' },
+        { text:'Stop the crab swarm! ⏰ TIMED - 2 min!', action:'accept_crab_invasion' },
+        { text:'See ya!', action:'close' }
+      ]}
+  ],
+  sailor_more: [
+    { speaker:'Sailor Bob', text:'A massive crab with one claw the size of a boat!' },
+    { speaker:'Sailor Bob', text:'It came from the deep... where the Jellyfish King rules!' },
+    { speaker:'Sailor Bob', text:'If you plan on going down there, take my old diving gear!' },
+    { action:'give_diving_gear' }
+  ],
+
+  // MONSTER SLIME NPCS
+  slime_elder_greeting: [
+    { speaker:'Slime Elder', text:'Greetings, traveler... welcome to our humble village.' },
+    { speaker:'Slime Elder', text:'Our peaceful slimes have been corrupted by the Slime Lord...' },
+    { speaker:'Slime Elder', text:'Will you help us stop the corruption?' },
+    { speaker:'Slime Elder', text:'We have several tasks... from urgent acid pool issues to swamp clearing work.' },
+    { choices: [
+        { text:'Clear corrupted slimes (Kill 15)', action:'accept_slime_quest' },
+        { text:'Clear swamp! ⚡ EXPRESS - 10 min (Medium)', action:'accept_swamp_clearing' },
+        { text:'Tell me about the Slime Lord.', action:'slime_elder_more' },
+        { text:'Maybe later...', action:'close' }
+      ]}
+  ],
+  slime_elder_more: [
+    { speaker:'Slime Elder', text:'The corruption spreads from the Slime Castle far to the south.' },
+    { speaker:'Slime Elder', text:'Only by defeating the Slime Lord can we be saved...' },
+    { speaker:'Slime Elder', text:'Be careful in the swamps - the acid pools are dangerous!' },
+    { choices: [
+        { text:'I\'ll defeat the Slime Lord! (Main Quest)', action:'accept_main_slime' },
+        { text:'Goodbye.', action:'close' }
+      ]}
+  ],
+  slime_merchant_greeting: [
+    { speaker:'Slime Trader', text:'Welcome to my potion shop! We have the finest slime-based products!' },
+    { choices: [
+        { text:'Show me what you have.', action:'open_shop' },
+        { text:'Goodbye.', action:'close' }
+      ]}
+  ],
+  slime_guard_greeting: [
+    { speaker:'Slime Guard', text:'Halt! State your business in Slime Village!' },
+    { speaker:'Slime Guard', text:'...Oh, a hero! Please, you must help us.' },
+    { speaker:'Slime Guard', text:'The Slime Queen and her minions are getting bolder...' },
+    { speaker:'Slime Guard', text:'But worse - the acid pools are rising fast! They\'ll flood the village in 2 and a half minutes!' },
+    { speaker:'Slime Guard', text:'We need to defeat 12 mega slimes that are causing the acid buildup - HURRY!' },
+    { choices: [
+        { text:'Hunt the Slime Queen! (Side Quest)', action:'accept_slime_queen_hunt' },
+        { text:'Stop the acid flood! ⏰ TIMED - 2.5 min!', action:'accept_acid_race' },
+        { text:'What\'s the situation?', action:'slime_guard_more' },
+        { text:'I\'ll be going now.', action:'close' }
+      ]}
+  ],
+  slime_guard_more: [
+    { speaker:'Slime Guard', text:'The toxic marshes are getting worse every day.' },
+    { speaker:'Slime Guard', text:'My fellow guards keep getting corrupted... I\'m the last one left!' },
+    { speaker:'Slime Guard', text:'Please, find the source of this corruption and destroy it!' },
+    { choices: [
+        { text:'I\'ll do what I can!', action:'close' }
+      ]}
+  ],
+  slime_farmer_greeting: [
+    { speaker:'Slime Farmer', text:'*sigh* My slime crops... they\'re all mutated now...' },
+    { speaker:'Slime Farmer', text:'They used to be so friendly and bouncy!' },
+    { speaker:'Slime Farmer', text:'Say... could you help me collect some slime jelly for medicine? No rush, take your time!' },
+    { choices: [
+        { text:'Collect slime jelly! 🌿 RELAX - 25 min (Light)', action:'accept_slime_harvest' },
+        { text:'I\'m sorry to hear that.', action:'slime_farmer_more' },
+        { text:'Take care.', action:'close' }
+      ]}
+  ],
+  slime_farmer_more: [
+    { speaker:'Slime Farmer', text:'Here, take these slime jellies I was able to save.' },
+    { speaker:'Slime Farmer', text:'They might help on your journey!' },
+    { action:'give_slime_jellies' }
+  ],
+
+  // WITCH ADVENTURE NPCS
+  witch_apprentice_greeting: [
+    { speaker:'Apprentice Zoe', text:'Welcome to our village! I\'m Zoe, a witch in training.' },
+    { speaker:'Apprentice Zoe', text:'The Witch Queen\'s curse has been getting stronger...' },
+    { speaker:'Apprentice Zoe', text:'Will you help us break her dark magic?' },
+    { speaker:'Apprentice Zoe', text:'I have several tasks - from quick patrols to longer research projects!' },
+    { choices: [
+        { text:'Exorcise spirits (Kill 12 Ghosts)', action:'accept_spirit_exorcism' },
+        { text:'Haunted patrol! ⚡ EXPRESS - 15 min (Medium)', action:'accept_haunted_patrol' },
+        { text:'Curse research! 🌿 RELAX - 22 min (Easy)', action:'accept_curse_research' },
+        { text:'Tell me about the Witch Queen.', action:'witch_apprentice_more' },
+        { text:'Maybe later...', action:'close' }
+      ]}
+  ],
+  witch_apprentice_more: [
+    { speaker:'Apprentice Zoe', text:'The Witch Queen was once our leader... but she was corrupted by dark magic.' },
+    { speaker:'Apprentice Zoe', text:'Now she resides in her Sanctum, spreading curses across the land.' },
+    { speaker:'Apprentice Zoe', text:'You\'ll need to travel through the haunted woods and the witch tower to reach her.' },
+    { choices: [
+        { text:'I will defeat the Witch Queen! (Main Quest)', action:'accept_witch_quest' },
+        { text:'Goodbye.', action:'close' }
+      ]}
+  ],
+  potion_merchant_greeting: [
+    { speaker:'Potion Seller', text:'Welcome! I sell all kinds of magical potions!' },
+    { speaker:'Potion Seller', text:'Great for long journeys through haunted forests!' },
+    { choices: [
+        { text:'Show me your potions.', action:'open_shop' },
+        { text:'Goodbye.', action:'close' }
+      ]}
+  ],
+  cursed_villager_greeting: [
+    { speaker:'Cursed Villager', text:'Ugh... the curse... it burns...' },
+    { speaker:'Cursed Villager', text:'The dark spirits... they\'re everywhere...' },
+    { speaker:'Cursed Villager', text:'They\'re coming from the haunted forest... in 3 minutes they\'ll reach the village...' },
+    { speaker:'Cursed Villager', text:'Please... you must stop them... before it\'s too late... my child is still in the forest...' },
+    { choices: [
+        { text:'I\'ll stop the dark spirits! ⏰ TIMED - 3 min!', action:'accept_darkness_falls' },
+        { text:'Hang in there!', action:'cursed_villager_more' },
+        { text:'I\'m sorry...', action:'close' }
+      ]}
+  ],
+  cursed_villager_more: [
+    { speaker:'Cursed Villager', text:'Here... take this... a protection charm... it might help...' },
+    { action:'give_protection_charm' }
+  ],
+  wise_woman_greeting: [
+    { speaker:'Wise Woman', text:'I sense great power within you, young one.' },
+    { speaker:'Wise Woman', text:'The path ahead is dark, but you have a strong spirit.' },
+    { speaker:'Wise Woman', text:'The cursed puppets in the castle... they grow restless...' },
+    { choices: [
+        { text:'Destroy cursed puppets (Side Quest)', action:'accept_cursed_puppets' },
+        { text:'What do you know about the Witch Queen?', action:'wise_woman_more' },
+        { text:'Farewell.', action:'close' }
+      ]}
+  ],
+  wise_woman_more: [
+    { speaker:'Wise Woman', text:'The Witch Queen was not always evil...' },
+    { speaker:'Wise Woman', text:'She lost herself in forbidden magic, seeking power beyond her control.' },
+    { speaker:'Wise Woman', text:'Perhaps... if you reach her, there may be a way to save her...' },
+    { speaker:'Wise Woman', text:'Or perhaps she is too far gone. Only time will tell.' },
+    { choices: [
+        { text:'I will try my best.', action:'close' }
+      ]}
+  ],
+  cat_familiar_greeting: [
+    { speaker:'Cat Familiar', text:'Meow...', speakerColor:'#9c27b0' },
+    { speaker:'Cat Familiar', text:'...Another human comes to face the queen...', speakerColor:'#9c27b0' },
+    { choices: [
+        { text:'You can talk?!', action:'cat_familiar_more' },
+        { text:'*pet the cat*', action:'cat_familiar_pet' }
+      ]}
+  ],
+  cat_familiar_more: [
+    { speaker:'Cat Familiar', text:'Of course I can talk. I\'m a familiar, after all.', speakerColor:'#9c27b0' },
+    { speaker:'Cat Familiar', text:'I left the Queen\'s service when she went dark...', speakerColor:'#9c27b0' },
+    { speaker:'Cat Familiar', text:'If you go to face her... be careful. She\'s more powerful than you know.', speakerColor:'#9c27b0' },
+    { action:'give_cat_blessing' }
+  ],
+  cat_familiar_pet: [
+    { speaker:'Cat Familiar', text:'Purrrrrr...', speakerColor:'#9c27b0' },
+    { speaker:'Cat Familiar', text:'Hmm... you are kinder than most...', speakerColor:'#9c27b0' },
+    { speaker:'Cat Familiar', text:'Take this. A gift from a friend.', speakerColor:'#9c27b0' },
+    { action:'give_cat_blessing' }
+  ],
+
+  // HELL ADVENTURE NPCS
+  demon_merchant_greeting: [
+    { speaker:'Demon Merchant', text:'Keh heh heh... Welcome to Hell, mortal!' },
+    { speaker:'Demon Merchant', text:'Looking for supplies for your suicide mission?' },
+    { choices: [
+        { text:'Show me what you have.', action:'open_shop' },
+        { text:'What is this place?', action:'demon_merchant_more' },
+        { text:'Goodbye.', action:'close' }
+      ]}
+  ],
+  demon_merchant_more: [
+    { speaker:'Demon Merchant', text:'This is Hell Outpost - the only safe place in the entire abyss.' },
+    { speaker:'Demon Merchant', text:'Beyond here lies the Demon Lord\'s domain.' },
+    { speaker:'Demon Merchant', text:'Most who venture in never come back... but you look different.', speakerColor:'#f44336' },
+    { choices: [
+        { text:'I\'ll take my chances!', action:'close' }
+      ]}
+  ],
+  fallen_knight_greeting: [
+    { speaker:'Fallen Knight', text:'...Another challenger to the Demon Lord?' },
+    { speaker:'Fallen Knight', text:'I too came here seeking glory... now I\'m trapped forever.' },
+    { speaker:'Fallen Knight', text:'These imps and demons... they keep swarming the outpost...' },
+    { speaker:'Fallen Knight', text:'If you\'re looking for work, there\'s a demon purge needed in the Burning Sands...' },
+    { choices: [
+        { text:'Cull the demon hordes (Kill 20 Imps)', action:'accept_demon_hunt' },
+        { text:'Demon purge! ⚡ EXPRESS - 12 min (Hard)', action:'accept_demon_purge' },
+        { text:'What happened?', action:'fallen_knight_more' },
+        { text:'I\'m sorry.', action:'close' }
+      ]}
+  ],
+  fallen_knight_more: [
+    { speaker:'Fallen Knight', text:'I thought I was strong enough... but the Demon Lord\'s power was overwhelming.' },
+    { speaker:'Fallen Knight', text:'Take my old sword... it might serve you better than it served me.' },
+    { action:'give_fallen_sword' }
+  ],
+  soul_guide_greeting: [
+    { speaker:'Soul Guide', text:'Greetings, living soul... you are far from home.' },
+    { speaker:'Soul Guide', text:'I guide lost souls through the underworld... but you are still alive.' },
+    { speaker:'Soul Guide', text:'The hellhounds run rampant... they\'re charging toward the outpost!' },
+    { speaker:'Soul Guide', text:'In just over 3 minutes, they\'ll breach the gates and devour all the trapped souls!' },
+    { speaker:'Soul Guide', text:'I also need help collecting lost souls from the area... no rush, just get to them when you can.' },
+    { choices: [
+        { text:'Slay the hellhounds! 🏃 RUSH - 3.3 min (Hard)', action:'accept_hell_rush' },
+        { text:'Collect lost souls! 🌿 RELAX - 20 min (Medium)', action:'accept_soul_collection' },
+        { text:'Why am I here?', action:'soul_guide_more' },
+        { text:'Farewell.', action:'close' }
+      ]}
+  ],
+  soul_guide_more: [
+    { speaker:'Soul Guide', text:'Your path has led you here, for better or worse.' },
+    { speaker:'Soul Guide', text:'The Demon Lord is the ruler of this realm... only by defeating him can you leave.' },
+    { speaker:'Soul Guide', text:'Take this Soul Stone. It will protect you from one deadly blow.' },
+    { action:'give_soul_stone' }
+  ],
+  smith_greeting: [
+    { speaker:'Smith of Doom', text:'WELL, WELL... A LIVING MORTAL IN MY FORGE!' },
+    { speaker:'Smith of Doom', text:'COME TO BUY WEAPONS FOR YOUR DOOM?' },
+    { speaker:'Smith of Doom', text:'THE BALROGS IN THE LAVA RIVER... THEY\'VE BEEN ACTIVE LATELY...' },
+    { choices: [
+        { text:'Slay the Balrogs! (Side Quest)', action:'accept_balrog_slayer' },
+        { text:'Show me your wares, blacksmith!', action:'open_shop' },
+        { text:'Impressive forge!', action:'smith_more' },
+        { text:'I must be going.', action:'close' }
+      ]}
+  ],
+  smith_more: [
+    { speaker:'Smith of Doom', text:'YES... I HAVE FORGED MANY WEAPONS HERE IN HELL!' },
+    { speaker:'Smith of Doom', text:'EVEN THE DEMON LORD\'S BLADE WAS FORGED HERE BY MY HAND!' },
+    { speaker:'Smith of Doom', text:'BUT I FORGE FOR ANYONE WHO CAN PAY... INCLUDING YOU, MORTAL!' },
+    { choices: [
+        { text:'Let me see your weapons!', action:'open_shop' }
+      ]}
+  ],
+  imp_butler_greeting: [
+    { speaker:'Imp Butler', text:'Welcome, master! May I assist you?' },
+    { speaker:'Imp Butler', text:'I serve anyone who defeats my previous master... so for now, I serve no one.' },
+    { speaker:'Imp Butler', text:'If you defeat the Demon Lord... I will serve YOU!' },
+    { choices: [
+        { text:'I will defeat the Demon Lord! (Main Quest)', action:'accept_hell_quest' },
+        { text:'Tell me about the Demon Lord.', action:'imp_butler_more' },
+        { text:'Goodbye!', action:'close' }
+      ]}
+  ],
+  imp_butler_more: [
+    { speaker:'Imp Butler', text:'The Demon Lord is incredibly powerful! He has ruled Hell for 10,000 years!' },
+    { speaker:'Imp Butler', text:'But if you somehow defeat him... I would be honored to serve you!' },
+    { speaker:'Imp Butler', text:'Good luck, brave warrior! You\'ll need it!' },
+    { choices: [
+        { text:'I\'ll keep that in mind!', action:'close' }
+      ]}
+  ],
+  void_whisperer_greeting: [
+    { speaker:'Void Whisperer', text:'...you have come far, mortal...', speakerColor:'#7b68ee' },
+    { speaker:'Void Whisperer', text:'...very few reach the edge of the abyss...', speakerColor:'#7b68ee' },
+    { choices: [
+        { text:'What is this place?', action:'void_whisperer_more' },
+        { text:'I must go.', action:'close' }
+      ]}
+  ],
+  void_whisperer_more: [
+    { speaker:'Void Whisperer', text:'...this is the boundary between Hell and the Nothing...', speakerColor:'#7b68ee' },
+    { speaker:'Void Whisperer', text:'...beyond lies the Eternal Abyss, where even demons fear to tread...', speakerColor:'#7b68ee' },
+    { speaker:'Void Whisperer', text:'...you have great strength... use it wisely...', speakerColor:'#7b68ee' },
+    { action:'give_void_blessing' }
+  ],
+
+  // QUEST TURN-IN DIALOGUES (v0.3.2)
+  // Fire Dragon
+  quest_heirloom_done: [
+    { speaker:'Innkeeper', text:'You found the Ancient Key! Amazing!' },
+    { speaker:'Innkeeper', text:'Here is your reward, brave adventurer!' },
+    { action:'reward_lost_heirloom' }
+  ],
+  quest_wolf_done: [
+    { speaker:'Townsman', text:'The wolves are defeated! You saved the village!' },
+    { speaker:'Townsman', text:'Here is your reward - well deserved!' },
+    { action:'reward_urgent_wolf' }
+  ],
+  quest_escort_done: [
+    { speaker:'Townsman', text:'You escorted the merchant safely! Thank you so much!' },
+    { speaker:'Townsman', text:'He brought valuable supplies for the village. Here is your reward!' },
+    { action:'reward_merchant_escort' }
+  ],
+  quest_patrol_done: [
+    { speaker:'Innkeeper', text:'You cleared the perimeter! The village feels safer already!' },
+    { speaker:'Innkeeper', text:'Here\'s your pay - and a discount on your next stay!' },
+    { action:'reward_village_patrol' }
+  ],
+  // Under the Sea
+  quest_jellyfish_done: [
+    { speaker:'Fisherman Tom', text:'The Jellyfish King is defeated! Peace returns to the seas!' },
+    { speaker:'Fisherman Tom', text:'You are a true hero of the ocean!' },
+    { action:'reward_main_jellyfish' }
+  ],
+  quest_fisherman_done: [
+    { speaker:'Fisherman Tom', text:'You cleared out those jellyfish! The reef is safe again!' },
+    { speaker:'Fisherman Tom', text:'Thank you so much! Here is your reward!' },
+    { action:'reward_fisherman' }
+  ],
+  quest_treasure_done: [
+    { speaker:'Sailor Bob', text:'Arrr! Ye found the sunken pearls!' },
+    { speaker:'Sailor Bob', text:'Great work, matey! Here be yer reward!' },
+    { action:'reward_lost_treasure' }
+  ],
+  quest_crab_done: [
+    { speaker:'Sailor Bob', text:'Ye defeated those giant crabs! The village is saved!' },
+    { speaker:'Sailor Bob', text:'Impressive work, sailor! Take yer reward!' },
+    { action:'reward_crab_invasion' }
+  ],
+  quest_reef_done: [
+    { speaker:'Fisherman Tom', text:'You cleaned up the reef! The coral is already recovering!' },
+    { speaker:'Fisherman Tom', text:'The fish are returning! Here is your reward!' },
+    { action:'reward_reef_cleanup' }
+  ],
+  quest_survey_done: [
+    { speaker:'Fisherman Tom', text:'You completed the deep sea survey! Amazing work!' },
+    { speaker:'Fisherman Tom', text:'The scholar will be thrilled! Here is your payment!' },
+    { action:'reward_deep_sea_survey' }
+  ],
+  // Monster Slime
+  quest_slime_main_done: [
+    { speaker:'Slime Elder', text:'The Slime Lord is defeated! The corruption is lifted!' },
+    { speaker:'Slime Elder', text:'Our village is saved! You are our hero!' },
+    { action:'reward_main_slime' }
+  ],
+  quest_slime_clear_done: [
+    { speaker:'Slime Elder', text:'You cleared out the corrupted slimes! Thank you!' },
+    { speaker:'Slime Elder', text:'The swamp is safer now. Here is your reward!' },
+    { action:'reward_slime_clearing' }
+  ],
+  quest_slime_queen_done: [
+    { speaker:'Slime Guard', text:'The Slime Queen is defeated! Incredible!' },
+    { speaker:'Slime Guard', text:'Here is your reward, brave warrior!' },
+    { action:'reward_slime_queen' }
+  ],
+  quest_acid_done: [
+    { speaker:'Slime Guard', text:'You stopped the acid pools from rising! Amazing speed!' },
+    { speaker:'Slime Guard', text:'The village is safe! Take your reward!' },
+    { action:'reward_acid_race' }
+  ],
+  quest_swamp_done: [
+    { speaker:'Slime Elder', text:'You cleared the toxic swamp! The corruption is receding!' },
+    { speaker:'Slime Elder', text:'Our village owes you a great debt! Here is your reward!' },
+    { action:'reward_swamp_clearing' }
+  ],
+  quest_harvest_done: [
+    { speaker:'Slime Farmer', text:'You collected all that slime jelly! Wonderful!' },
+    { speaker:'Slime Farmer', text:'The medicine will be made soon! Here is your payment!' },
+    { action:'reward_slime_harvest' }
+  ],
+  // Witch Adventure
+  quest_witch_main_done: [
+    { speaker:'Apprentice Zoe', text:'The Witch Queen\'s curse is broken! The land is free!' },
+    { speaker:'Apprentice Zoe', text:'You are a true hero! Thank you so much!' },
+    { action:'reward_main_witch' }
+  ],
+  quest_spirit_done: [
+    { speaker:'Apprentice Zoe', text:'The spirits are exorcised! The forest feels lighter already!' },
+    { speaker:'Apprentice Zoe', text:'Thank you! Here is your reward!' },
+    { action:'reward_spirit_exorcism' }
+  ],
+  quest_puppet_done: [
+    { speaker:'Wise Woman', text:'The cursed puppets are destroyed! The castle is less haunted!' },
+    { speaker:'Wise Woman', text:'Well done, young one. Take this reward.' },
+    { action:'reward_cursed_puppets' }
+  ],
+  quest_darkness_done: [
+    { speaker:'Cursed Villager', text:'The dark spirits are gone... the curse... it\'s fading...' },
+    { speaker:'Cursed Villager', text:'Thank you... take this reward... ugh...' },
+    { action:'reward_darkness_falls' }
+  ],
+  quest_patrol_ghost_done: [
+    { speaker:'Apprentice Zoe', text:'You culled the ghost population! The woods feel safer already!' },
+    { speaker:'Apprentice Zoe', text:'Great work! Here is your reward!' },
+    { action:'reward_haunted_patrol' }
+  ],
+  quest_research_done: [
+    { speaker:'Apprentice Zoe', text:'You collected all the cursed samples! Perfect for my research!' },
+    { speaker:'Apprentice Zoe', text:'This will help me develop a counter-curse! Thank you!' },
+    { action:'reward_curse_research' }
+  ],
+  // Hell Adventure
+  quest_hell_main_done: [
+    { speaker:'Fallen Knight', text:'The Demon Lord is slain! Hell has a new ruler...' },
+    { speaker:'Fallen Knight', text:'You have done what I could not. Glory to you, hero!' },
+    { action:'reward_main_hell' }
+  ],
+  quest_demon_done: [
+    { speaker:'Fallen Knight', text:'You hunted down those demons! Well fought!' },
+    { speaker:'Fallen Knight', text:'Here is your reward. You\'ve earned it!' },
+    { action:'reward_demon_hunt' }
+  ],
+  quest_balrog_done: [
+    { speaker:'Soul Guide', text:'The Balrog is no more. Many souls are now free...' },
+    { speaker:'Soul Guide', text:'Thank you, living soul. Take this as your reward.' },
+    { action:'reward_balrog_slayer' }
+  ],
+  quest_hell_rush_done: [
+    { speaker:'Imp Butler', text:'Master! You defeated all those hell hounds! Incredible!' },
+    { speaker:'Imp Butler', text:'The outpost is safe! Here is your reward, master!' },
+    { action:'reward_hell_rush' }
+  ],
+  quest_purge_done: [
+    { speaker:'Fallen Knight', text:'You purged the Burning Sands! The demons are retreating!' },
+    { speaker:'Fallen Knight', text:'A truly impressive feat! You have my respect!' },
+    { action:'reward_demon_purge' }
+  ],
+  quest_soul_done: [
+    { speaker:'Soul Guide', text:'You freed so many souls... they can finally rest in peace...' },
+    { speaker:'Soul Guide', text:'Thank you, living soul. You have done a great good today.' },
+    { action:'reward_soul_collection' }
+  ],
+
+  // MYSTERY PLACE NPCS
+  mystery_guardian_greeting: [
+    { speaker:'Mystery Guardian', text:'Welcome... to the Mystery Cave.', speakerColor:'#9C27B0' },
+    { speaker:'Mystery Guardian', text:'Few find this place... and even fewer leave with their sanity.', speakerColor:'#9C27B0' },
+    { choices: [
+        { text:'What is this place?', action:'mystery_guardian_more' },
+        { text:'Farewell.', action:'close' }
+      ]}
+  ],
+  mystery_guardian_more: [
+    { speaker:'Mystery Guardian', text:'This cave exists between dimensions... a crossroads of realities.', speakerColor:'#9C27B0' },
+    { speaker:'Mystery Guardian', text:'The trading hall has items from countless worlds.', speakerColor:'#9C27B0' },
+    { speaker:'Mystery Guardian', text:'And the surprise chamber... well, you\'ll see!', speakerColor:'#9C27B0' },
+    { choices: [
+        { text:'Fascinating!', action:'close' }
+      ]}
+  ],
+  mystery_trader_greeting: [
+    { speaker:'Mystery Trader', text:'Ah, a new customer! Welcome to my humble marketplace!', speakerColor:'#9C27B0' },
+    { speaker:'Mystery Trader', text:'I have wares from across the multiverse!', speakerColor:'#9C27B0' },
+    { choices: [
+        { text:'Show me what you have!', action:'open_shop' },
+        { text:'Goodbye!', action:'close' }
+      ]}
+  ],
+  mystery_box_greeting: [
+    { speaker:'Mystery Box', text:'*the box shakes mysteriously*' },
+    { speaker:'Mystery Box', text:'Insert 100 gold... receive a surprise!', speakerColor:'#f4b41b' },
+    { choices: [
+        { text:'Insert 100 Gold! (Open Mystery Box)', action:'open_mystery_box' },
+        { text:'Maybe later...', action:'close' }
+      ]}
   ]
 };
 
+// --- QUEST DIFFICULTY & URGENCY (v0.3.4) ---
+const DIFFICULTY_LEVELS = {
+  light:   { name:'Light',  color:'#8bc34a', icon:'🌱' },
+  easy:    { name:'Easy',   color:'#4caf50', icon:'🍃' },
+  medium:  { name:'Medium', color:'#ff9800', icon:'⚡' },
+  hard:    { name:'Hard',   color:'#ff5722', icon:'🔥' },
+  devil:   { name:'Devil',  color:'#9c27b0', icon:'💀' }
+};
+
+const URGENCY_LEVELS = {
+  relax:   { name:'Relax',   color:'#4caf50', icon:'🌿', minMin:20, restable:true },
+  express: { name:'Express', color:'#ff9800', icon:'⚡', minMin:10, maxMin:15, restable:true },
+  rush:    { name:'Rush',    color:'#f44336', icon:'🏃', maxMin:5,  restable:false }
+};
+
+function getUrgencyLevel(timeLimitMs) {
+  const mins = timeLimitMs / 60000;
+  if (mins <= 5) return 'rush';
+  if (mins >= 10 && mins <= 15) return 'express';
+  if (mins >= 20) return 'relax';
+  if (mins < 10) return 'rush';
+  return 'express';
+}
+
 // --- QUEST DATABASE ---
 const QUESTS = {
+  // FIRE DRAGON ADVENTURE QUESTS
   main_dragon: {
     id:'main_dragon', name:'The Dragon\'s Awakening', description:'Defeat the ancient dragon terrorizing the kingdom.',
-    type:'main',
+    type:'main', adventure:'fire_dragon',
     objectives: [
       { type:'kill', target:'dragon', count:1, current:0, desc:'Defeat the Ancient Dragon' }
     ],
     rewards: { exp:1000, gold:1000, items:['hero_medal'] },
-    status:'available'
+    status:'available', timed:false,
+    questGiver:'elder', turnInDialog:'main_quest_complete'
   },
   goblin_problem: {
-    id:'goblin_problem', name:'Goblin Problem', description:'Clear out goblins from the Whispering Forest.',
-    type:'side',
+    id:'goblin_problem', name:'Goblin Problem', description:'Clear out goblins from the forest.',
+    type:'side', adventure:'fire_dragon',
     objectives: [
       { type:'kill', target:'goblin', count:5, current:0, desc:'Defeat 5 Goblins' }
     ],
     rewards: { exp:100, gold:100, items:['hp_potion_big'] },
-    status:'available',
-    questGiver:'quest_giver',
-    turnInDialog:'quest_goblin_done'
+    status:'available', timed:false,
+    questGiver:'quest_giver', turnInDialog:'quest_goblin_done'
   },
   lost_heirloom: {
     id:'lost_heirloom', name:'Lost Heirloom', description:'Find the Ancient Key in the Deep Forest.',
-    type:'side',
+    type:'side', adventure:'fire_dragon',
     objectives: [
       { type:'collect', target:'ancient_key', count:1, current:0, desc:'Find the Ancient Key' }
     ],
     rewards: { exp:80, gold:150 },
-    status:'available'
+    status:'available', timed:false,
+    questGiver:'innkeeper', turnInDialog:'quest_heirloom_done'
+  },
+  urgent_wolf_cull: {
+    id:'urgent_wolf_cull', name:'Urgent: Wolf Cull', description:'The village is under attack! Defeat 8 wolves quickly!',
+    type:'side', adventure:'fire_dragon', timed:true, timeLimit: 180000,
+    difficulty:'medium', urgency:'rush',
+    objectives: [
+      { type:'kill', target:'wolf', count:8, current:0, desc:'Defeat 8 Wolves' }
+    ],
+    rewards: { exp:200, gold:250, items:['hp_potion_big','mp_potion_big'] },
+    status:'available',
+    questGiver:'quest_giver', turnInDialog:'quest_wolf_done'
+  },
+  merchant_escort: {
+    id:'merchant_escort', name:'Merchant Escort', description:'Escort a merchant through the forest path. Defeat 15 goblins to keep him safe!',
+    type:'side', adventure:'fire_dragon', timed:true, timeLimit: 720000,
+    difficulty:'easy', urgency:'express',
+    objectives: [
+      { type:'kill', target:'goblin', count:15, current:0, desc:'Defeat 15 Goblins' }
+    ],
+    rewards: { exp:120, gold:200, items:['hp_potion_big'] },
+    status:'available',
+    questGiver:'quest_giver', turnInDialog:'quest_escort_done'
+  },
+  village_patrol: {
+    id:'village_patrol', name:'Village Patrol', description:'Patrol the village perimeter and clear out all threats. Defeat 30 monsters of any kind.',
+    type:'side', adventure:'fire_dragon', timed:true, timeLimit: 1200000,
+    difficulty:'light', urgency:'relax',
+    objectives: [
+      { type:'kill', target:'wolf', count:10, current:0, desc:'Defeat 10 Wolves' },
+      { type:'kill', target:'goblin', count:20, current:0, desc:'Defeat 20 Goblins' }
+    ],
+    rewards: { exp:150, gold:180, items:['mp_potion_big','antidote'] },
+    status:'available',
+    questGiver:'innkeeper', turnInDialog:'quest_patrol_done'
+  },
+
+  // UNDER THE SEA ADVENTURE QUESTS
+  main_jellyfish: {
+    id:'main_jellyfish', name:'The Jellyfish King', description:'Defeat the Jellyfish King and restore peace to the seas.',
+    type:'main', adventure:'under_sea',
+    objectives: [
+      { type:'kill', target:'jellyfish_king', count:1, current:0, desc:'Defeat the Jellyfish King' }
+    ],
+    rewards: { exp:1500, gold:1500, items:['trident'] },
+    status:'available', timed:false,
+    questGiver:'fisherman', turnInDialog:'quest_jellyfish_done'
+  },
+  fisherman_request: {
+    id:'fisherman_request', name:'Fisherman\'s Request', description:'Help Fisherman Tom by clearing out jellyfish from the reef.',
+    type:'side', adventure:'under_sea',
+    objectives: [
+      { type:'kill', target:'jellyfish', count:10, current:0, desc:'Defeat 10 Jellyfish' }
+    ],
+    rewards: { exp:150, gold:120, items:['hp_potion_big'] },
+    status:'available', timed:false,
+    questGiver:'fisherman', turnInDialog:'quest_fisherman_done'
+  },
+  lost_treasure: {
+    id:'lost_treasure', name:'Lost Sunken Treasure', description:'Find the sunken treasure chest in the coral reef.',
+    type:'side', adventure:'under_sea',
+    objectives: [
+      { type:'collect', target:'pearl', count:3, current:0, desc:'Collect 3 Pearls' }
+    ],
+    rewards: { exp:200, gold:300 },
+    status:'available', timed:false,
+    questGiver:'sailor', turnInDialog:'quest_treasure_done'
+  },
+  crab_invasion: {
+    id:'crab_invasion', name:'Crab Invasion!', description:'Giant crabs are attacking! Defeat 6 before they reach the village!',
+    type:'side', adventure:'under_sea', timed:true, timeLimit: 120000,
+    difficulty:'easy', urgency:'rush',
+    objectives: [
+      { type:'kill', target:'crab', count:6, current:0, desc:'Defeat 6 Giant Crabs' }
+    ],
+    rewards: { exp:250, gold:200, items:['elixir'] },
+    status:'available',
+    questGiver:'sailor', turnInDialog:'quest_crab_done'
+  },
+  reef_cleanup: {
+    id:'reef_cleanup', name:'Reef Cleanup', description:'The coral reef is being overrun! Clear out 20 jellyfish within 12 minutes.',
+    type:'side', adventure:'under_sea', timed:true, timeLimit: 720000,
+    difficulty:'medium', urgency:'express',
+    objectives: [
+      { type:'kill', target:'jellyfish', count:20, current:0, desc:'Defeat 20 Jellyfish' }
+    ],
+    rewards: { exp:300, gold:350, items:['hp_potion_big','mp_potion_big'] },
+    status:'available',
+    questGiver:'fisherman', turnInDialog:'quest_reef_done'
+  },
+  deep_sea_survey: {
+    id:'deep_sea_survey', name:'Deep Sea Survey', description:'A scholar wants you to explore the depths and catalog creatures. Defeat 30 sea creatures within 20 minutes.',
+    type:'side', adventure:'under_sea', timed:true, timeLimit: 1200000,
+    difficulty:'easy', urgency:'relax',
+    objectives: [
+      { type:'kill', target:'jellyfish', count:15, current:0, desc:'Defeat 15 Jellyfish' },
+      { type:'kill', target:'crab', count:15, current:0, desc:'Defeat 15 Crabs' }
+    ],
+    rewards: { exp:350, gold:400, items:['pearl','elixir'] },
+    status:'available',
+    questGiver:'fisherman', turnInDialog:'quest_survey_done'
+  },
+
+  // MONSTER SLIME ADVENTURE QUESTS
+  main_slime: {
+    id:'main_slime', name:'The Corruption', description:'Stop the Slime Lord and purify the corrupted slimes.',
+    type:'main', adventure:'monster_slime',
+    objectives: [
+      { type:'kill', target:'slime_lord', count:1, current:0, desc:'Defeat the Slime Lord' }
+    ],
+    rewards: { exp:2000, gold:2000, items:['slime_crown'] },
+    status:'available', timed:false,
+    questGiver:'slime_elder', turnInDialog:'quest_slime_main_done'
+  },
+  slime_clearing: {
+    id:'slime_clearing', name:'Slime Clearing', description:'Help clear out corrupted slimes from the swamp.',
+    type:'side', adventure:'monster_slime',
+    objectives: [
+      { type:'kill', target:'slime', count:15, current:0, desc:'Defeat 15 Slimes' }
+    ],
+    rewards: { exp:200, gold:180, items:['hp_potion_big'] },
+    status:'available', timed:false,
+    questGiver:'slime_elder', turnInDialog:'quest_slime_clear_done'
+  },
+  slime_queen_hunt: {
+    id:'slime_queen_hunt', name:'Hunt the Slime Queen', description:'Find and defeat the Slime Queen in the caverns.',
+    type:'side', adventure:'monster_slime',
+    objectives: [
+      { type:'kill', target:'slime_queen', count:1, current:0, desc:'Defeat the Slime Queen' }
+    ],
+    rewards: { exp:400, gold:350, items:['slime_essence'] },
+    status:'available', timed:false,
+    questGiver:'slime_guard', turnInDialog:'quest_slime_queen_done'
+  },
+  acid_race: {
+    id:'acid_race', name:'Acid Race!', description:'The acid pools are rising! Defeat 12 mega slimes quickly!',
+    type:'side', adventure:'monster_slime', timed:true, timeLimit: 150000,
+    difficulty:'hard', urgency:'rush',
+    objectives: [
+      { type:'kill', target:'mega_slime', count:12, current:0, desc:'Defeat 12 Mega Slimes' }
+    ],
+    rewards: { exp:350, gold:400, items:['elixir','phoenix_feather'] },
+    status:'available',
+    questGiver:'slime_guard', turnInDialog:'quest_acid_done'
+  },
+  swamp_clearing: {
+    id:'swamp_clearing', name:'Swamp Clearing', description:'Clear out the toxic swamp area. Defeat 25 corrupted slimes within 10 minutes.',
+    type:'side', adventure:'monster_slime', timed:true, timeLimit: 600000,
+    difficulty:'medium', urgency:'express',
+    objectives: [
+      { type:'kill', target:'corrupted_slime', count:25, current:0, desc:'Defeat 25 Corrupted Slimes' }
+    ],
+    rewards: { exp:400, gold:450, items:['slime_essence','hp_potion_big'] },
+    status:'available',
+    questGiver:'slime_elder', turnInDialog:'quest_swamp_done'
+  },
+  slime_harvest: {
+    id:'slime_harvest', name:'Slime Harvest', description:'The village needs slime jelly for medicine. Collect 20 slime jellies within 25 minutes.',
+    type:'side', adventure:'monster_slime', timed:true, timeLimit: 1500000,
+    difficulty:'light', urgency:'relax',
+    objectives: [
+      { type:'collect', target:'slime_jelly', count:20, current:0, desc:'Collect 20 Slime Jellies' }
+    ],
+    rewards: { exp:450, gold:500, items:['slime_essence','mp_potion_big'] },
+    status:'available',
+    questGiver:'slime_farmer', turnInDialog:'quest_harvest_done'
+  },
+
+  // WITCH ADVENTURE QUESTS
+  main_witch: {
+    id:'main_witch', name:'The Witch Queen', description:'Break the Witch Queen\'s curse and free the land.',
+    type:'main', adventure:'witch',
+    objectives: [
+      { type:'kill', target:'witch_queen', count:1, current:0, desc:'Defeat the Witch Queen' }
+    ],
+    rewards: { exp:3000, gold:3000, items:['witch_hat'] },
+    status:'available', timed:false,
+    questGiver:'witch_apprentice', turnInDialog:'quest_witch_main_done'
+  },
+  spirit_exorcism: {
+    id:'spirit_exorcism', name:'Spirit Exorcism', description:'Help clear the haunted forest of evil spirits.',
+    type:'side', adventure:'witch',
+    objectives: [
+      { type:'kill', target:'ghost', count:12, current:0, desc:'Exorcise 12 Ghosts' }
+    ],
+    rewards: { exp:300, gold:250, items:['mp_potion_big'] },
+    status:'available', timed:false,
+    questGiver:'witch_apprentice', turnInDialog:'quest_spirit_done'
+  },
+  cursed_puppets: {
+    id:'cursed_puppets', name:'Cursed Puppets', description:'Destroy the cursed puppets in the castle.',
+    type:'side', adventure:'witch',
+    objectives: [
+      { type:'kill', target:'cursed_puppet', count:3, current:0, desc:'Destroy 3 Cursed Puppets' }
+    ],
+    rewards: { exp:500, gold:400, items:['magic_scroll'] },
+    status:'available', timed:false,
+    questGiver:'wise_woman', turnInDialog:'quest_puppet_done'
+  },
+  darkness_falls: {
+    id:'darkness_falls', name:'Darkness Falls!', description:'The curse is spreading! Defeat 15 dark spirits before they consume everything!',
+    type:'side', adventure:'witch', timed:true, timeLimit: 180000,
+    difficulty:'medium', urgency:'rush',
+    objectives: [
+      { type:'kill', target:'dark_spirit', count:15, current:0, desc:'Defeat 15 Dark Spirits' }
+    ],
+    rewards: { exp:500, gold:500, items:['elixir','phoenix_feather','mp_potion_big'] },
+    status:'available',
+    questGiver:'cursed_villager', turnInDialog:'quest_darkness_done'
+  },
+  haunted_patrol: {
+    id:'haunted_patrol', name:'Haunted Patrol', description:'Patrol the haunted woods and cull the ghost population. Defeat 20 ghosts within 15 minutes.',
+    type:'side', adventure:'witch', timed:true, timeLimit: 900000,
+    difficulty:'medium', urgency:'express',
+    objectives: [
+      { type:'kill', target:'ghost', count:20, current:0, desc:'Defeat 20 Ghosts' }
+    ],
+    rewards: { exp:550, gold:600, items:['magic_scroll','hp_potion_big'] },
+    status:'available',
+    questGiver:'witch_apprentice', turnInDialog:'quest_patrol_ghost_done'
+  },
+  curse_research: {
+    id:'curse_research', name:'Curse Research', description:'Apprentice Zoe needs cursed samples for her research. Collect various cursed materials within 22 minutes.',
+    type:'side', adventure:'witch', timed:true, timeLimit: 1320000,
+    difficulty:'easy', urgency:'relax',
+    objectives: [
+      { type:'kill', target:'ghost', count:10, current:0, desc:'Defeat 10 Ghosts' },
+      { type:'kill', target:'cursed_puppet', count:5, current:0, desc:'Destroy 5 Cursed Puppets' }
+    ],
+    rewards: { exp:600, gold:650, items:['magic_scroll','mp_potion_big','elixir'] },
+    status:'available',
+    questGiver:'witch_apprentice', turnInDialog:'quest_research_done'
+  },
+
+  // HELL ADVENTURE QUESTS
+  main_hell: {
+    id:'main_hell', name:'The Demon Lord', description:'Conquer Hell and defeat the Demon Lord!',
+    type:'main', adventure:'hell',
+    objectives: [
+      { type:'kill', target:'demon_lord', count:1, current:0, desc:'Defeat the Demon Lord' }
+    ],
+    rewards: { exp:5000, gold:5000, items:['demon_blade','phoenix_feather'] },
+    status:'available', timed:false,
+    questGiver:'fallen_knight', turnInDialog:'quest_hell_main_done'
+  },
+  demon_hunt: {
+    id:'demon_hunt', name:'Demon Hunt', description:'Hunt down demons in the burning sands.',
+    type:'side', adventure:'hell',
+    objectives: [
+      { type:'kill', target:'demon', count:15, current:0, desc:'Defeat 15 Demons' }
+    ],
+    rewards: { exp:400, gold:400, items:['hp_potion_big','mp_potion_big'] },
+    status:'available', timed:false,
+    questGiver:'fallen_knight', turnInDialog:'quest_demon_done'
+  },
+  balrog_slayer: {
+    id:'balrog_slayer', name:'Balrog Slayer', description:'Defeat the fearsome Balrog in the Lake of Fire.',
+    type:'side', adventure:'hell',
+    objectives: [
+      { type:'kill', target:'balrog', count:1, current:0, desc:'Slay the Balrog' }
+    ],
+    rewards: { exp:800, gold:700, items:['flame_amulet'] },
+    status:'available', timed:false,
+    questGiver:'soul_guide', turnInDialog:'quest_balrog_done'
+  },
+  hell_rush: {
+    id:'hell_rush', name:'HELL RUSH!', description:'Demons are storming the outpost! Defeat 20 hell hounds FAST!',
+    type:'side', adventure:'hell', timed:true, timeLimit: 200000,
+    difficulty:'hard', urgency:'rush',
+    objectives: [
+      { type:'kill', target:'hell_hound', count:20, current:0, desc:'Defeat 20 Hell Hounds' }
+    ],
+    rewards: { exp:700, gold:800, items:['elixir','phoenix_feather','hp_potion_big'] },
+    status:'available',
+    questGiver:'imp_butler', turnInDialog:'quest_hell_rush_done'
+  },
+  demon_purge: {
+    id:'demon_purge', name:'Demon Purge', description:'Purge the demon hordes from the Burning Sands. Defeat 30 demons within 12 minutes.',
+    type:'side', adventure:'hell', timed:true, timeLimit: 720000,
+    difficulty:'hard', urgency:'express',
+    objectives: [
+      { type:'kill', target:'demon', count:30, current:0, desc:'Defeat 30 Demons' }
+    ],
+    rewards: { exp:900, gold:1000, items:['flame_amulet','phoenix_feather'] },
+    status:'available',
+    questGiver:'fallen_knight', turnInDialog:'quest_purge_done'
+  },
+  soul_collection: {
+    id:'soul_collection', name:'Soul Collection', description:'The Soul Guide needs help guiding lost souls. Defeat various hell creatures to free souls within 20 minutes.',
+    type:'side', adventure:'hell', timed:true, timeLimit: 1200000,
+    difficulty:'medium', urgency:'relax',
+    objectives: [
+      { type:'kill', target:'imp', count:30, current:0, desc:'Defeat 30 Imps' },
+      { type:'kill', target:'tortured_soul', count:10, current:0, desc:'Free 10 Tortured Souls' }
+    ],
+    rewards: { exp:1000, gold:1200, items:['soul_stone','elixir','mp_potion_big'] },
+    status:'available',
+    questGiver:'soul_guide', turnInDialog:'quest_soul_done'
   }
 };
+
+// --- TIMED QUEST SYSTEM (v0.3.2) ---
+const TIMED_QUESTS_UNLOCK_LEVEL = 7;
+let timedQuestsUnlocked = false;
+let activeTimedQuests = {}; // questId -> { startTime, endTime }
+
+function checkTimedQuestUnlock() {
+  if (player.level >= TIMED_QUESTS_UNLOCK_LEVEL && !timedQuestsUnlocked) {
+    timedQuestsUnlocked = true;
+    logMessage(`⏰ Timed Quests unlocked at Level ${TIMED_QUESTS_UNLOCK_LEVEL}!`, 'gold');
+    logMessage('Complete quests quickly for bonus rewards!', 'gold');
+  }
+}
+
+function isTimedQuestAvailable() {
+  return player.level >= TIMED_QUESTS_UNLOCK_LEVEL;
+}
+
+function startTimedQuest(questId) {
+  const quest = QUESTS[questId];
+  if (!quest || !quest.timed) return;
+
+  if (activeTimedQuests[questId]) return;
+
+  const now = Date.now();
+  activeTimedQuests[questId] = {
+    startTime: now,
+    endTime: now + quest.timeLimit
+  };
+
+  logMessage(`⏰ Timed quest started: ${quest.name}!`, 'gold');
+}
+
+function getTimeRemaining(questId) {
+  const timer = activeTimedQuests[questId];
+  if (!timer) return 0;
+  if (timer.paused) return Math.max(0, timer.pausedRemaining);
+  return Math.max(0, timer.endTime - Date.now());
+}
+
+function isTimedQuestFailed(questId) {
+  const timer = activeTimedQuests[questId];
+  if (!timer) return false;
+  if (timer.paused) return false;
+  return Date.now() > timer.endTime;
+}
+
+function cancelTimedQuest(questId) {
+  if (activeTimedQuests[questId]) {
+    delete activeTimedQuests[questId];
+  }
+  
+  const quest = QUESTS[questId];
+  if (quest) {
+    quest.status = 'available';
+    // Reset objectives
+    for (const obj of quest.objectives) {
+      obj.current = 0;
+    }
+    logMessage(`Cancelled quest: ${quest.name}`, 'yellow');
+  }
+  
+  renderQuests();
+}
+
+function restTimedQuest(questId) {
+  const quest = QUESTS[questId];
+  if (!quest || !quest.timed) return;
+  if (!activeTimedQuests[questId]) return;
+  
+  // Rush quests cannot be rested (v0.3.4)
+  if (quest.urgency === 'rush') {
+    logMessage('Rush quests cannot be rested! Too urgent!', 'red');
+    return;
+  }
+  
+  if (player.gold < 15) {
+    logMessage('You need 15 gold to rest a quest!', 'red');
+    return;
+  }
+
+  const timer = activeTimedQuests[questId];
+  if (timer.paused) {
+    logMessage('Quest timer is already paused!', 'yellow');
+    return;
+  }
+
+  player.gold -= 15;
+  
+  const remaining = timer.endTime - Date.now();
+  timer.paused = true;
+  timer.pausedRemaining = remaining;
+  
+  logMessage(`⏸ Quest paused for 15 gold!`, 'cyan');
+  logMessage(`Time remaining: ${Math.ceil(remaining / 60000)} minutes`, 'cyan');
+  logMessage('Resume by talking to the quest giver.', 'yellow');
+  
+  quest.rested = true;
+  
+  updateUI();
+  renderQuests();
+}
+
+// --- CREDIT SCORE SYSTEM (v0.3.5) ---
+const CREDIT_MAX = 100;
+const CREDIT_QUEST_THRESHOLD = 70;
+const CREDIT_FIGHT_THRESHOLD = 30;
+const CREDIT_ANYTHING_THRESHOLD = 10;
+const CREDIT_RECOVERY_10MIN = 5;
+const CREDIT_RECOVERY_20MIN_FULL = true;
+const CREDIT_FINE_GOLD = 20;
+const CREDIT_PENALTIES = [5, 10, 15];
+
+function canAcceptQuests() {
+  return player.creditScore >= CREDIT_QUEST_THRESHOLD;
+}
+
+function canFight() {
+  return player.creditScore >= CREDIT_FIGHT_THRESHOLD;
+}
+
+function canUseShop() {
+  return player.creditScore >= CREDIT_FIGHT_THRESHOLD;
+}
+
+function canDoAnything() {
+  return player.creditScore >= CREDIT_ANYTHING_THRESHOLD;
+}
+
+function canInteractNPCs() {
+  return player.creditScore >= CREDIT_ANYTHING_THRESHOLD;
+}
+
+function canSave() {
+  return player.creditScore >= CREDIT_ANYTHING_THRESHOLD;
+}
+
+function applyQuestFailurePenalty() {
+  if (player.gold >= CREDIT_FINE_GOLD) {
+    player.gold -= CREDIT_FINE_GOLD;
+    logMessage(`💸 Fined ${CREDIT_FINE_GOLD} gold for failing a timed quest!`, 'red');
+  } else {
+    const penaltyIdx = Math.min(player.questFailureCount, CREDIT_PENALTIES.length - 1);
+    const penalty = CREDIT_PENALTIES[penaltyIdx];
+    player.creditScore = Math.max(0, player.creditScore - penalty);
+    player.questFailureCount++;
+    logMessage(`⚠️ Not enough gold! Credit Score -${penalty}! (Consecutive failures: ${player.questFailureCount})`, 'red');
+    logMessage(`Current Credit Score: ${player.creditScore}/${CREDIT_MAX}`, 'red');
+  }
+  player.lastGoodBehaviorTime = Date.now();
+  updateUI();
+}
+
+function updateCreditRecovery(deltaMs) {
+  if (!player || player.creditScore >= CREDIT_MAX) {
+    if (player) player.lastGoodBehaviorTime = Date.now();
+    return;
+  }
+
+  const now = Date.now();
+  const elapsed = now - player.lastGoodBehaviorTime;
+
+  if (elapsed >= 20 * 60 * 1000) {
+    const oldScore = player.creditScore;
+    player.creditScore = CREDIT_MAX;
+    player.questFailureCount = 0;
+    if (oldScore < CREDIT_MAX) {
+      logMessage(`⭐ Credit Score fully restored to ${CREDIT_MAX}!`, 'green');
+    }
+    player.lastGoodBehaviorTime = now;
+    updateUI();
+  } else if (elapsed >= 10 * 60 * 1000) {
+    const tenMinIncrements = Math.floor(elapsed / (10 * 60 * 1000));
+    const expectedScore = Math.min(CREDIT_MAX, 100 - (tenMinIncrements * CREDIT_RECOVERY_10MIN));
+    if (player.creditScore < expectedScore) {
+      const increase = expectedScore - player.creditScore;
+      player.creditScore = Math.min(CREDIT_MAX, player.creditScore + increase);
+      if (player.creditScore >= CREDIT_MAX) {
+        player.questFailureCount = 0;
+      }
+      logMessage(`⭐ Credit Score +${increase}! (Good behavior for ${tenMinIncrements * 10} min)`, 'green');
+      logMessage(`Current Credit Score: ${player.creditScore}/${CREDIT_MAX}`, 'green');
+      player.lastGoodBehaviorTime = now;
+      updateUI();
+    }
+  }
+}
+
+function handleCrossSessionCreditRecovery() {
+  if (!player) return;
+
+  const now = Date.now();
+  const lastTime = player.lastSessionTime || now;
+  const lastDate = new Date(lastTime);
+  const nowDate = new Date(now);
+
+  const isNextDay = nowDate.getDate() !== lastDate.getDate() ||
+    nowDate.getMonth() !== lastDate.getMonth() ||
+    nowDate.getFullYear() !== lastDate.getFullYear();
+
+  if (isNextDay) {
+    if (player.creditScore < CREDIT_MAX) {
+      player.creditScore = CREDIT_MAX;
+      player.questFailureCount = 0;
+      logMessage(`🌅 New day! Credit Score fully restored to ${CREDIT_MAX}!`, 'green');
+    }
+  } else {
+    const elapsed = now - lastTime;
+    if (elapsed > 0 && player.creditScore < CREDIT_MAX) {
+      const tenMinIncrements = Math.floor(elapsed / (10 * 60 * 1000));
+      if (tenMinIncrements > 0) {
+        const increase = Math.min(CREDIT_MAX - player.creditScore, tenMinIncrements * CREDIT_RECOVERY_10MIN);
+        player.creditScore = Math.min(CREDIT_MAX, player.creditScore + increase);
+        if (player.creditScore >= CREDIT_MAX) {
+          player.questFailureCount = 0;
+          logMessage(`⭐ Credit Score fully restored while you were away!`, 'green');
+        } else {
+          logMessage(`⭐ Credit Score +${increase} while you were away! (${tenMinIncrements * 10} min)`, 'green');
+        }
+      }
+    }
+  }
+
+  player.lastGoodBehaviorTime = now;
+  player.lastSessionTime = now;
+  updateUI();
+}
+
+function getCreditScoreColorClass() {
+  if (player.creditScore >= 70) return 'credit-good';
+  if (player.creditScore >= 30) return 'credit-warn';
+  if (player.creditScore >= 10) return 'credit-bad';
+  return 'credit-critical';
+}
 
 // --- ADVENTURE DATABASE ---
 const ADVENTURES = {
@@ -2494,11 +4070,11 @@ const ADVENTURE_ENEMIES = {
 // --- ADVENTURE STATE ---
 let currentAdventure = 'fire_dragon';
 let adventureProgress = {
-  fire_dragon: { currentArea: 0, completed: false, clearedAreas: [] },
-  under_sea: { currentArea: 0, completed: false, clearedAreas: [] },
-  monster_slime: { currentArea: 0, completed: false, clearedAreas: [] },
-  witch: { currentArea: 0, completed: false, clearedAreas: [] },
-  hell: { currentArea: 0, completed: false, clearedAreas: [] }
+  fire_dragon: { currentArea: 0, lastLocation: 'village', completed: false, clearedAreas: [] },
+  under_sea: { currentArea: 0, lastLocation: 'coastal_village', completed: false, clearedAreas: [] },
+  monster_slime: { currentArea: 0, lastLocation: 'slime_village', completed: false, clearedAreas: [] },
+  witch: { currentArea: 0, lastLocation: 'witch_hut', completed: false, clearedAreas: [] },
+  hell: { currentArea: 0, lastLocation: 'hell_outpost', completed: false, clearedAreas: [] }
 };
 
 // --- MYSTERY PLACE SYSTEM (v0.3.1) ---
@@ -2544,7 +4120,37 @@ const MERCHANT_STAY_TIME = 600;
 const SHOPS = {
   village: {
     name:'Village Shop',
-    buy: ['hp_potion', 'mp_potion', 'antidote', 'iron_sword', 'leather_armor', 'power_ring'],
+    buy: ['hp_potion', 'mp_potion', 'antidote', 'iron_sword', 'leather_armor', 'power_ring', 'hp_potion_big', 'mp_potion_big'],
+    prices: {}
+  },
+  sea_merchant: {
+    name:'Sea Merchant',
+    buy: ['hp_potion', 'mp_potion', 'antidote', 'hp_potion_big', 'mp_potion_big', 'elixir', 'chain_mail', 'wise_amulet', 'pearl'],
+    prices: {}
+  },
+  slime_merchant: {
+    name:'Slime Trader',
+    buy: ['hp_potion', 'mp_potion', 'antidote', 'hp_potion_big', 'mp_potion_big', 'slime_jelly', 'slime_essence', 'steel_blade', 'chain_mail', 'plate_armor'],
+    prices: {}
+  },
+  potion_merchant: {
+    name:'Potion Seller',
+    buy: ['hp_potion', 'mp_potion', 'antidote', 'hp_potion_big', 'mp_potion_big', 'elixir', 'magic_scroll', 'phoenix_feather', 'mage_robes', 'crystal_staff'],
+    prices: {}
+  },
+  demon_merchant: {
+    name:'Demon Merchant',
+    buy: ['hp_potion', 'mp_potion', 'antidote', 'hp_potion_big', 'mp_potion_big', 'elixir', 'phoenix_feather', 'fire_sword', 'plate_armor', 'power_ring', 'flame_amulet'],
+    prices: {}
+  },
+  smith_of_doom: {
+    name:'Smith of Doom',
+    buy: ['hp_potion', 'mp_potion', 'hp_potion_big', 'mp_potion_big', 'steel_blade', 'fire_sword', 'fallen_sword', 'plate_armor', 'dragon_armor', 'power_ring', 'flame_amulet'],
+    prices: {}
+  },
+  mystery_trader: {
+    name:'Mystery Trader',
+    buy: ['hp_potion', 'mp_potion', 'hp_potion_big', 'mp_potion_big', 'elixir', 'phoenix_feather', 'soul_stone', 'hero_sword', 'dragon_armor', 'cat_blessing', 'void_blessing'],
     prices: {}
   }
 };
@@ -2587,9 +4193,11 @@ function init() {
   mapCanvas = document.getElementById('map-canvas');
   mapCtx = mapCanvas.getContext('2d');
 
+  loadSettings();
   setupInput();
   setupClassSelect();
   gameLoop();
+  updateTimeDisplay();
   logMessage('Welcome to Pixel Quest RPG!', 'gold');
 }
 
@@ -2707,7 +4315,11 @@ function startGame() {
     gold: 50,
     skills: [...cls.skills],
     statuses: [],
-    buffs: []
+    buffs: [],
+    creditScore: 100,
+    questFailureCount: 0,
+    lastGoodBehaviorTime: Date.now(),
+    lastSessionTime: Date.now()
   };
 
   currentLocation = 'village';
@@ -2737,12 +4349,76 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
+let questTimerTick = 0;
+let lastFrameTime = 0;
+let timeDisplayTick = 0;
+
 function update() {
+  const now = performance.now();
+  const deltaMs = lastFrameTime ? (now - lastFrameTime) : 16;
+  lastFrameTime = now;
+  
   if (currentState === GameState.EXPLORE) {
     if (moveCooldown > 0) moveCooldown--;
     handleMovement();
     // Update world monsters (v0.2.1)
     updateWorldMonsters();
+    
+    // Update game time (v0.3.3)
+    updateGameTime(deltaMs);
+    
+    // Update credit score recovery (v0.3.5)
+    updateCreditRecovery(deltaMs);
+    
+    // Update time display every 30 frames
+    timeDisplayTick++;
+    if (timeDisplayTick >= 30) {
+      timeDisplayTick = 0;
+      updateTimeDisplay();
+    }
+    
+    // Update timed quest UI every 30 frames (~0.5s)
+    questTimerTick++;
+    if (questTimerTick >= 30) {
+      questTimerTick = 0;
+      checkTimedQuestFailures();
+      const questModal = document.getElementById('quest-modal');
+      if (questModal && questModal.classList.contains('active')) {
+        renderQuests();
+      }
+    }
+  }
+}
+
+function updateTimeDisplay() {
+  const timeEl = document.getElementById('stat-time');
+  const timeRow = document.getElementById('stat-time-row');
+  if (!timeEl || !timeRow) return;
+  
+  const timeStr = getCurrentTimeDisplay();
+  if (timeStr) {
+    timeRow.style.display = 'flex';
+    timeEl.textContent = timeStr;
+  } else {
+    timeRow.style.display = 'none';
+  }
+}
+
+function checkTimedQuestFailures() {
+  for (const [questId, timer] of Object.entries(activeTimedQuests)) {
+    if (timer.paused) continue;
+    if (Date.now() > timer.endTime) {
+      const quest = QUESTS[questId];
+      if (quest && quest.status === 'active') {
+        quest.status = 'available';
+        for (const obj of quest.objectives) {
+          obj.current = 0;
+        }
+        delete activeTimedQuests[questId];
+        logMessage(`⏰ Time expired! Quest failed: ${quest.name}`, 'red');
+        applyQuestFailurePenalty();
+      }
+    }
   }
 }
 
@@ -2822,6 +4498,9 @@ function changeLocation(newLoc, fromDir) {
     logMessage('This is a safe area.', 'green');
   }
 
+  // Save current location for the adventure (v0.3.2)
+  saveAdventureLocation();
+
   // Initialize monsters for new area (v0.2.1)
   initWorldMonsters();
 
@@ -2830,6 +4509,11 @@ function changeLocation(newLoc, fromDir) {
 
 function handleInteract() {
   if (currentState !== GameState.EXPLORE) return;
+
+  if (!canInteractNPCs()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to interact with NPCs.`, 'red');
+    return;
+  }
 
   // Check for random merchant first
   if (randomMerchant) {
@@ -3526,6 +5210,10 @@ function handleMerchantInteract() {
 
 function openRandomMerchantShop() {
   if (!randomMerchant) return;
+  if (!canUseShop()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_FIGHT_THRESHOLD}+ to use shops.`, 'red');
+    return;
+  }
   
   const shopUI = document.createElement('div');
   shopUI.className = 'modal-overlay active';
@@ -3612,6 +5300,11 @@ function triggerRandomEncounter() {
   const loc = LOCATIONS[currentLocation];
   if (!loc.enemies || loc.enemies.length === 0) return;
   
+  if (!canFight()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_FIGHT_THRESHOLD}+ to fight.`, 'red');
+    return;
+  }
+  
   // Check if we're in an adventure location
   const adventure = ADVENTURES[currentAdventure];
   
@@ -3638,6 +5331,11 @@ function triggerRandomEncounter() {
 }
 
 function startBossBattle(bossId) {
+  if (!canFight()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_FIGHT_THRESHOLD}+ to fight.`, 'red');
+    return;
+  }
+  
   // Check if this is an adventure boss
   const adventure = ADVENTURES[currentAdventure];
   let boss;
@@ -3982,6 +5680,15 @@ function battleDefend() {
 }
 
 // Flee from battle (v0.2.1) - costs 25 gold
+function toggleBattleMenu() {
+  const menu = document.getElementById('battle-dropdown-menu');
+  if (menu.style.display === 'none') {
+    menu.style.display = 'block';
+  } else {
+    menu.style.display = 'none';
+  }
+}
+
 function battleFlee() {
   if (battleState.turn !== 'player') return;
 
@@ -4005,6 +5712,10 @@ function battleFlee() {
 // Open shop during battle (v0.2.1)
 function openBattleShop() {
   if (battleState.turn !== 'player') return;
+  if (!canUseShop()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_FIGHT_THRESHOLD}+ to use shops.`, 'red');
+    return;
+  }
 
   // Temporarily pause battle
   battleState.fleeing = true;
@@ -4503,6 +6214,10 @@ function getItemCount(itemId) {
 
 function openInventory() {
   if (currentState !== GameState.EXPLORE) return;
+  if (!canDoAnything()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to use inventory.`, 'red');
+    return;
+  }
   document.getElementById('inventory-modal').classList.add('active');
   currentInvTab = 'all';
   renderInventory();
@@ -4729,6 +6444,13 @@ function updateUI() {
   document.getElementById('stat-agi').textContent = getPlayerStat('agi');
   document.getElementById('stat-luk').textContent = getPlayerStat('luk');
   document.getElementById('stat-gold').textContent = player.gold;
+  
+  const creditEl = document.getElementById('stat-credit');
+  const creditRow = document.getElementById('stat-credit-row');
+  if (creditEl && creditRow && player.creditScore !== undefined) {
+    creditEl.textContent = player.creditScore;
+    creditRow.className = `mini-stat ${getCreditScoreColorClass()}`;
+  }
 
   document.getElementById('equip-weapon').textContent = player.equipment.weapon ? ITEMS[player.equipment.weapon].name : 'None';
   document.getElementById('equip-armor').textContent = player.equipment.armor ? ITEMS[player.equipment.armor].name : 'None';
@@ -4761,6 +6483,10 @@ let currentQuestTab = 'active';
 
 function openQuests() {
   if (currentState !== GameState.EXPLORE) return;
+  if (!canDoAnything()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to view quests.`, 'red');
+    return;
+  }
   document.getElementById('quest-modal').classList.add('active');
   currentQuestTab = 'active';
   renderQuests();
@@ -4782,6 +6508,10 @@ function renderQuests() {
   list.innerHTML = '';
 
   let quests = Object.values(QUESTS);
+  
+  // Filter by current adventure
+  quests = quests.filter(q => q.adventure === currentAdventure || !q.adventure);
+  
   if (currentQuestTab === 'active') {
     quests = quests.filter(q => q.status === 'active');
   } else if (currentQuestTab === 'completed') {
@@ -4814,14 +6544,102 @@ function renderQuests() {
       rewardsHtml = `<div class="quest-rewards">Reward: ${parts.join(' | ')}</div>`;
     }
 
+    // Difficulty & Urgency badges (v0.3.4)
+    let badgesHtml = '';
+    if (quest.timed) {
+      const diff = DIFFICULTY_LEVELS[quest.difficulty];
+      const urg = URGENCY_LEVELS[quest.urgency];
+      if (diff && urg) {
+        badgesHtml = `
+          <div style="display:flex;gap:5px;margin:4px 0;">
+            <span style="font-size:8px;padding:2px 6px;background:${diff.color}22;color:${diff.color};border:1px solid ${diff.color};">
+              ${diff.icon} DIFF: ${diff.name}
+            </span>
+            <span style="font-size:8px;padding:2px 6px;background:${urg.color}22;color:${urg.color};border:1px solid ${urg.color};">
+              ${urg.icon} URG: ${urg.name}
+            </span>
+          </div>
+        `;
+      }
+    }
+
+    // Timed quest info (v0.3.2)
+    let timedHtml = '';
+    if (quest.timed && quest.status === 'active') {
+      const remaining = getTimeRemaining(quest.id);
+      const failed = isTimedQuestFailed(quest.id);
+      const paused = activeTimedQuests[quest.id]?.paused;
+      const secs = Math.ceil(remaining / 1000);
+      const mins = Math.floor(secs / 60);
+      const secsRem = secs % 60;
+      
+      const bgColor = paused ? '#3a3a1a' : (failed ? '#4a1a1a' : '#1a3a4a');
+      const borderColor = paused ? '#ffc107' : (failed ? '#f44336' : '#00bcd4');
+      const label = paused ? '⏸ PAUSED' : (failed ? 'FAILED - Time expired!' : `Time: ${mins}:${secsRem.toString().padStart(2, '0')}`);
+      
+      timedHtml = `
+        <div class="quest-timer ${failed ? 'expired' : ''}" style="margin:5px 0;padding:5px;background:${bgColor};border-left:3px solid ${borderColor};">
+          <span style="font-size:9px;">${label}</span>
+        </div>
+      `;
+    }
+
+    // Action buttons for active quests (v0.3.2)
+    let actionButtons = '';
+    if (quest.status === 'active') {
+      const cancelBtn = `<button class="pixel-btn" style="padding:4px 8px;font-size:8px;margin-right:5px;background:#4a1a1a;border-color:#6a2a2a;" onclick="cancelQuest('${quest.id}')">✕ CANCEL</button>`;
+      
+      let restBtn = '';
+      if (quest.timed && !quest.rested && quest.urgency !== 'rush') {
+        restBtn = `<button class="pixel-btn" style="padding:4px 8px;font-size:8px;background:#1a3a4a;border-color:#2a5a6a;" onclick="restQuest('${quest.id}')">⏸ REST (15g)</button>`;
+      }
+      
+      actionButtons = `<div style="margin-top:8px;">${cancelBtn}${restBtn}</div>`;
+    }
+
+    // Timed quest badge for available quests
+    let timedBadge = '';
+    if (quest.timed && quest.status === 'available') {
+      const mins = Math.floor(quest.timeLimit / 60000);
+      const canSee = isTimedQuestAvailable();
+      if (canSee) {
+        timedBadge = `<span style="float:right;font-size:8px;background:#00bcd4;color:#fff;padding:2px 6px;">⏰ ${mins}min</span>`;
+      }
+    }
+
     div.innerHTML = `
-      <div class="quest-name">${quest.type === 'main' ? '★ ' : ''}${quest.name}</div>
+      <div class="quest-name">${quest.type === 'main' ? '★ ' : ''}${quest.name}${timedBadge}</div>
       <div class="quest-desc">${quest.description}</div>
+      ${badgesHtml}
+      ${timedHtml}
       <div class="quest-objectives">${objectivesHtml}</div>
       ${rewardsHtml}
+      ${actionButtons}
     `;
     list.appendChild(div);
   }
+}
+
+function cancelQuest(questId) {
+  const quest = QUESTS[questId];
+  if (!quest || quest.status !== 'active') return;
+  
+  if (quest.timed) {
+    cancelTimedQuest(questId);
+  } else {
+    quest.status = 'available';
+    for (const obj of quest.objectives) {
+      obj.current = 0;
+    }
+    logMessage(`Cancelled quest: ${quest.name}`, 'yellow');
+  }
+  
+  renderQuests();
+}
+
+function restQuest(questId) {
+  restTimedQuest(questId);
+  renderQuests();
 }
 
 function updateQuestKills(enemyId) {
@@ -4862,6 +6680,26 @@ function completeQuest(questId) {
 
   quest.status = 'completed';
 
+  if (quest.timed && activeTimedQuests[questId]) {
+    const remaining = getTimeRemaining(questId);
+    const failed = isTimedQuestFailed(questId);
+    delete activeTimedQuests[questId];
+    
+    if (failed) {
+      logMessage(`Quest time expired - rewards reduced!`, 'red');
+      if (quest.rewards) {
+        if (quest.rewards.exp) quest.rewards.exp = Math.floor(quest.rewards.exp * 0.5);
+        if (quest.rewards.gold) quest.rewards.gold = Math.floor(quest.rewards.gold * 0.5);
+      }
+    } else if (remaining > quest.timeLimit * 0.5) {
+      logMessage(`⏰ Fast completion! Bonus rewards!`, 'gold');
+      if (quest.rewards) {
+        if (quest.rewards.exp) quest.rewards.exp = Math.floor(quest.rewards.exp * 1.5);
+        if (quest.rewards.gold) quest.rewards.gold = Math.floor(quest.rewards.gold * 1.5);
+      }
+    }
+  }
+
   if (quest.rewards) {
     if (quest.rewards.exp) {
       player.exp += quest.rewards.exp;
@@ -4886,8 +6724,25 @@ function completeQuest(questId) {
 function acceptQuest(questId) {
   const quest = QUESTS[questId];
   if (!quest || quest.status !== 'available') return;
+  
+  if (quest.timed && !isTimedQuestAvailable()) {
+    logMessage('You need to be level 7+ to accept timed quests!', 'red');
+    return;
+  }
+  
+  if (!canAcceptQuests()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_QUEST_THRESHOLD}+ to accept quests.`, 'red');
+    return;
+  }
+  
   quest.status = 'active';
   logMessage(`Quest accepted: ${quest.name}`, 'gold');
+  
+  if (quest.timed) {
+    startTimedQuest(questId);
+  }
+  
+  renderQuests();
 }
 
 // ============================================================
@@ -4896,6 +6751,10 @@ function acceptQuest(questId) {
 
 function openAdventures() {
   if (currentState !== GameState.EXPLORE) return;
+  if (!canDoAnything()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to view adventures.`, 'red');
+    return;
+  }
   renderAdventureList();
   document.getElementById('adventure-modal').classList.add('active');
 }
@@ -4984,25 +6843,22 @@ function selectAdventure(adventureId) {
   currentAdventure = adventureId;
   logMessage(`Adventure selected: ${adventure.name}`, 'gold');
   
-  // Reset progress for selected adventure
-  adventureProgress[adventureId].currentArea = 0;
+  // Teleport to remembered location (or default if never visited)
+  const progress = adventureProgress[adventureId];
+  const targetLocation = progress.lastLocation;
   
-  // Teleport player to adventure start location
-  if (adventureId === 'fire_dragon') {
-    changeLocation('forest_path', 'north');
-  } else if (adventureId === 'under_sea') {
-    changeLocation('beach', 'north');
-  } else if (adventureId === 'monster_slime') {
-    changeLocation('slime_swamp', 'north');
-  } else if (adventureId === 'witch') {
-    changeLocation('haunted_forest', 'north');
-  } else if (adventureId === 'hell') {
-    changeLocation('inferno_gate', 'north');
-  }
+  logMessage(`Arrived at: ${LOCATIONS[targetLocation] ? LOCATIONS[targetLocation].name : targetLocation}`, 'cyan');
+  changeLocation(targetLocation, 'south');
   
   closeAdventures();
   renderAdventureList();
   updateUI();
+}
+
+function saveAdventureLocation() {
+  if (adventureProgress[currentAdventure]) {
+    adventureProgress[currentAdventure].lastLocation = currentLocation;
+  }
 }
 
 function advanceAdventureArea() {
@@ -5052,6 +6908,10 @@ function checkMysteryPlaceUnlock() {
 function openMysteryPlace() {
   if (player.level < MYSTERY_PLACE.unlockLevel) {
     logMessage(`🔒 Mystery Cave unlocks at Level ${MYSTERY_PLACE.unlockLevel}!`, 'red');
+    return;
+  }
+  if (!canDoAnything()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to access Mystery Cave.`, 'red');
     return;
   }
   document.getElementById('mystery-modal').classList.add('active');
@@ -5137,6 +6997,10 @@ function checkFreeExperienceUnlock() {
 function openFreeExperience() {
   if (player.level < FREE_EXPERIENCE.unlockLevel) {
     logMessage(`🔒 Free Experience unlocks at Level ${FREE_EXPERIENCE.unlockLevel}!`, 'red');
+    return;
+  }
+  if (!canDoAnything()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to claim free experience.`, 'red');
     return;
   }
   
@@ -5390,6 +7254,22 @@ function handleDialogChoice(action) {
       acceptQuest('goblin_problem');
       closeDialog();
       break;
+    case 'accept_lost_heirloom':
+      acceptQuest('lost_heirloom');
+      closeDialog();
+      break;
+    case 'accept_urgent_wolf':
+      acceptQuest('urgent_wolf_cull');
+      closeDialog();
+      break;
+    case 'accept_merchant_escort':
+      acceptQuest('merchant_escort');
+      closeDialog();
+      break;
+    case 'accept_village_patrol':
+      acceptQuest('village_patrol');
+      closeDialog();
+      break;
     case 'elder_more':
       currentDialog = DIALOGUES['elder_more'];
       dialogIndex = 0;
@@ -5407,6 +7287,201 @@ function handleDialogChoice(action) {
       currentDialog = DIALOGUES['sage_more'];
       dialogIndex = 0;
       showDialogLine();
+      break;
+    // Under the Sea quests
+    case 'accept_main_jellyfish':
+      acceptQuest('main_jellyfish');
+      closeDialog();
+      break;
+    case 'accept_fisherman_quest':
+      acceptQuest('fisherman_request');
+      closeDialog();
+      break;
+    case 'accept_lost_treasure':
+      acceptQuest('lost_treasure');
+      closeDialog();
+      break;
+    case 'accept_crab_invasion':
+      acceptQuest('crab_invasion');
+      closeDialog();
+      break;
+    case 'accept_reef_cleanup':
+      acceptQuest('reef_cleanup');
+      closeDialog();
+      break;
+    case 'accept_deep_sea_survey':
+      acceptQuest('deep_sea_survey');
+      closeDialog();
+      break;
+    case 'fisherman_more':
+      currentDialog = DIALOGUES['fisherman_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'sailor_more':
+      currentDialog = DIALOGUES['sailor_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'sea_merchant_more':
+      currentDialog = DIALOGUES['sea_merchant_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    // Monster Slime quests
+    case 'accept_main_slime':
+      acceptQuest('main_slime');
+      closeDialog();
+      break;
+    case 'accept_slime_quest':
+      acceptQuest('slime_clearing');
+      closeDialog();
+      break;
+    case 'accept_slime_queen_hunt':
+      acceptQuest('slime_queen_hunt');
+      closeDialog();
+      break;
+    case 'accept_acid_race':
+      acceptQuest('acid_race');
+      closeDialog();
+      break;
+    case 'accept_swamp_clearing':
+      acceptQuest('swamp_clearing');
+      closeDialog();
+      break;
+    case 'accept_slime_harvest':
+      acceptQuest('slime_harvest');
+      closeDialog();
+      break;
+    case 'slime_elder_more':
+      currentDialog = DIALOGUES['slime_elder_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'slime_guard_more':
+      currentDialog = DIALOGUES['slime_guard_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'slime_farmer_more':
+      currentDialog = DIALOGUES['slime_farmer_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    // Witch adventure quests
+    case 'accept_witch_quest':
+      acceptQuest('main_witch');
+      closeDialog();
+      break;
+    case 'accept_spirit_exorcism':
+      acceptQuest('spirit_exorcism');
+      closeDialog();
+      break;
+    case 'accept_cursed_puppets':
+      acceptQuest('cursed_puppets');
+      closeDialog();
+      break;
+    case 'accept_darkness_falls':
+      acceptQuest('darkness_falls');
+      closeDialog();
+      break;
+    case 'accept_haunted_patrol':
+      acceptQuest('haunted_patrol');
+      closeDialog();
+      break;
+    case 'accept_curse_research':
+      acceptQuest('curse_research');
+      closeDialog();
+      break;
+    case 'witch_apprentice_more':
+      currentDialog = DIALOGUES['witch_apprentice_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'cursed_villager_more':
+      currentDialog = DIALOGUES['cursed_villager_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'wise_woman_more':
+      currentDialog = DIALOGUES['wise_woman_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'cat_familiar_more':
+      currentDialog = DIALOGUES['cat_familiar_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'cat_familiar_pet':
+      currentDialog = DIALOGUES['cat_familiar_pet'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    // Hell adventure quests
+    case 'accept_hell_quest':
+      acceptQuest('main_hell');
+      closeDialog();
+      break;
+    case 'accept_demon_hunt':
+      acceptQuest('demon_hunt');
+      closeDialog();
+      break;
+    case 'accept_balrog_slayer':
+      acceptQuest('balrog_slayer');
+      closeDialog();
+      break;
+    case 'accept_hell_rush':
+      acceptQuest('hell_rush');
+      closeDialog();
+      break;
+    case 'accept_demon_purge':
+      acceptQuest('demon_purge');
+      closeDialog();
+      break;
+    case 'accept_soul_collection':
+      acceptQuest('soul_collection');
+      closeDialog();
+      break;
+    case 'demon_merchant_more':
+      currentDialog = DIALOGUES['demon_merchant_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'fallen_knight_more':
+      currentDialog = DIALOGUES['fallen_knight_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'soul_guide_more':
+      currentDialog = DIALOGUES['soul_guide_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'smith_more':
+      currentDialog = DIALOGUES['smith_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'imp_butler_more':
+      currentDialog = DIALOGUES['imp_butler_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'void_whisperer_more':
+      currentDialog = DIALOGUES['void_whisperer_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    // Mystery place
+    case 'mystery_guardian_more':
+      currentDialog = DIALOGUES['mystery_guardian_more'];
+      dialogIndex = 0;
+      showDialogLine();
+      break;
+    case 'open_mystery_box':
+      openMysteryBox();
+      closeDialog();
       break;
     default:
       dialogIndex++;
@@ -5427,7 +7502,143 @@ function handleDialogAction(action) {
       completeQuest('goblin_problem');
       break;
     case 'game_victory':
+      completeQuest('main_dragon');
       setTimeout(() => showScreen('victory-screen'), 1000);
+      break;
+    // Give item actions
+    case 'give_diving_gear':
+      if (!gameFlags.gotDivingGear) {
+        gameFlags.gotDivingGear = true;
+        addItem('diving_gear', 1);
+        logMessage('Obtained: Diving Gear!', 'gold');
+      }
+      break;
+    case 'give_slime_jellies':
+      if (!gameFlags.gotSlimeJellies) {
+        gameFlags.gotSlimeJellies = true;
+        addItem('slime_jelly', 5);
+        logMessage('Obtained: Slime Jelly x5!', 'gold');
+      }
+      break;
+    case 'give_protection_charm':
+      if (!gameFlags.gotProtectionCharm) {
+        gameFlags.gotProtectionCharm = true;
+        addItem('protection_charm', 1);
+        logMessage('Obtained: Protection Charm!', 'gold');
+      }
+      break;
+    case 'give_cat_blessing':
+      if (!gameFlags.gotCatBlessing) {
+        gameFlags.gotCatBlessing = true;
+        addItem('cat_blessing', 1);
+        logMessage('Obtained: Cat\'s Blessing!', 'gold');
+      }
+      break;
+    case 'give_fallen_sword':
+      if (!gameFlags.gotFallenSword) {
+        gameFlags.gotFallenSword = true;
+        addItem('fallen_sword', 1);
+        logMessage('Obtained: Fallen Knight\'s Sword!', 'gold');
+      }
+      break;
+    case 'give_soul_stone':
+      if (!gameFlags.gotSoulStone) {
+        gameFlags.gotSoulStone = true;
+        addItem('soul_stone', 1);
+        logMessage('Obtained: Soul Stone!', 'gold');
+      }
+      break;
+    case 'give_void_blessing':
+      if (!gameFlags.gotVoidBlessing) {
+        gameFlags.gotVoidBlessing = true;
+        addItem('void_blessing', 1);
+        logMessage('Obtained: Void Blessing!', 'gold');
+      }
+      break;
+    // Quest reward actions (v0.3.2)
+    case 'reward_lost_heirloom':
+      completeQuest('lost_heirloom');
+      break;
+    case 'reward_urgent_wolf':
+      completeQuest('urgent_wolf_cull');
+      break;
+    case 'reward_merchant_escort':
+      completeQuest('merchant_escort');
+      break;
+    case 'reward_village_patrol':
+      completeQuest('village_patrol');
+      break;
+    case 'reward_main_jellyfish':
+      completeQuest('main_jellyfish');
+      break;
+    case 'reward_fisherman':
+      completeQuest('fisherman_request');
+      break;
+    case 'reward_lost_treasure':
+      completeQuest('lost_treasure');
+      break;
+    case 'reward_crab_invasion':
+      completeQuest('crab_invasion');
+      break;
+    case 'reward_reef_cleanup':
+      completeQuest('reef_cleanup');
+      break;
+    case 'reward_deep_sea_survey':
+      completeQuest('deep_sea_survey');
+      break;
+    case 'reward_main_slime':
+      completeQuest('main_slime');
+      break;
+    case 'reward_slime_clearing':
+      completeQuest('slime_clearing');
+      break;
+    case 'reward_slime_queen':
+      completeQuest('slime_queen_hunt');
+      break;
+    case 'reward_acid_race':
+      completeQuest('acid_race');
+      break;
+    case 'reward_swamp_clearing':
+      completeQuest('swamp_clearing');
+      break;
+    case 'reward_slime_harvest':
+      completeQuest('slime_harvest');
+      break;
+    case 'reward_main_witch':
+      completeQuest('main_witch');
+      break;
+    case 'reward_spirit_exorcism':
+      completeQuest('spirit_exorcism');
+      break;
+    case 'reward_cursed_puppets':
+      completeQuest('cursed_puppets');
+      break;
+    case 'reward_darkness_falls':
+      completeQuest('darkness_falls');
+      break;
+    case 'reward_haunted_patrol':
+      completeQuest('haunted_patrol');
+      break;
+    case 'reward_curse_research':
+      completeQuest('curse_research');
+      break;
+    case 'reward_main_hell':
+      completeQuest('main_hell');
+      break;
+    case 'reward_demon_hunt':
+      completeQuest('demon_hunt');
+      break;
+    case 'reward_balrog_slayer':
+      completeQuest('balrog_slayer');
+      break;
+    case 'reward_hell_rush':
+      completeQuest('hell_rush');
+      break;
+    case 'reward_demon_purge':
+      completeQuest('demon_purge');
+      break;
+    case 'reward_soul_collection':
+      completeQuest('soul_collection');
       break;
   }
 }
@@ -5460,6 +7671,10 @@ function checkQuestTurnIns() {
 
 function openShop() {
   if (currentState !== GameState.EXPLORE) return;
+  if (!canUseShop()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_FIGHT_THRESHOLD}+ to use shops.`, 'red');
+    return;
+  }
   document.getElementById('shop-modal').classList.add('active');
   renderShop();
 }
@@ -5468,9 +7683,32 @@ function closeShop() {
   document.getElementById('shop-modal').classList.remove('active');
 }
 
+function getCurrentShop() {
+  if (randomMerchant) {
+    return SHOPS['village'];
+  }
+  if (currentNPC) {
+    const npcShopMap = {
+      'merchant': 'village',
+      'sea_merchant': 'sea_merchant',
+      'slime_merchant': 'slime_merchant',
+      'potion_merchant': 'potion_merchant',
+      'demon_merchant': 'demon_merchant',
+      'smith_of_doom': 'smith_of_doom',
+      'mystery_trader': 'mystery_trader'
+    };
+    const shopId = npcShopMap[currentNPC.id];
+    if (shopId && SHOPS[shopId]) {
+      return SHOPS[shopId];
+    }
+  }
+  return SHOPS['village'];
+}
+
 function renderShop() {
-  const shop = SHOPS['village'];
+  const shop = getCurrentShop();
   document.getElementById('shop-gold').textContent = `💰 GOLD: ${player.gold}`;
+  document.getElementById('shop-title').textContent = shop.name;
 
   const buyEl = document.getElementById('shop-buy');
   buyEl.innerHTML = '';
@@ -5557,6 +7795,10 @@ let currentSaveTab = 'save';
 
 function openSaveMenu() {
   if (currentState !== GameState.EXPLORE) return;
+  if (!canDoAnything()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to save/load.`, 'red');
+    return;
+  }
   document.getElementById('save-modal').classList.add('active');
   currentSaveTab = 'save';
   renderSaveSlots();
@@ -5619,6 +7861,13 @@ function renderSaveSlots() {
 }
 
 function saveToSlot(slot) {
+  if (!canSave()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to save.`, 'red');
+    return;
+  }
+  
+  player.lastSessionTime = Date.now();
+  
   const saveData = {
     version: '1.0',
     timestamp: Date.now(),
@@ -5632,7 +7881,10 @@ function saveToSlot(slot) {
     playerX, playerY,
     gameFlags: JSON.parse(JSON.stringify(gameFlags)),
     encounteredBoss,
-    quests: JSON.parse(JSON.stringify(QUESTS))
+    quests: JSON.parse(JSON.stringify(QUESTS)),
+    activeTimedQuests: JSON.parse(JSON.stringify(activeTimedQuests)),
+    currentAdventure,
+    adventureProgress: JSON.parse(JSON.stringify(adventureProgress))
   };
 
   localStorage.setItem(`pixelquest_save_${slot}`, JSON.stringify(saveData));
@@ -5664,10 +7916,32 @@ function loadFromSlot(slot) {
       }
     }
 
+    if (data.activeTimedQuests) {
+      activeTimedQuests = data.activeTimedQuests;
+    }
+
+    if (data.currentAdventure) {
+      currentAdventure = data.currentAdventure;
+    }
+
+    if (data.adventureProgress) {
+      adventureProgress = data.adventureProgress;
+    }
+
+    if (player.creditScore === undefined) {
+      player.creditScore = 100;
+      player.questFailureCount = 0;
+      player.lastGoodBehaviorTime = Date.now();
+      player.lastSessionTime = Date.now();
+    }
+
     document.getElementById('location-name').textContent = LOCATIONS[currentLocation].name;
     closeSaveMenu();
     showScreen('explore-screen');
     logMessage(`Loaded Slot ${slot}!`, 'gold');
+    
+    handleCrossSessionCreditRecovery();
+    
     drawMap();
   } catch(e) {
     logMessage('Failed to load save!', 'red');
@@ -5715,6 +7989,10 @@ function renderStatus() {
   const hpPct = Math.floor((player.hp / player.hpMax) * 100);
   const mpPct = Math.floor((player.mp / player.mpMax) * 100);
   const xpPct = Math.floor((player.exp / player.expNext) * 100);
+  const creditColor = getCreditScoreColorClass();
+  const creditColorHex = creditColor === 'credit-good' ? '#38b764' :
+    creditColor === 'credit-warn' ? '#f4b41b' :
+    creditColor === 'credit-bad' ? '#ef4155' : '#b13e53';
 
   let skillsHtml = '';
   for (const skillId of player.skills) {
@@ -5767,6 +8045,7 @@ function renderStatus() {
           <div style="display:flex;justify-content:space-between;"><span style="color:#94b0c2;">AGI</span><span>${getPlayerStat('agi')}</span></div>
           <div style="display:flex;justify-content:space-between;"><span style="color:#94b0c2;">LUK</span><span>${getPlayerStat('luk')}</span></div>
           <div style="display:flex;justify-content:space-between;"><span style="color:#f4b41b;">GOLD</span><span>${player.gold}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#94b0c2;">⭐ CREDIT</span><span style="color:${creditColorHex};">${player.creditScore}/100</span></div>
         </div>
       </div>
     </div>
@@ -5792,6 +8071,10 @@ function toggleMap() {
 }
 
 function restAtInn() {
+  if (!canDoAnything()) {
+    logMessage(`⚠️ Credit Score too low (${player.creditScore}/${CREDIT_MAX})! Need ${CREDIT_ANYTHING_THRESHOLD}+ to rest at inn.`, 'red');
+    return;
+  }
   if (player.gold < 20) {
     logMessage('Not enough gold!', 'red');
     return;
@@ -5811,8 +8094,206 @@ function returnToTitle() {
   }
 }
 
+// ============================================================
+// SETTINGS SYSTEM (v0.3.3)
+// ============================================================
+
+const DEFAULT_SETTINGS = {
+  sound: true,
+  music: false,
+  textSize: 10,
+  gameTime: true,
+  timeSpeed: 20,
+  realTime: false,
+  realSprites: false
+};
+
+let settings = { ...DEFAULT_SETTINGS };
+
+// Game time state
+let gameTimeMinutes = 8 * 60; // Start at 8:00 AM
+let lastTimeUpdate = 0;
+
+function loadSettings() {
+  const saved = localStorage.getItem('pixelquest_settings');
+  if (saved) {
+    try {
+      settings = { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+    } catch(e) {
+      settings = { ...DEFAULT_SETTINGS };
+    }
+  }
+  applySettings();
+}
+
+function saveSettings() {
+  localStorage.setItem('pixelquest_settings', JSON.stringify(settings));
+}
+
+function applySettings() {
+  // Text size
+  document.documentElement.style.fontSize = settings.textSize + 'px';
+  
+  // Update UI toggles
+  const soundEl = document.getElementById('setting-sound');
+  const musicEl = document.getElementById('setting-music');
+  const textSizeEl = document.getElementById('setting-textsize');
+  const gameTimeEl = document.getElementById('setting-gametime');
+  const timeSpeedEl = document.getElementById('setting-timespeed');
+  const realTimeEl = document.getElementById('setting-realtime');
+  const realSpritesEl = document.getElementById('setting-realsprites');
+  
+  if (soundEl) soundEl.checked = settings.sound;
+  if (musicEl) musicEl.checked = settings.music;
+  if (textSizeEl) textSizeEl.value = settings.textSize;
+  if (document.getElementById('textsize-value')) {
+    document.getElementById('textsize-value').textContent = settings.textSize + 'px';
+  }
+  if (gameTimeEl) gameTimeEl.checked = settings.gameTime;
+  if (timeSpeedEl) timeSpeedEl.value = settings.timeSpeed;
+  if (document.getElementById('timespeed-value')) {
+    document.getElementById('timespeed-value').textContent = settings.timeSpeed + ' min';
+  }
+  if (realTimeEl) realTimeEl.checked = settings.realTime;
+  if (realSpritesEl) realSpritesEl.checked = settings.realSprites;
+  
+  // Show/hide time speed row based on game time toggle
+  const speedRow = document.getElementById('gametime-speed-row');
+  if (speedRow) {
+    speedRow.style.opacity = settings.gameTime ? '1' : '0.4';
+    speedRow.style.pointerEvents = settings.gameTime ? 'auto' : 'none';
+  }
+  
+  // Show warning for 1:1 ratio
+  const warning = document.getElementById('timespeed-warning');
+  if (warning) {
+    if (settings.timeSpeed === 60 && !settings.realTime) {
+      warning.style.display = 'block';
+    } else {
+      warning.style.display = 'none';
+    }
+  }
+}
+
+function openSettings() {
+  applySettings();
+  document.getElementById('settings-modal').classList.add('active');
+}
+
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('active');
+  saveSettings();
+}
+
+function toggleSound() {
+  settings.sound = document.getElementById('setting-sound').checked;
+  saveSettings();
+  logMessage(`Sound: ${settings.sound ? 'ON' : 'OFF'}`, 'cyan');
+}
+
+function toggleMusic() {
+  settings.music = document.getElementById('setting-music').checked;
+  saveSettings();
+  logMessage(`Music: ${settings.music ? 'ON' : 'OFF'}`, 'cyan');
+}
+
+function changeTextSize(val) {
+  settings.textSize = parseInt(val);
+  document.getElementById('textsize-value').textContent = settings.textSize + 'px';
+  document.documentElement.style.fontSize = settings.textSize + 'px';
+  saveSettings();
+}
+
+function toggleGameTime() {
+  settings.gameTime = document.getElementById('setting-gametime').checked;
+  
+  // If enabling game time and real time is on, turn off real time
+  if (settings.gameTime && settings.realTime) {
+    settings.realTime = false;
+    document.getElementById('setting-realtime').checked = false;
+  }
+  
+  applySettings();
+  saveSettings();
+  logMessage(`In-Game Time: ${settings.gameTime ? 'ON' : 'OFF'}`, 'cyan');
+}
+
+function changeTimeSpeed(val) {
+  settings.timeSpeed = parseInt(val);
+  document.getElementById('timespeed-value').textContent = settings.timeSpeed + ' min';
+  
+  // If 60 min (1:1), suggest real time
+  const warning = document.getElementById('timespeed-warning');
+  if (settings.timeSpeed === 60 && !settings.realTime) {
+    warning.style.display = 'block';
+  } else {
+    warning.style.display = 'none';
+  }
+  
+  // If 1:1 ratio, auto-enable real time mode
+  if (settings.timeSpeed === 60) {
+    settings.realTime = true;
+    document.getElementById('setting-realtime').checked = true;
+    settings.gameTime = false;
+    document.getElementById('setting-gametime').checked = false;
+    applySettings();
+    logMessage('Real Time mode enabled (1:1 ratio)', 'gold');
+  }
+  
+  saveSettings();
+}
+
+function toggleRealTime() {
+  settings.realTime = document.getElementById('setting-realtime').checked;
+  
+  // If enabling real time, disable game time
+  if (settings.realTime) {
+    settings.gameTime = false;
+    document.getElementById('setting-gametime').checked = false;
+  }
+  
+  applySettings();
+  saveSettings();
+  logMessage(`Real Time: ${settings.realTime ? 'ON' : 'OFF'}`, 'cyan');
+}
+
+function toggleRealSprites() {
+  settings.realSprites = document.getElementById('setting-realsprites').checked;
+  saveSettings();
+  logMessage(`Real Person Sprites: ${settings.realSprites ? 'ON' : 'OFF'}`, 'cyan');
+  // Force re-render of player and NPCs
+  if (typeof render === 'function') render();
+}
+
+function getCurrentTimeDisplay() {
+  if (settings.realTime) {
+    const now = new Date();
+    return now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  }
+  if (settings.gameTime) {
+    const hours = Math.floor(gameTimeMinutes / 60) % 24;
+    const mins = Math.floor(gameTimeMinutes % 60);
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  }
+  return '';
+}
+
+function updateGameTime(deltaMs) {
+  if (!settings.gameTime || settings.realTime) return;
+  
+  // timeSpeed = real minutes per game hour
+  // So 1 game hour = timeSpeed real minutes = timeSpeed * 60 * 1000 ms
+  const msPerGameHour = settings.timeSpeed * 60 * 1000;
+  const gameMinutesPassed = (deltaMs / msPerGameHour) * 60;
+  
+  gameTimeMinutes += gameMinutesPassed;
+  if (gameTimeMinutes >= 24 * 60) {
+    gameTimeMinutes -= 24 * 60;
+  }
+}
+
 function showCredits() {
-  alert('PIXEL QUEST RPG v0.3.1\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nNEW in v0.3.1:\n- Level-based Adventure Unlocking!\n- Adventures get more complex by level\n- Mystery Cave (Lv.15): Surprise Box & Trading\n- Free Experience Shrine (Lv.26)\n- Level cap extended to 30\n\nAdventure Unlock Levels:\n- Fire Dragon: Lv.1 (Default)\n- Under the Sea: Lv.5\n- Monster Slime: Lv.10\n- Abracadabra Witch: Lv.18\n- Boundless Hell: Lv.25\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
+  alert('PIXEL QUEST RPG v0.3.5\n\nControls:\nWASD / Arrows - Move\nE - Interact\nSPACE / ENTER - Confirm\nESC - Inventory\nI - Inventory\nQ - Quests\nM - Map\n\nNEW in v0.3.5:\n- ⭐ Credit Score System!\n  Default: 100 points\n  <70: Cannot accept quests\n  <30: Cannot fight or use shops\n  <10: Can only move, no interactions\n- 💸 Quest Failure Penalties:\n  20 gold fine if you have it\n  Progressive credit loss if no gold (-5, -10, -15)\n- 🌟 Credit Recovery:\n  +5 after 10 min good behavior\n  Full restore after 20 min\n  Full reset next day\n  Continues recovery if same day\n\nNEW in v0.3.4:\n- 🏆 Quest Difficulty Levels!\n  Light / Easy / Medium / Hard / Devil\n- ⏱️ Quest Urgency Levels!\n  🏃 Rush (<=5min, no rest)\n  ⚡ Express (10-15min)\n  🌿 Relax (>=20min)\n- 10 NEW timed quests (15 total!)\n- Rush quests cannot be rested!\n- Difficulty + Urgency badges in quest UI\n- All NPCs show quest difficulty/urgency\n\nAdventure Unlock Levels:\n- Fire Dragon: Lv.1 (Default)\n- Under the Sea: Lv.5\n- Monster Slime: Lv.10\n- Abracadabra Witch: Lv.18\n- Boundless Hell: Lv.25\n\nMystery Cave: Lv.15\nFree Exp Shrine: Lv.26\nTimed Quests: Lv.7\n\nA retro pixel RPG adventure!\nMade with HTML, CSS & JavaScript.');
 }
 
 // ============================================================
